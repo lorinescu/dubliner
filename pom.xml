@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>pub.occams.elite</groupId>
+    <artifactId>dubliner</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <properties>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <maven.compiler.version>3.3</maven.compiler.version>
+        <maven.source.version>2.4</maven.source.version>
+
+        <log4j.version>1.2.17</log4j.version>
+        <test.junit.version>4.12</test.junit.version>
+        <tess4j.version>2.0.1</tess4j.version>
+        <jackson.version>2.6.2</jackson.version>
+
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${test.junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.tess4j</groupId>
+            <artifactId>tess4j</artifactId>
+            <version>${tess4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.version}</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>net.sourceforge.tess4j:tess4j</artifact>
+                                    <excludes>
+                                        <!--
+                                        trained data is kept outside the jar for easy update
+                                        -->
+                                        <exclude>tessdata/*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>pub.occams.elite.dubliner.App</Main-Class>
+
+                                        <!--
+                                        manifest gymnastics is necessary due to java not being able to
+                                        load a JAI provider which makes ImageIO.read() crack
+                                        see: http://stackoverflow.com/questions/15345769/exception-when-trying-to-save-images
+                                        -->
+                                        <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
+                                        <Specification-Version>1.1</Specification-Version>
+                                        <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                        <Implementation-Title>com.sun.media.imageio</Implementation-Title>
+                                        <Implementation-Version>1.1</Implementation-Version>
+                                        <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
+                                        <Extension-Name>com.sun.media.imageio</Extension-Name>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
