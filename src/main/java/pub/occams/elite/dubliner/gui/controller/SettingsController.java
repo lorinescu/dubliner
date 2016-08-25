@@ -83,12 +83,12 @@ public class SettingsController extends Controller<Pane> {
 
     @FXML
     private void applyResolutions(ActionEvent actionEvent) {
-        new Alert(Alert.AlertType.ERROR, "NOT WORKING").showAndWait();
+        new Alert(Alert.AlertType.ERROR, "NOT IMPLEMENTED").showAndWait();
     }
 
     @FXML
     private void applyCorrections(ActionEvent actionEvent) {
-        new Alert(Alert.AlertType.ERROR, "NOT WORKING").showAndWait();
+        new Alert(Alert.AlertType.ERROR, "NOT IMPLEMENTED").showAndWait();
     }
 
     private SegmentModel segmentToModel(final String name, final SegmentDto s) {

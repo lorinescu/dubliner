@@ -36,7 +36,7 @@ public class MasterController extends Controller<AnchorPane> {
     @FXML
     private void about(ActionEvent actionEvent) {
         final Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(App.NAME + "-"+ App.VERSION + " (reddit: cmdrmacarye)");
+        alert.setHeaderText(App.NAME + "-"+ App.VERSION + "\nhttps://bitbucket.org/lorinescu/dubliner\n(lorin@occams.pub)");
         alert.getDialogPane().setContent(new ImageView("/pub/occams/elite/dubliner/gui/controller/about.jpg"));
         alert.showAndWait();
     }
