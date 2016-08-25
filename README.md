@@ -15,7 +15,7 @@ Dev environment:
 * If you get a "Error: Illegal min or max specification!" error set in your
 environment "LC_ALL=C" ([known bug](https://code.google.com/p/tesseract-ocr/issues/detail?id=1467))
 * Running the app or it's tests will fail unless the "dataPath" setting (in conf/settings.json ) points at
-the training data dirs in [dubliner-data repository](https://github.com/cmdrmacarye/dubliner-data) or your own 
+the training data dirs in [dubliner-data repository](https://bitbucket.org/lorinescu/dubliner-data) or your own 
 trained data. In my environment I checkout dubliner and dubliner-data in the same parent directory, switch to 
 dubliner directory and create a symbolic link to the data repo (in linux: ln -s ../dubliner-data data or in 
 windows: mklink /D data ..\dubliner-data).
