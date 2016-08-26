@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressIndicator?>
@@ -23,17 +24,18 @@
                   <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Select a screenshot directory which will be scanned for images. Supported resolutions:  1920x1200, 1600x900, 1920x1080, 2560x1440" wrapText="true" />
                 <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                     <children>
-                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectScreenshotDirectory" prefHeight="35.0" prefWidth="96.0" text="Browse" />
+                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectScreenshotDirectory" prefHeight="35.0" prefWidth="112.0" text="Browse" />
                         <TextField fx:id="screenshotDirectoryField" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="384.0" promptText="Screenshot directory" />
                     </children>
                 </HBox>
             <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                <children>
-                      <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#start" prefHeight="35.0" prefWidth="96.0" text="Scan" />
+                      <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#start" prefHeight="35.0" prefWidth="112.0" text="Scan" />
                   <ProgressIndicator fx:id="progressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="20.0" />
                </children>
             </HBox>
-            <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabMaxHeight="20.0" tabMaxWidth="100.0" tabMinHeight="20.0" tabMinWidth="100.0" VBox.vgrow="ALWAYS">
+            <ComboBox prefHeight="35.0" prefWidth="168.0" promptText="Powers found" />
+            <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
               <tabs>
                 <Tab closable="false" disable="true" text="Preparation" />
                 <Tab closable="false" text="Control">
@@ -42,7 +44,7 @@
                            <children>
                               <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                  <children>
-                                    <Button mnemonicParsing="false" onAction="#copyCSV" text="Copy CSV" />
+                                    <Button mnemonicParsing="false" onAction="#copyCSV" prefHeight="35.0" prefWidth="112.0" text="Copy CSV" />
                                     <ListView fx:id="controlSystemList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="400.0" />
                                  </children>
                               </VBox>
@@ -93,7 +95,7 @@
                                     <ImageView fx:id="fortifyTriggerImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="7" />
                                     <ImageView fx:id="undermineTotalImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="187.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="8" />
                                     <ImageView fx:id="undermineTriggerImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="217.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="9" />
-                                    <Button mnemonicParsing="false" onAction="#showOriginalImage" text="Original image" />
+                                    <Button mnemonicParsing="false" onAction="#showOriginalImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
                                  </children>
                               </GridPane>
                            </children>
