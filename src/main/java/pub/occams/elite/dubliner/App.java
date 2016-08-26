@@ -57,7 +57,10 @@ public class App extends Application {
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
         masterController.postConstruct(imageApi, settingsController, scanController, helpController);
 
-        primaryStage.setScene(new Scene(masterController.getView()));
+        final Scene scene = new Scene(masterController.getView());
+        scene.getStylesheets().add(App.class.getResource("gui/style/custom.css").toExternalForm());
+        primaryStage.setScene(scene);
+
 
         primaryStage.getIcons().add(new Image(MasterController.class.getResourceAsStream("edmund-fist.png")));
 
