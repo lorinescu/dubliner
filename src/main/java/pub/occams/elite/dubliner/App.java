@@ -66,10 +66,17 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    public static SettingsDto loadSettings() throws IOException {
+    public static SettingsDto loadSettingsV1() throws IOException {
         JSON_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
 
-        final File configFile = new File("conf/settings.json");
+        final File configFile = new File("conf/settings_v1.json");
+        return JSON_MAPPER.readValue(configFile, SettingsDto.class);
+    }
+
+    public static SettingsDto loadSettingsV2() throws IOException {
+        JSON_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+
+        final File configFile = new File("conf/settings_v2.json");
         return JSON_MAPPER.readValue(configFile, SettingsDto.class);
     }
 
@@ -79,7 +86,7 @@ public class App extends Application {
         Logger.getLogger(LOGGER_NAME).info("Starting " + NAME + "-" + VERSION);
 
         try {
-            imageApi = new ImageApiV1(loadSettings(), false);
+            imageApi = new ImageApiV1(loadSettingsV1(), false);
         } catch (IOException e) {
             Logger.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }

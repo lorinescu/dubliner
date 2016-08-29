@@ -181,15 +181,15 @@
         "height": "20"
       },
       "preparationTab": {
-        "x": "1106",
-        "y": "155",
-        "width": "100",
+        "x": "600",
+        "y": "90",
+        "width": "145",
         "height": "20"
       },
       "expansionTab": {
-        "x": "1106",
-        "y": "155",
-        "width": "100",
+        "x": "855",
+        "y": "90",
+        "width": "120",
         "height": "20"
       },
       "controlTab": {

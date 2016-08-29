@@ -93,4 +93,19 @@ public class ImageUtil {
 
         return scaledImage;
     }
+
+    //returns the % of black pixels - histogram for a black/white image
+    public static double percentBlack(final BufferedImage image) {
+        final long totalPixels = image.getHeight() * image.getWidth();
+        long blackPixels = 0;
+        for (int x = 0; x<image.getWidth(); x++) {
+            for (int y = 0; y <image.getHeight(); y++) {
+                int pixel = image.getRGB(x, y);
+                if ( 0 == (pixel & 0x00FFFFFF)) {
+                    blackPixels++;
+                }
+            }
+        }
+        return (double) blackPixels * 100 / totalPixels;
+    }
 }

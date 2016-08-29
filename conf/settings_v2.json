@@ -1,0 +1,169 @@
+{
+  "ocr": {
+
+    "filterRedChannelMin" : "85",
+    "tesseractForNumbers": {
+      "dataPath": "data/training/numbers_eurocaps",
+      "language": "eng1",
+      "variables": {
+        "tessedit_char_whitelist": "-0123456789C",
+        "classify_enable_adaptive_matcher ": "F",
+        "classify_enable_learning" : "F",
+        "load_system_dawg": "F",
+        "load_freq_dawg": "F",
+        "load_unambig_dawg" : "F",
+        "load_punc_dawg" : "F",
+        "load_number_dawg" : "F",
+        "load_fixed_length_dawgs" : "F",
+        "load_bigram_dawg" : "F"
+      }
+    },
+
+    "tesseractForSystemNames": {
+      "dataPath": "data/training/numbers_eurocaps",
+      "language": "eng1",
+      "variables": {
+        "load_system_dawg": "F",
+        "load_freq_dawg": "F",
+        "tessedit_char_whitelist": "-+.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ[]"
+      }
+    }
+  },
+
+  "corrections": {
+    "systemName": {
+      "0UAN GURUS" : "QUAN GURUS",
+      "0LWAIN": "OLWAIN",
+      "0PALA": "OPALA",
+      "80NIT0U": "BONITOU",
+      "8D+03 3531A": "BD+03 3531A",
+      "8D-22 3573": "BD-22 3573",
+      "8IEL0NTI": "BIELONTI",
+      "8ILFR0ST": "BILFROST",
+      "8OREAS": "BOREAS",
+      "8UKURNABAL": "BUKURNABAL",
+      "ALI0TH": "ALIOTH",
+      "ANAYOI.": "ANAYOL",
+      "ANAY0L": "ANAYOL",
+      "A0 K0ND" : "AO KOND",
+      "AO K0ND": "AO KOND",
+      "ARA8H" : "ARABH",
+      "MSGAA" : "AASGAA",
+      "BIEL0NTI" : "BIELONTI",
+      "BILFR0ST" : "BILFROST",
+      "BONIT0U" : "BONITOU",
+      "CART0Q" : "CARTOQ",
+      "C0NTIEN": "CONTIEN",
+      "CIRCI0S": "CIRCIOS",
+      "CYBEI.E" : "CYBELE",
+      "DA0 ZI" : "DAO ZI",
+      "DHANH0PI": "DHANHOPI",
+      "DHAN H0PI" : "DHANHOPI",
+      "H0LIACAN": "HOLIACAN",
+      "H00RIAYAN": "HOORIAYAN",
+      "HO0RIAYAN" : "HOORIAYAN",
+      "I.HS 2936": "LHS 2936",
+      "K0K0IMUDJI": "KOKOIMUDJI",
+      "K0KOIMUDJI" : "KOKOIMUDJI",
+      "K0NS": "KONS",
+      "LP 490'68" : "LP 490-68",
+      "L.IT 14478": "LTT 14478",
+      "19 LE0NIS MINORIS": "19 LEONIS MINORIS",
+      "19 LE0NIS MIN0RIS": "19 LEONIS MINORIS",
+      "MAN8ATZ" : "MANBATZ",
+      "MEREB0GA" : "MEREBOGA",
+      "MERE80GA" : "MEREBOGA",
+      "MUI.LAG" : "MULLAG",
+      "NI.TT 44958": "NLTT 44958",
+      "NAGYB0LD" : "NAGYBOLD",
+      "NAGY80LD" : "NAGYBOLD",
+      "NEVERM0RE": "NEVERMORE",
+      "OI.WAIN" : "OLWAIN",
+      "0LKER" : "OLKER",
+      "OPAI.A" : "OPALA",
+      "PECK0LLERCI": "PECKOLLERCI",
+      "P0NGO": "PONGO",
+      "PONG0" : "PONGO",
+      "R08OR": "ROBOR",
+      "R0BOR" : "ROBOR",
+      "R0SS 94" : "ROSS 94",
+      "R0SS 842" : "ROSS 842",
+      "R0SS 931" : "ROSS 931",
+      "SA8IKAMI" : "SABIKAMI",
+      "SII<I" : "SIKI",
+      "TAU 8O0TIS" : "TAU BOOTIS",
+      "TAU 8O0TI8" : "TAU BOOTIS",
+      "TAU BO0TI8" : "TAU BOOTIS",
+      "TRIC0RII" : "TRICORII",
+      "TRICOR\"" : "TRICORII",
+      "U N KUAR": "UNKUAR",
+      "V371 N0RMAE": "V371 NORMAE",
+      "W0LONIUG0" : "WOLONIUGO",
+      "WOLONIUGO" : "WOLONIUGO",
+      "W0LF 412" : "WOLF 412",
+      "WOI.F 412" : "WOLF 412",
+      "WOL0NIUG0" : "WOLONIUGO",
+      "Z0SI": "ZOSI"
+    }
+  },
+  "segmentsCoordinates": [
+    {
+      "screenWidth": "1920",
+      "screenHeight": "1200",
+      "controlTab": {
+        "x": "1106",
+        "y": "155",
+        "width": "100",
+        "height": "20"
+      }
+    },
+    {
+      "screenWidth": "1920",
+      "screenHeight": "1080",
+      "overviewTab": {
+        "x": "130",
+        "y": "90",
+        "width": "120",
+        "height": "20"
+      },
+      "preparationTab": {
+        "x": "600",
+        "y": "90",
+        "width": "145",
+        "height": "20"
+      },
+      "expansionTab": {
+        "x": "855",
+        "y": "90",
+        "width": "120",
+        "height": "20"
+      },
+      "controlTab": {
+        "x": "1106",
+        "y": "90",
+        "width": "100",
+        "height": "20"
+      }
+    },
+    {
+      "screenWidth": "1600",
+      "screenHeight": "900",
+      "controlTab": {
+        "x": "910",
+        "y": "100",
+        "width": "80",
+        "height": "20"
+      }
+    },
+    {
+      "screenWidth": "2560",
+      "screenHeight": "1440",
+      "controlTab": {
+        "x": "1470",
+        "y": "118",
+        "width": "137",
+        "height": "30"
+      }
+    }
+  ]
+}

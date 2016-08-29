@@ -23,7 +23,7 @@ public class ImageApiV1Test {
 
     @Before
     public void setUp() throws Exception {
-        imageApi = new ImageApiV1(App.loadSettings(), false);
+        imageApi = new ImageApiV1(App.loadSettingsV1(), false);
     }
 
     @Test
