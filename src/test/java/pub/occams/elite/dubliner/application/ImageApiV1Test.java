@@ -1,5 +1,6 @@
 package pub.occams.elite.dubliner.application;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,10 +10,7 @@ import pub.occams.elite.dubliner.domain.ImageType;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -28,24 +26,26 @@ public class ImageApiV1Test {
 
     @Test
     public void testIsImageControlTab() throws Exception {
-        assertEquals(ImageType.CONTROL, imageApi.classifyImage(new File(DATA_CONTROL_IMAGES + "1920x1080_1.bmp")).getType());
+        assertEquals(ImageType.CONTROL, imageApi.prepareAndClassifyImage(new File(DATA_CONTROL_IMAGES + "1920x1080/mahon/control/1.bmp")).getType());
 
         //FIXME: find a bad image
-        //assertFalse(imageApi.classifyImage(new File("data/images/some_bad_image.bmp")));
+        //assertFalse(imageApi.prepareAndClassifyImage(new File("data/images/some_bad_image.bmp")));
     }
 
     @Test
     public void testExtractControlDataFromImages() throws Exception {
 
-        final File[] referenceFiles = new File(DATA_CONTROL_IMAGES).listFiles((FileFilter) new SuffixFileFilter("bmp"));
+        final String[] extensions = new String[1];
+        extensions[0] = "bmp";
+        final Collection<File> referenceFiles = FileUtils.listFiles(new File(DATA_CONTROL_IMAGES), extensions, true);
 
         assertNotNull(referenceFiles);
 
         final File referenceCsv = new File(DATA_CONTROL_IMAGES + "0000_manually_extracted_text_from_images.csv");
         assertNotNull(referenceCsv);
 
-        final List<ControlSystem> systems = imageApi.extractDataFromImages(Arrays.asList(referenceFiles));
-        assertEquals(referenceFiles.length, systems.size());
+        final List<ControlSystem> systems = imageApi.extractDataFromImages(new ArrayList<>(referenceFiles));
+        assertEquals(referenceFiles.size(), systems.size());
 
         final Scanner scanner = new Scanner(referenceCsv);
         scanner.nextLine(); //skip header
@@ -53,10 +53,11 @@ public class ImageApiV1Test {
             final String line = scanner.nextLine();
             final String[] parts = line.split(",");
             final String fileName = parts[0].replace("\"", "");
+            final File file = new File(DATA_CONTROL_IMAGES + "/" + fileName);
             final Optional<ControlSystem> system =
                     systems
                             .stream()
-                            .filter(cs -> fileName.equals(cs.getControlSystemSegments().getInputImage().getFile().getName()))
+                            .filter(cs -> file.getAbsolutePath().equals(cs.getControlSystemSegments().getInputImage().getFile().getAbsolutePath()))
                             .findFirst();
 
             assertTrue("file not found:" + fileName, system.isPresent());

@@ -23,31 +23,12 @@ import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
+import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
 public class ImageApiV2 extends ImageApiBase {
 
     public ImageApiV2(final SettingsDto settings, final boolean debug) {
         super(settings, debug);
-    }
-
-    private String ocrTab(final BufferedImage image, final SegmentDto coordinates,
-                          final String fileName, final String step) {
-
-        final Optional<BufferedImage> croppedImage = crop(coordinates, image);
-        if (!croppedImage.isPresent()) {
-            return "";
-        }
-
-        final BufferedImage ocrInputImage = scale(
-                filterRedAndBinarize(invert(croppedImage.get()), settings.ocr.filterRedChannelMin)
-        );
-
-        saveImageAtStage(ocrInputImage, fileName, step);
-        final String title = ocrSegment(ocrInputImage);
-        if (null == title) {
-            return "";
-        }
-        return title;
     }
 
     // - the tab title should be tabName
@@ -60,11 +41,10 @@ public class ImageApiV2 extends ImageApiBase {
             return false;
         }
 
-        final BufferedImage ocrInputImage = scale(
-                filterRedAndBinarize(invert(croppedImage.get()), settings.ocr.filterRedChannelMin)
-        );
+        final BufferedImage ocrInputImage = filterRedAndBinarize(invert(croppedImage.get()), settings.ocr.filterRedChannelMin);
 
         saveImageAtStage(ocrInputImage, fileName, step);
+
         final String title = ocrSegment(ocrInputImage);
         if (null == title) {
             return false;
@@ -75,43 +55,31 @@ public class ImageApiV2 extends ImageApiBase {
         }
 
         final double blacknessPct = ImageUtil.percentBlack(ocrInputImage);
-        if (blacknessPct < 50) {
-            return true;
-        }
-        return false;
+        return blacknessPct < 50;
     }
 
     @Override
-    public InputImage classifyImage(final File file) {
+    public InputImage prepareAndClassifyImage(final File file) {
 
         LOGGER.info("verifying if file " + file.getName() + " is a power play screenshot");
 
+        //1. load image in memory
         final Optional<BufferedImage> maybeImage = ImageUtil.readImageFromFile(file);
         if (!maybeImage.isPresent()) {
             return new InputImage(file, null, ImageType.UNKNOWN);
         }
-
         final BufferedImage image = maybeImage.get();
 
+        //2. fetch settings for this image resolution
         final Optional<SegmentsCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
             LOGGER.info("Could not find coordinates settings for image " + file.getName() +
                     " at " + image.getWidth() + "x" + image.getHeight());
-            return new InputImage(file, image, ImageType.UNKNOWN);
+            return new InputImage(file, null, ImageType.UNKNOWN);
         }
         final SegmentsCoordinatesDto coord = maybeCoord.get();
 
-        //1. if this is a screenshot from Power Play we should have an Overview tab in left upper corner
-        LOGGER.info("ocr-ing selected tab title");
-        final String overviewTabText = ocrTab(image, coord.overviewTab, file.getName(), "classify-image-isPowerPlay");
-
-        LOGGER.info("image " + file.getName() + " has [" + overviewTabText + "] in the Overview tab position");
-
-        if (!"OVERVIEW".equals(overviewTabText.trim().replace("0", "O"))) {
-            return new InputImage(file, image, ImageType.UNKNOWN);
-        }
-
-        //2. is there an interesting selected ?
+        //3. which tab is selected
         final ImageType type;
         if (isTabSelected(image, coord.preparationTab, "PREPARATION", file.getName(), "classify-image-preparation")) {
             type = ImageType.PREPARATION;
@@ -125,27 +93,30 @@ public class ImageApiV2 extends ImageApiBase {
 
         LOGGER.info("Image:" + file.getName() + " type is: " + type);
 
-        return new InputImage(file, image, type);
+        //5. keep only interesting data which is above a certain level of red and make the image grayscale
+        final BufferedImage preparedImage = filterRedAndBinarize(maybeImage.get(), settings.ocr.filterRedChannelMin);
+        saveImageAtStage(preparedImage, file.getName(), "classify-prepared");
+
+        return new InputImage(file, preparedImage, type);
     }
 
     public InputImage detectLines(final InputImage image) {
-        final IplImage img = ImageUtil.bufferedImageToIplImage(image.getImage());
 
+        final IplImage img = ImageUtil.bufferedImageToIplImage(image.getImage());
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
-        final IplImage colorDst = cvCreateImage(cvGetSize(img), img.depth(), 3);
 
         cvCanny(img, dst, 80, 200, 3);
-        cvCvtColor(dst, colorDst, CV_GRAY2BGR);
-
+//        cvCvtColor(dst, colorDst, CV_GRAY2BGR);
         final CvMemStorage storage = cvCreateMemStorage(0);
 
         final double angleResolution = CV_PI / 180;
-        final int pixelResolution = 1;
+        final int pixelResolution = 5;
         final int threshold = 200;
-        final int minLength = 200;
+        final int minLength = 300;
         final int maxGap = 1;
         final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
                 threshold, minLength, maxGap, 0, CV_PI);
+
         for (int i = 0; i < lines.total(); i++) {
             final Pointer line = new CvPoint2D32f(cvGetSeqElem(lines, i));
 
@@ -155,14 +126,14 @@ public class ImageApiV2 extends ImageApiBase {
 //            System.out.println("Line spotted: ");
 //            System.out.println("\t rho= " + rho);
 //            System.out.println("\t theta= " + theta);
-            System.out.println("coords: from ("+pt1.x()+","+pt1.y()+") to ("+pt2.x()+","+pt2.y()+")");
-            cvLine(colorDst, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
+            System.out.println("coords: from (" + pt1.x() + "," + pt1.y() + ") to (" + pt2.x() + "," + pt2.y() + ")");
+            cvLine(img, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
             CvFont font = new CvFont();
             cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
-            cvPutText(colorDst,"L="+i,pt1,font,CvScalar.BLUE);
+            cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
         }
 
-        saveImageAtStage(ImageUtil.iplImageToBufferedImage(colorDst), image.getFile().getName(), "line-detection");
+        saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), image.getFile().getName(), "line-detection");
         return image;
     }
 
@@ -171,7 +142,7 @@ public class ImageApiV2 extends ImageApiBase {
 
         files
                 .stream()
-                .map(this::classifyImage)
+                .map(this::prepareAndClassifyImage)
                 .filter(img -> ImageType.UNKNOWN != img.getType())
                 .map(this::detectLines)
                 .collect(Collectors.toList());
@@ -221,6 +192,7 @@ public class ImageApiV2 extends ImageApiBase {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
 //                    new File("../dubliner-data-tmp/2560x1440_1.bmp"),
+                    new File("data/control_images/1920x1080_12.bmp"),
                     new File("data/control_images/1920x1080_26.bmp")
                     //                    new File("../dubliner-data-tmp/1600x900_1.bmp")
 

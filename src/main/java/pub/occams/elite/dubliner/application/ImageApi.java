@@ -12,7 +12,7 @@ public interface ImageApi {
 
     SettingsDto getSettings();
 
-    InputImage classifyImage(final File file);
+    InputImage prepareAndClassifyImage(final File file);
 
     List<ControlSystem> extractDataFromImages(final List<File> files);
 

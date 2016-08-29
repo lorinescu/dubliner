@@ -235,7 +235,7 @@ public class ImageApiV1 extends ImageApiBase {
     }
 
     @Override
-    public InputImage classifyImage(final File file) {
+    public InputImage prepareAndClassifyImage(final File file) {
 
         LOGGER.info("verifying if file " + file.getName() + " is a screenshot of the Control tab");
 
@@ -294,7 +294,7 @@ public class ImageApiV1 extends ImageApiBase {
         return
                 images
                         .stream()
-                        .map(this::classifyImage)
+                        .map(this::prepareAndClassifyImage)
                         .filter(img -> img.getType() == ImageType.CONTROL)
                         .map(this::extractSegments)
                         .filter(Optional::isPresent)
