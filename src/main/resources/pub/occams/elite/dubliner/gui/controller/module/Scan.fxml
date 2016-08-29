@@ -26,16 +26,12 @@
                     <children>
                         <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectScreenshotDirectory" prefHeight="35.0" prefWidth="112.0" text="Browse" />
                         <TextField fx:id="screenshotDirectoryField" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="384.0" promptText="Screenshot directory" />
-                    </children>
-                </HBox>
-            <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
-               <children>
                       <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#start" prefHeight="35.0" prefWidth="112.0" text="Scan" />
                   <ProgressIndicator fx:id="progressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="20.0" />
-               </children>
-            </HBox>
+                    </children>
+                </HBox>
             <ComboBox prefHeight="35.0" prefWidth="168.0" promptText="Powers found" />
-            <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
+            <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
               <tabs>
                 <Tab closable="false" disable="true" text="Preparation" />
                 <Tab closable="false" text="Control">
@@ -52,7 +48,7 @@
                                 <columnConstraints>
                                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
                                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
-                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="300.0" />
                                 </columnConstraints>
                                 <rowConstraints>
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
@@ -86,15 +82,15 @@
                                     <TextField fx:id="fortifyTriggerText" editable="false" layoutX="142.0" layoutY="157.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     <TextField fx:id="undermineTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                                     <TextField fx:id="undermineTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="9" />
-                                    <ImageView fx:id="nameImage" pickOnBounds="true" preserveRatio="true" smooth="false" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                                    <ImageView fx:id="upkeepImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                                    <ImageView fx:id="defaultUpkeepImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="37.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                                    <ImageView fx:id="fortifiedCostImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="67.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                                    <ImageView fx:id="underminedCostImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="97.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-                                    <ImageView fx:id="fortifyTotalImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="127.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="6" />
-                                    <ImageView fx:id="fortifyTriggerImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="7" />
-                                    <ImageView fx:id="undermineTotalImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="187.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="8" />
-                                    <ImageView fx:id="undermineTriggerImage" fitHeight="36.0" fitWidth="100.0" layoutX="324.0" layoutY="217.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="9" />
+                                    <ImageView fx:id="nameImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                    <ImageView fx:id="upkeepImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                    <ImageView fx:id="defaultUpkeepImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="37.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                    <ImageView fx:id="fortifiedCostImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="67.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                                    <ImageView fx:id="underminedCostImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="97.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                                    <ImageView fx:id="fortifyTotalImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="127.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+                                    <ImageView fx:id="fortifyTriggerImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                                    <ImageView fx:id="undermineTotalImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="187.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+                                    <ImageView fx:id="undermineTriggerImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="217.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="9" />
                                     <Button mnemonicParsing="false" onAction="#showOriginalImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
                                  </children>
                               </GridPane>
