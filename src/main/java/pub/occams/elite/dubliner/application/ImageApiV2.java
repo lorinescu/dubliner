@@ -1,5 +1,10 @@
 package pub.occams.elite.dubliner.application;
 
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_core.*;
+import org.bytedeco.javacv.CanvasFrame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.ImageType;
@@ -9,6 +14,7 @@ import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +23,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
+import static org.bytedeco.javacpp.opencv_core.*;
+import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
+import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
 public class ImageApiV2 extends ImageApiBase {
 
@@ -123,6 +133,44 @@ public class ImageApiV2 extends ImageApiBase {
         return new InputImage(file, image, type);
     }
 
+    public InputImage detectLines(final InputImage image) {
+        final IplImage img = ImageUtil.bufferedImageToIplImage(image.getImage());
+
+        final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
+        final IplImage colorDst = cvCreateImage(cvGetSize(img), img.depth(), 3);
+
+        cvCanny(img, dst, 80, 200, 3);
+        cvCvtColor(dst, colorDst, CV_GRAY2BGR);
+
+        final CvMemStorage storage = cvCreateMemStorage(0);
+
+        final double angleResolution = CV_PI / 180;
+        final int pixelResolution = 1;
+        final int threshold = 200;
+        final int minLength = 200;
+        final int maxGap = 1;
+        final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
+                threshold, minLength, maxGap, 0, CV_PI);
+        for (int i = 0; i < lines.total(); i++) {
+            final Pointer line = new CvPoint2D32f(cvGetSeqElem(lines, i));
+
+            final CvPoint pt1 = new CvPoint(line.position(0));
+            final CvPoint pt2 = new CvPoint(line.position(1));
+
+//            System.out.println("Line spotted: ");
+//            System.out.println("\t rho= " + rho);
+//            System.out.println("\t theta= " + theta);
+            System.out.println("coords: from ("+pt1.x()+","+pt1.y()+") to ("+pt2.x()+","+pt2.y()+")");
+            cvLine(colorDst, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
+            CvFont font = new CvFont();
+            cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
+            cvPutText(colorDst,"L="+i,pt1,font,CvScalar.BLUE);
+        }
+
+        saveImageAtStage(ImageUtil.iplImageToBufferedImage(colorDst), image.getFile().getName(), "line-detection");
+        return image;
+    }
+
     @Override
     public List<ControlSystem> extractDataFromImages(final List<File> files) {
 
@@ -130,6 +178,7 @@ public class ImageApiV2 extends ImageApiBase {
                 .stream()
                 .map(this::classifyImage)
                 .filter(img -> ImageType.UNKNOWN != img.getType())
+                .map(this::detectLines)
                 .collect(Collectors.toList());
            /*
 
@@ -140,6 +189,7 @@ public class ImageApiV2 extends ImageApiBase {
         3. find the coordinates** of the selected tab
         5. crop the tab area, ocr the segment and apply corrections
         6. if the selected tab is not Preparation | Control | Expansion goto 1.
+        ^^DONE^^
         7. find the coordinates of the power name
         8. crop the power name, ocr the segment and apply corrections
         9. if the power name is not Edmund | Winters | ..... goto 1.

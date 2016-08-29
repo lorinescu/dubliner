@@ -1,6 +1,9 @@
 package pub.occams.elite.dubliner.util;
 
 import org.apache.log4j.Logger;
+import org.bytedeco.javacpp.opencv_core.IplImage;
+import org.bytedeco.javacv.Java2DFrameConverter;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.dto.settings.SegmentDto;
 import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
@@ -16,6 +19,9 @@ import java.util.Optional;
 public class ImageUtil {
 
     private static final Logger LOGGER = Logger.getLogger(App.LOGGER_NAME);
+
+    private static final OpenCVFrameConverter.ToIplImage CONVERTER1 = new OpenCVFrameConverter.ToIplImage();
+    private static final Java2DFrameConverter CONVERTER2 = new Java2DFrameConverter();
 
     private static final short[] invertTable;
 
@@ -98,14 +104,22 @@ public class ImageUtil {
     public static double percentBlack(final BufferedImage image) {
         final long totalPixels = image.getHeight() * image.getWidth();
         long blackPixels = 0;
-        for (int x = 0; x<image.getWidth(); x++) {
-            for (int y = 0; y <image.getHeight(); y++) {
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
                 int pixel = image.getRGB(x, y);
-                if ( 0 == (pixel & 0x00FFFFFF)) {
+                if (0 == (pixel & 0x00FFFFFF)) {
                     blackPixels++;
                 }
             }
         }
         return (double) blackPixels * 100 / totalPixels;
+    }
+
+    public static BufferedImage iplImageToBufferedImage(final IplImage image) {
+        return CONVERTER2.getBufferedImage(CONVERTER1.convert(image));
+    }
+
+    public static IplImage bufferedImageToIplImage(final BufferedImage image) {
+        return CONVERTER1.convert(CONVERTER2.convert(image));
     }
 }
