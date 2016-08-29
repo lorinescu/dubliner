@@ -85,24 +85,42 @@ public class App extends Application {
         PropertyConfigurator.configure("conf/log4j.properties");
         Logger.getLogger(LOGGER_NAME).info("Starting " + NAME + "-" + VERSION);
 
+        boolean debug = false;
+        boolean cliMode = false;
+        File imageFile = null;
+        if (args.length != 0) {
+            for (final String arg : args) {
+                if ("-help".equals(arg)) {
+                    System.out.println("Usage: java -jar dubliner.jar [-help] [-debug] [-cli <path/to/image>]");
+                    System.exit(0);
+                } else if ("-debug".equals(arg)) {
+                    debug = true;
+                } else if ("-cli".equals(arg)) {
+                    cliMode = true;
+                } else {
+                    imageFile = new File(arg);
+                }
+            }
+        }
+
         try {
-            imageApi = new ImageApiV1(loadSettingsV1(), false);
+            imageApi = new ImageApiV1(loadSettingsV1(), debug);
         } catch (IOException e) {
             Logger.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }
 
-        if (args.length !=0 ) {
-            if (args.length != 2 || !"-cli".equals(args[0])) {
-                System.out.println("Usage: java -jar dubliner.jar -cli <path/to/image>");
-            } else {
-                final List<ControlSystem> cs = imageApi.extractDataFromImages(Collections.singletonList(new File(args[1])));
-                if (null != cs && cs.size() == 1) {
-                    System.out.println(cs);
-                }
+        if (cliMode && null != imageFile) {
+            if (!imageFile.exists()) {
+                System.out.println("File: "+imageFile.getName()+" does not exist");
+                System.exit(1);
+            }
+            final List<ControlSystem> cs = imageApi.extractDataFromImages(Collections.singletonList(imageFile));
+            if (null != cs && cs.size() == 1) {
+                System.out.println(cs);
             }
         } else {
             launch(args);
         }
-        System.exit(1);
+        System.exit(0);
     }
 }
