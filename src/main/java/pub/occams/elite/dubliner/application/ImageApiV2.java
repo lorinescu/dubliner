@@ -1,10 +1,7 @@
 package pub.occams.elite.dubliner.application;
 
 import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_core.*;
-import org.bytedeco.javacv.CanvasFrame;
-import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.ImageType;
@@ -14,7 +11,6 @@ import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +23,6 @@ import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
-import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
 public class ImageApiV2 extends ImageApiBase {
 
@@ -226,7 +221,7 @@ public class ImageApiV2 extends ImageApiBase {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
 //                    new File("../dubliner-data-tmp/2560x1440_1.bmp"),
-                    new File("../dubliner-data-tmp/1920x1080_26.bmp")
+                    new File("data/control_images/1920x1080_26.bmp")
                     //                    new File("../dubliner-data-tmp/1600x900_1.bmp")
 
             );

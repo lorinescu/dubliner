@@ -48,12 +48,12 @@ public abstract class ImageApiBase implements ImageApi {
             return image;
         }
         try {
-            final String path = "out/" + imageName;
+            final String path = "out" + File.separator + imageName;
             final File dir = new File(path);
             if (!dir.exists()) {
-                dir.mkdir();
+                dir.mkdirs();
             }
-            ImageIO.write(image, "png", new File(path + "/" + cnt + "-" + stage + " .png"));
+            ImageIO.write(image, "png", new File(dir + File.separator + cnt + "-" + stage + ".png"));
             cnt++;
         } catch (IOException e) {
             LOGGER.error("Failed to write debug image", e);
