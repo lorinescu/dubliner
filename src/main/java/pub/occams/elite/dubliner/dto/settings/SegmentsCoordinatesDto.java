@@ -10,6 +10,15 @@ public class SegmentsCoordinatesDto {
     @JsonProperty("screenHeight")
     public Integer screenHeight;
 
+    @JsonProperty("overviewTab")
+    public SegmentDto overviewTab;
+
+    @JsonProperty("preparationTab")
+    public SegmentDto preparationTab;
+
+    @JsonProperty("expansionTab")
+    public SegmentDto expansionTab;
+
     @JsonProperty("controlTab")
     public SegmentDto controlTab;
 

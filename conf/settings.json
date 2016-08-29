@@ -48,6 +48,7 @@
       "A0 K0ND" : "AO KOND",
       "AO K0ND": "AO KOND",
       "ARA8H" : "ARABH",
+      "MSGAA" : "AASGAA",
       "BIEL0NTI" : "BIELONTI",
       "BILFR0ST" : "BILFROST",
       "BONIT0U" : "BONITOU",
@@ -92,6 +93,7 @@
       "SII<I" : "SIKI",
       "TAU 8O0TIS" : "TAU BOOTIS",
       "TAU 8O0TI8" : "TAU BOOTIS",
+      "TAU BO0TI8" : "TAU BOOTIS",
       "TRIC0RII" : "TRICORII",
       "TRICOR\"" : "TRICORII",
       "U N KUAR": "UNKUAR",
@@ -172,6 +174,24 @@
     {
       "screenWidth": "1920",
       "screenHeight": "1080",
+      "overviewTab": {
+        "x": "130",
+        "y": "90",
+        "width": "120",
+        "height": "20"
+      },
+      "preparationTab": {
+        "x": "1106",
+        "y": "155",
+        "width": "100",
+        "height": "20"
+      },
+      "expansionTab": {
+        "x": "1106",
+        "y": "155",
+        "width": "100",
+        "height": "20"
+      },
       "controlTab": {
         "x": "1106",
         "y": "90",

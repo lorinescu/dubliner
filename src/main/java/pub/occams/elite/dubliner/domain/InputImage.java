@@ -7,10 +7,12 @@ public class InputImage {
 
     private final File file;
     private final BufferedImage image;
+    private final ImageType type;
 
-    public InputImage(File file, BufferedImage image) {
+    public InputImage(final File file, final BufferedImage image, final ImageType type) {
         this.file = file;
         this.image = image;
+        this.type = type;
     }
 
     public File getFile() {
@@ -19,5 +21,9 @@ public class InputImage {
 
     public BufferedImage getImage() {
         return image;
+    }
+
+    public ImageType getType() {
+        return type;
     }
 }

@@ -1,12 +1,9 @@
 package pub.occams.elite.dubliner.application;
 
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.ControlSystemSegments;
+import pub.occams.elite.dubliner.domain.ImageType;
 import pub.occams.elite.dubliner.domain.InputImage;
 import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
@@ -21,53 +18,10 @@ import java.util.stream.Collectors;
 
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
 
-public class ImageApiImpl implements ImageApi {
+public class ImageApiV1 extends ImageApiBase {
 
-    private static final Logger LOGGER = Logger.getLogger(App.LOGGER_NAME);
-    private final SettingsDto settings;
-
-    private final Tesseract tessForNumbers = new Tesseract();
-    private final Tesseract tessForNames = new Tesseract();
-
-    private int cnt = 0;
-
-    public ImageApiImpl(final SettingsDto settings) {
-        this.settings = settings;
-
-        tessForNumbers.setDatapath(settings.ocr.tesseractForNumbers.dataPath);
-        tessForNumbers.setLanguage(settings.ocr.tesseractForNumbers.language);
-        settings.ocr.tesseractForNumbers.variables.forEach(tessForNumbers::setTessVariable);
-        settings.ocr.tesseractForNumbers.variables.forEach(tessForNumbers::setTessVariable);
-
-        tessForNames.setDatapath(settings.ocr.tesseractForSystemNames.dataPath);
-        tessForNames.setLanguage(settings.ocr.tesseractForSystemNames.language);
-        settings.ocr.tesseractForSystemNames.variables.forEach(tessForNames::setTessVariable);
-    }
-
-    private BufferedImage saveImageAtStage(final BufferedImage image, final String imageName, final String stage) {
-        return image;
-//        try {
-//            final String path = "out/" + imageName;
-//            final File dir = new File(path);
-//            if (!dir.exists()) {
-//                dir.mkdir();
-//            }
-//            ImageIO.write(image, "png", new File(path + "/" + cnt + "-" + stage + " .png"));
-//            cnt++;
-//        } catch (IOException e) {
-//            LOGGER.error("Failed to write debug image", e);
-//        }
-//        return image;
-    }
-
-
-    private Optional<InputImage> loadImage(final File file) {
-        final Optional<BufferedImage> image = ImageUtil.readImageFromFile(file);
-        if (image.isPresent()) {
-            return Optional.of(new InputImage(file, image.get()));
-        }
-
-        return Optional.empty();
+    public ImageApiV1(final SettingsDto settings, final boolean debug) {
+        super(settings, debug);
     }
 
     private ControlSystemSegments saveControlSystem(final ControlSystemSegments segments, final String stage) {
@@ -180,25 +134,6 @@ public class ImageApiImpl implements ImageApi {
         );
     }
 
-    private String cleanNumber(final String str) {
-        return str
-                .trim()
-                .replace("CC", "")
-                .replace("O", "0")
-                .replace("'", "")
-                .replace(" ", "")
-                .replace("-", "");
-    }
-
-    private String cleanName(final String str) {
-        final String nameWithoutTurmoil = str.replaceAll("(\\(|\\[).*", "").trim();
-        if (settings.corrections.systemName.containsKey(nameWithoutTurmoil)) {
-            return settings.corrections.systemName.get(nameWithoutTurmoil);
-        } else {
-            return nameWithoutTurmoil;
-        }
-    }
-
     //FIXME: dedup cleanups and everything in here
     private ControlSystem segmentsToText(final ControlSystemSegments segments) {
 
@@ -299,54 +234,29 @@ public class ImageApiImpl implements ImageApi {
         );
     }
 
-    private String ocrNumberSegment(final BufferedImage image) {
-        try {
-            return tessForNumbers.doOCR(image);
-        } catch (TesseractException e) {
-            LOGGER.error("Error when ocr-ing image.", e);
-        }
-        return "";
-    }
-
-    private String ocrSegment(final BufferedImage image) {
-        LOGGER.info("starting OCR");
-        try {
-            return tessForNames.doOCR(image);
-        } catch (Exception e) {
-            LOGGER.error("Error when ocr-ing image.", e);
-        }
-        return "";
-    }
-
     @Override
-    public SettingsDto getSettings() {
-        return this.settings;
-    }
-
-    @Override
-    public boolean isImageControlTab(final File file) {
+    public InputImage classifyImage(final File file) {
 
         LOGGER.info("verifying if file " + file.getName() + " is a screenshot of the Control tab");
 
-        final Optional<InputImage> inputImage = loadImage(file);
-        if (!inputImage.isPresent()) {
-            LOGGER.info("Could not load an image from file " + file.getName());
-            return false;
+        final Optional<BufferedImage> maybeImage = ImageUtil.readImageFromFile(file);
+        if (!maybeImage.isPresent()) {
+            return new InputImage(file, null, ImageType.UNKNOWN);
         }
 
-        final BufferedImage image = inputImage.get().getImage();
+        final BufferedImage image = maybeImage.get();
 
         final Optional<SegmentsCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
             LOGGER.info("Could not find coordinates settings for image " + file.getName() +
                     " at " + image.getWidth() + "x" + image.getHeight());
-            return false;
+            return new InputImage(file, image, ImageType.UNKNOWN);
         }
         final SegmentsCoordinatesDto coord = maybeCoord.get();
 
         final Optional<BufferedImage> croppedImage = crop(coord.controlTab, image);
         if (!croppedImage.isPresent()) {
-            return false;
+            return new InputImage(file, image, ImageType.UNKNOWN);
         }
 
         LOGGER.info("ocr-ing selected tab title");
@@ -361,13 +271,15 @@ public class ImageApiImpl implements ImageApi {
         if (null != tabTitle && !tabTitle.isEmpty()) {
             final boolean isControlTabSelected = "CONTROL".equals(tabTitle.trim().replace("0", "O"));
             LOGGER.info(("image " + file.getName() + " is a control tab screenshot: " + isControlTabSelected));
-            return isControlTabSelected;
+            if (isControlTabSelected) {
+                return new InputImage(file, image, ImageType.CONTROL);
+            }
         }
-        return false;
+        return new InputImage(file, image, ImageType.UNKNOWN);
     }
 
     @Override
-    public List<ControlSystem> extractControlDataFromImages(final List<File> images) {
+    public List<ControlSystem> extractDataFromImages(final List<File> images) {
         final File debugDir = new File("out");
         if (debugDir.exists()) {
             try {
@@ -382,10 +294,8 @@ public class ImageApiImpl implements ImageApi {
         return
                 images
                         .stream()
-                        .filter(this::isImageControlTab)
-                        .map(this::loadImage)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
+                        .map(this::classifyImage)
+                        .filter(img -> img.getType() == ImageType.CONTROL)
                         .map(this::extractSegments)
                         .filter(Optional::isPresent)
                         .map(Optional::get).map(css -> saveControlSystem(css, "segments"))

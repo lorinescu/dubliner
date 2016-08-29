@@ -197,7 +197,7 @@ public class ScanController extends Controller<AnchorPane> {
         ocrTask = new Task<List<ControlSystem>>() {
             @Override
             protected List<ControlSystem> call() throws Exception {
-                return imageApi.extractControlDataFromImages(
+                return imageApi.extractDataFromImages(
                         getUnprocessedFilesFromDir(imageDir.get())
                 );
             }

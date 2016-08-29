@@ -16,44 +16,6 @@ public class OpenCVLineDetection {
 
     public static void main(String[] args) {
         testStandardHough();
-
-        /*
-
-        pipeline*:
-
-        1. pick an image from the image folder
-        2. if it is not a power play image goto 1.
-        3. find the coordinates** of the selected tab
-        5. crop the tab area, ocr the segment and apply corrections
-        6. if the selected tab is not Preparation | Control | Expansion goto 1.
-        7. find the coordinates of the power name
-        8. crop the power name, ocr the segment and apply corrections
-        9. if the power name is not Edmund | Winters | ..... goto 1.
-        10. find the coordinates for:
-            - system name
-            - preparation tab:
-            - control tab:
-                - costs area
-                - fortification area
-                - undermining area
-            - expansion tab:
-        11. ocr all segments and apply corrections to system names/numbers
-        12. produce a result object like:
-        {
-            maybe_debug: { misc data structures with detected coordinates, raw ocr results, refs to original file etc }
-            power: xyz
-            preparation: [..]
-            control: [..]
-            expansion: [..]
-        }
-        13. show the result
-        14. optionally clean-up the processed files from the image folder
-
-        ---
-        * pipeline - single thread if the tesseract instance is shared
-        ** find the coordinates - find a rectangle (x0,y0,x1,y1) that surrounds the area to be fed to ocr
-
-        */
     }
 
     private static void testStandardHough() {

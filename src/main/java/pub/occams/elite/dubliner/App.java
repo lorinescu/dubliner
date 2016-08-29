@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import pub.occams.elite.dubliner.application.ImageApi;
-import pub.occams.elite.dubliner.application.ImageApiImpl;
+import pub.occams.elite.dubliner.application.ImageApiV1;
 import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
@@ -18,11 +18,9 @@ import pub.occams.elite.dubliner.gui.controller.MasterController;
 import pub.occams.elite.dubliner.gui.controller.SettingsController;
 import pub.occams.elite.dubliner.gui.controller.module.HelpController;
 import pub.occams.elite.dubliner.gui.controller.module.ScanController;
-import pub.occams.elite.dubliner.util.ImageUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -81,7 +79,7 @@ public class App extends Application {
         Logger.getLogger(LOGGER_NAME).info("Starting " + NAME + "-" + VERSION);
 
         try {
-            imageApi = new ImageApiImpl(loadSettings());
+            imageApi = new ImageApiV1(loadSettings(), false);
         } catch (IOException e) {
             Logger.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }
@@ -90,7 +88,7 @@ public class App extends Application {
             if (args.length != 2 || !"-cli".equals(args[0])) {
                 System.out.println("Usage: java -jar dubliner.jar -cli <path/to/image>");
             } else {
-                final List<ControlSystem> cs = imageApi.extractControlDataFromImages(Collections.singletonList(new File(args[1])));
+                final List<ControlSystem> cs = imageApi.extractDataFromImages(Collections.singletonList(new File(args[1])));
                 if (null != cs && cs.size() == 1) {
                     System.out.println(cs);
                 }
