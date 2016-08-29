@@ -14,6 +14,7 @@ import pub.occams.elite.dubliner.util.ImageUtil;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -110,29 +111,58 @@ public class ImageApiV2 extends ImageApiBase {
         final CvMemStorage storage = cvCreateMemStorage(0);
 
         final double angleResolution = CV_PI / 180;
-        final int pixelResolution = 5;
-        final int threshold = 200;
-        final int minLength = 300;
+        final int pixelResolution = 10;
+        final int threshold = 10;
+        final int minLength = 200;
         final int maxGap = 1;
         final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
                 threshold, minLength, maxGap, 0, CV_PI);
 
+        class MyListSegment {
+            public final int x0;
+            public final int y0;
+            public final int x1;
+            public final int y1;
+
+            public MyListSegment(int x0, int y0, int x1, int y1) {
+                this.x0 = x0;
+                this.y0 = y0;
+                this.x1 = x1;
+                this.y1 = y1;
+            }
+        }
+
+        final List<MyListSegment> segments = new ArrayList<>();
         for (int i = 0; i < lines.total(); i++) {
             final Pointer line = new CvPoint2D32f(cvGetSeqElem(lines, i));
 
             final CvPoint pt1 = new CvPoint(line.position(0));
             final CvPoint pt2 = new CvPoint(line.position(1));
+            segments.add(new MyListSegment(pt1.x(), pt1.y(),pt2.x(), pt2.y()));
 
 //            System.out.println("Line spotted: ");
 //            System.out.println("\t rho= " + rho);
 //            System.out.println("\t theta= " + theta);
             System.out.println("coords: from (" + pt1.x() + "," + pt1.y() + ") to (" + pt2.x() + "," + pt2.y() + ")");
-            cvLine(img, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
-            CvFont font = new CvFont();
-            cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
-            cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
+
         }
 
+        //filter horizontal segments, sort by y and show
+        final List<MyListSegment> segs = segments
+                .stream()
+//                .filter(s -> s.y0 == s.y1)
+                .filter(s -> s.x0 == s.x1)
+                .sorted((s1, s2) -> s1.y0 - s2.y1)
+                .collect(Collectors.toList());
+        CvFont font = new CvFont();
+        cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
+        for (int i = 0; i<segs.size();i++) {
+            final MyListSegment s = segs.get(i);
+            final CvPoint pt1 = new CvPoint(s.x0, s.y0);
+            final CvPoint pt2 = new CvPoint(s.x1, s.y1);
+            cvLine(img, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
+            cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
+        }
         saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), image.getFile().getName(), "line-detection");
         return image;
     }
@@ -191,10 +221,8 @@ public class ImageApiV2 extends ImageApiBase {
         try {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
-//                    new File("../dubliner-data-tmp/2560x1440_1.bmp"),
-                    new File("data/control_images/1920x1080_12.bmp"),
-                    new File("data/control_images/1920x1080_26.bmp")
-                    //                    new File("../dubliner-data-tmp/1600x900_1.bmp")
+                    new File("data/control_images/1920x1080/mahon/control/12.bmp"),
+                    new File("data/control_images/1920x1080/mahon/control/26.bmp")
 
             );
             api.extractDataFromImages(images);
