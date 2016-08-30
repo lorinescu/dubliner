@@ -88,6 +88,9 @@ public class AreasController extends Controller<AnchorPane> {
         y1Column.setCellFactory(TextFieldTableCell.forTableColumn(new NumberStringConverter()));
     }
 
+    private void setupDummyData() {
+        areaData.add(new AreaModel("upkeepFromLastCycle", DataType.NUMERIC, 1090, 370,1210,395));
+    }
     @FXML
     private void initialize() {
         resolutionCombo.setItems(resolutionData);
@@ -98,6 +101,8 @@ public class AreasController extends Controller<AnchorPane> {
 
         screenCombo.disableProperty().bind(resolution.isNotNull().not());
         powerCombo.disableProperty().bind(imageType.isNotNull().not());
+
+        setupDummyData();
     }
 
     @FXML
