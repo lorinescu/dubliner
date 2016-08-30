@@ -68,7 +68,7 @@ public abstract class ImageApiBase implements ImageApi {
         }
 
         try {
-            final String imageName = imageFile.getCanonicalPath().replace(File.separator, "-");
+            final String imageName = imageFile.getCanonicalPath().replace(File.separator, "-").replace(":","-");
             final String path = "out" + File.separator + imageName;
             final File dir = new File(path);
             if (!dir.exists()) {

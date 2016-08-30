@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.AreasController">
+   <children>
+      <VBox spacing="10.0">
+         <children>
+            <Label text="Image Classifiers">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label text="(classifiers are used to determine exactly which image is processed)" />
+            <VBox spacing="10.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <ComboBox fx:id="resolutionCombo" prefHeight="35.0" prefWidth="128.0" promptText="Resolution" />
+                        <Button mnemonicParsing="false" onAction="#addResolution" prefHeight="35.0" prefWidth="35.0" text="+" />
+                        <Button layoutX="160.0" layoutY="10.0" mnemonicParsing="false" onAction="#deleteResolution" prefHeight="35.0" prefWidth="35.0" text="-" />
+                        <Label text="image resolution" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" spacing="10.0">
+                     <children>
+                        <ComboBox fx:id="screenCombo" prefHeight="35.0" prefWidth="128.0" promptText="Screen" />
+                        <Button mnemonicParsing="false" onAction="#addScreen" prefHeight="35.0" prefWidth="35.0" text="+" />
+                        <Button layoutX="160.0" layoutY="10.0" mnemonicParsing="false" onAction="#deleteScreen" prefHeight="35.0" prefWidth="35.0" text="-" />
+                        <Label text="in which power play tab" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="45.0" spacing="10.0">
+                     <children>
+                        <ComboBox fx:id="powerCombo" prefHeight="35.0" prefWidth="128.0" promptText="Power" />
+                        <Button mnemonicParsing="false" onAction="#addPower" prefHeight="35.0" prefWidth="35.0" text="+" />
+                        <Button layoutX="160.0" layoutY="10.0" mnemonicParsing="false" onAction="#deletePower" prefHeight="35.0" prefWidth="35.0" text="-" />
+                        <Label text="for which power" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            <Label fx:id="classifierLabel" text="---" />
+            <Label text="Data Areas">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label text="(after an image is classified  data can be extracted from specific rectangles)" />
+            <HBox spacing="10.0">
+               <children>
+                  <TableView fx:id="areasTable" editable="true">
+                    <columns>
+                      <TableColumn fx:id="nameColumn" maxWidth="-1.0" minWidth="100.0" prefWidth="-1.0" text="Name" />
+                      <TableColumn fx:id="typeColumn" maxWidth="-1.0" minWidth="100.0" prefWidth="-1.0" text="Type" />
+                        <TableColumn maxWidth="-1.0" minWidth="100.0" prefWidth="-1.0" text="x0" fx:id="x0Column" />
+                        <TableColumn fx:id="y0Column" maxWidth="-1.0" minWidth="100.0" prefWidth="-1.0" text="y0" />
+                        <TableColumn maxWidth="-1.0" minWidth="100.0" prefWidth="-1.0" text="x1" fx:id="x1Column" />
+                        <TableColumn fx:id="y1Column" maxWidth="-1.0" minWidth="100.0" prefWidth="-1.0" text="y1" />
+                    </columns>
+                  </TableView>
+                  <VBox spacing="10.0">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#addArea" prefHeight="35.0" prefWidth="96.0" text="Add" />
+                        <Button mnemonicParsing="false" onAction="#deleteArea" prefHeight="35.0" prefWidth="96.0" text="Delete" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Button mnemonicParsing="false" onAction="#save" prefHeight="35.0" prefWidth="96.0" text="Save" />
+         </children>
+      </VBox>
+   </children>
+   <padding>
+      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+   </padding>
+</AnchorPane>

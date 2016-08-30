@@ -29,6 +29,7 @@
       <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <tabs>
           <Tab fx:id="scanTab" text="Scan" />
+          <Tab fx:id="areaTab" text="Areas" />
           <Tab fx:id="helpTab" text="Help" />
         </tabs>
       </TabPane>

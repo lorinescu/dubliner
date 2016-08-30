@@ -16,6 +16,7 @@ import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.gui.controller.MasterController;
 import pub.occams.elite.dubliner.gui.controller.SettingsController;
+import pub.occams.elite.dubliner.gui.controller.module.AreasController;
 import pub.occams.elite.dubliner.gui.controller.module.HelpController;
 import pub.occams.elite.dubliner.gui.controller.module.ScanController;
 
@@ -50,10 +51,13 @@ public class App extends Application {
         final ScanController scanController = loadFxml(ScanController.class, "Scan.fxml");
         scanController.postConstruct(imageApi);
 
+        final AreasController areasController = loadFxml(AreasController.class, "Areas.fxml");
+        areasController.postContruct(imageApi);
+
         final HelpController helpController = loadFxml(HelpController.class, "Help.fxml");
 
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
-        masterController.postConstruct(imageApi, settingsController, scanController, helpController);
+        masterController.postConstruct(imageApi, settingsController, scanController, areasController, helpController);
 
         final Scene scene = new Scene(masterController.getView());
         scene.getStylesheets().add(App.class.getResource("gui/style/custom.css").toExternalForm());
