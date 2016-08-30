@@ -50,13 +50,13 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private TextField nameText;
     @FXML
-    private TextField upkeepText;
-    @FXML
-    private TextField defaultUpkeepText;
+    private TextField upkeepFromLastCycleText;
     @FXML
     private TextField fortifiedCostText;
     @FXML
     private TextField underminedCostText;
+    @FXML
+    private TextField baseIncomeText;
     @FXML
     private TextField fortifyTotalText;
     @FXML
@@ -68,13 +68,13 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private ImageView nameImage;
     @FXML
-    private ImageView upkeepImage;
-    @FXML
-    private ImageView defaultUpkeepImage;
+    private ImageView upkeepFromLastCycleImage;
     @FXML
     private ImageView fortifiedCostImage;
     @FXML
     private ImageView underminedCostImage;
+    @FXML
+    private ImageView baseIncomeImage;
     @FXML
     private ImageView fortifyTotalImage;
     @FXML
@@ -150,16 +150,17 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private void copyCSV(ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Name,UpkeepCost,DefaultUpkeepCost,CostIfFortified,CostIfUndermined,FortifyTotal,FortifyTrigger,UndermineTotal,UndermineTrigger\n");
+        sb.append("Name,UpkeepFromLastCycle,CostIfFortified,CostIfUndermined,BaseIncome,FortifyTotal,FortifyTrigger," +
+                "UndermineTotal,UndermineTrigger\n");
         controlSystems
                 .stream()
                 .forEach(
                         cs -> sb
                                 .append("\"").append(cs.getSystemName()).append("\",")
-                                .append("\"").append(cs.getUpkeepCost()).append("\",")
-                                .append("\"").append(cs.getDefaultUpkeepCost()).append("\",")
+                                .append("\"").append(cs.getUpkeepFromLastCycle()).append("\",")
                                 .append("\"").append(cs.getCostIfFortified()).append("\",")
                                 .append("\"").append(cs.getCostIfUndermined()).append("\",")
+                                .append("\"").append(cs.getBaseIncome()).append("\",")
                                 .append("\"").append(cs.getFortifyTotal()).append("\",")
                                 .append("\"").append(cs.getFortifyTrigger()).append("\",")
                                 .append("\"").append(cs.getUnderminingTotal()).append("\",")
@@ -182,14 +183,14 @@ public class ScanController extends Controller<AnchorPane> {
             return;
         }
 
-        final BufferedImage originalImage = system.getControlSystemRectangles().getInputImage().getImage();
+        final BufferedImage originalImage = system.getControlSystemRectangles().getInput().getInputImage().getImage();
         if (null == originalImage) {
             return;
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.getDialogPane().setContent(new ImageView(toFXImage(originalImage, null)));
-        alert.setHeaderText(system.getControlSystemRectangles().getInputImage().getFile().getAbsolutePath());
+        alert.setHeaderText(system.getControlSystemRectangles().getInput().getInputImage().getFile().getAbsolutePath());
         alert.show();
     }
 
@@ -231,17 +232,17 @@ public class ScanController extends Controller<AnchorPane> {
         nameText.setText(cs.getSystemName());
         nameImage.setImage(toFXImage(cs.getControlSystemRectangles().getSystemName(), null));
 
-        upkeepText.setText(String.valueOf(cs.getUpkeepCost()));
-        upkeepImage.setImage(toFXImage(cs.getControlSystemRectangles().getUpkeepCost(), null));
-
-        defaultUpkeepText.setText(String.valueOf(cs.getDefaultUpkeepCost()));
-        defaultUpkeepImage.setImage(toFXImage(cs.getControlSystemRectangles().getDefaultUpkeepCost(), null));
+        upkeepFromLastCycleText.setText(String.valueOf(cs.getUpkeepFromLastCycle()));
+        upkeepFromLastCycleImage.setImage(toFXImage(cs.getControlSystemRectangles().getUpkeepFromLastCycle(), null));
 
         fortifiedCostText.setText(String.valueOf(cs.getCostIfFortified()));
         fortifiedCostImage.setImage(toFXImage(cs.getControlSystemRectangles().getCostIfFortified(), null));
 
         underminedCostText.setText(String.valueOf(cs.getCostIfUndermined()));
         underminedCostImage.setImage(toFXImage(cs.getControlSystemRectangles().getCostIfUndermined(), null));
+
+        baseIncomeText.setText(String.valueOf(cs.getBaseIncome()));
+        baseIncomeImage.setImage(toFXImage(cs.getControlSystemRectangles().getBaseIncome(), null));
 
         fortifyTotalText.setText(String.valueOf(cs.getFortifyTotal()));
         fortifyTotalImage.setImage(toFXImage(cs.getControlSystemRectangles().getFortificationTotal(), null));
@@ -260,11 +261,11 @@ public class ScanController extends Controller<AnchorPane> {
         nameText.setText(null);
         nameImage.setImage(null);
 
-        upkeepText.setText(null);
-        upkeepImage.setImage(null);
+        upkeepFromLastCycleText.setText(null);
+        upkeepFromLastCycleImage.setImage(null);
 
-        defaultUpkeepText.setText(null);
-        defaultUpkeepImage.setImage(null);
+        baseIncomeText.setText(null);
+        baseIncomeImage.setImage(null);
 
         fortifiedCostText.setText(null);
         fortifiedCostImage.setImage(null);

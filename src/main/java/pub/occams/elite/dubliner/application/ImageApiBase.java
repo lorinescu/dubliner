@@ -4,12 +4,15 @@ import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.apache.log4j.Logger;
 import pub.occams.elite.dubliner.App;
+import pub.occams.elite.dubliner.domain.InputImage;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
+import pub.occams.elite.dubliner.util.ImageUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 public abstract class ImageApiBase implements ImageApi {
 
@@ -43,11 +46,29 @@ public abstract class ImageApiBase implements ImageApi {
         return this.settings;
     }
 
-    protected BufferedImage saveImageAtStage(final BufferedImage image, final String imageName, final String stage) {
+    @Override
+    public Optional<InputImage> load(final File file) {
+        LOGGER.info("loading image:" + file.getAbsolutePath());
+
+        final Optional<BufferedImage> maybeImg = ImageUtil.readImageFromFile(file);
+        if (!maybeImg.isPresent()) {
+            return Optional.empty();
+        }
+
+        final BufferedImage img = maybeImg.get();
+
+        saveImageAtStage(img, file, "loading");
+
+        return Optional.of(new InputImage(file, maybeImg.get()));
+    }
+    
+    protected BufferedImage saveImageAtStage(final BufferedImage image, final File imageFile, final String stage) {
         if (!debug) {
             return image;
         }
+
         try {
+            final String imageName = imageFile.getCanonicalPath().replace(File.separator, "-");
             final String path = "out" + File.separator + imageName;
             final File dir = new File(path);
             if (!dir.exists()) {

@@ -4,8 +4,10 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import pub.occams.elite.dubliner.App;
+import pub.occams.elite.dubliner.domain.ClassifiedImage;
 import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.ImageType;
+import pub.occams.elite.dubliner.domain.InputImage;
 
 import java.io.File;
 import java.util.*;
@@ -24,7 +26,11 @@ public class ImageApiV1Test {
 
     @Test
     public void testIsImageControlTab() throws Exception {
-        assertEquals(ImageType.CONTROL, imageApi.prepareAndClassifyImage(new File(DATA_CONTROL_IMAGES + "1920x1080/mahon/control/1.bmp")).getType());
+        final Optional<InputImage> maybeImg = imageApi.load(new File(DATA_CONTROL_IMAGES + "1920x1080/mahon/control/1.bmp"));
+        assertTrue(maybeImg.isPresent());
+        final Optional<ClassifiedImage> maybeImg2 = imageApi.classify(maybeImg.get());
+        assertTrue(maybeImg2.isPresent());
+        assertEquals(ImageType.PP_CONTROL, maybeImg2.get().getType());
 
         //FIXME: find a bad image
         //assertFalse(imageApi.prepareAndClassifyImage(new File("data/images/some_bad_image.bmp")));
@@ -55,7 +61,8 @@ public class ImageApiV1Test {
             final Optional<ControlSystem> system =
                     systems
                             .stream()
-                            .filter(cs -> file.getAbsolutePath().equals(cs.getControlSystemRectangles().getInputImage().getFile().getAbsolutePath()))
+                            .filter(cs -> file.getAbsolutePath().equals(cs.getControlSystemRectangles().getInput()
+                                    .getInputImage().getFile().getAbsolutePath()))
                             .findFirst();
 
             assertTrue("file not found:" + fileName, system.isPresent());
@@ -64,13 +71,13 @@ public class ImageApiV1Test {
 
             //FIXME: use SuperCSV
             assertEquals(parts[1], s.getSystemName());
-            assertEquals(parts[2], String.valueOf(s.getUpkeepCost()));
-            assertEquals(parts[3], String.valueOf(s.getDefaultUpkeepCost()));
+            assertEquals(parts[2], String.valueOf(s.getUpkeepFromLastCycle()));
             assertEquals(parts[4], String.valueOf(s.getCostIfFortified()));
             assertEquals(parts[5], String.valueOf(s.getCostIfUndermined()));
-            assertEquals(parts[6], String.valueOf(s.getFortifyTotal()));
-            assertEquals(parts[7], String.valueOf(s.getFortifyTrigger()));
-            assertEquals(parts[8], String.valueOf(s.getUnderminingTotal()));
+            assertEquals(parts[6], String.valueOf(s.getBaseIncome()));
+            assertEquals(parts[7], String.valueOf(s.getFortifyTotal()));
+            assertEquals(parts[8], String.valueOf(s.getFortifyTrigger()));
+            assertEquals(parts[9], String.valueOf(s.getUnderminingTotal()));
             assertEquals("incorrect undermining trigger in  image : " + fileName, parts[9], String.valueOf(s.getUnderminingTrigger()));
         }
     }

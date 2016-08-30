@@ -3,12 +3,8 @@ package pub.occams.elite.dubliner.application;
 import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.opencv_core.*;
 import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.domain.ControlSystem;
-import pub.occams.elite.dubliner.domain.ImageType;
-import pub.occams.elite.dubliner.domain.InputImage;
-import pub.occams.elite.dubliner.domain.LineSegment;
+import pub.occams.elite.dubliner.domain.*;
 import pub.occams.elite.dubliner.dto.settings.RectangleDto;
-import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -24,8 +20,10 @@ import java.util.stream.Collectors;
 import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
+import static pub.occams.elite.dubliner.domain.ImageType.PP_CONTROL;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.invert;
+import static sun.plugin.javascript.navig.JSType.Image;
 
 public class ImageApiV2 extends ImageApiBase {
 
@@ -33,91 +31,17 @@ public class ImageApiV2 extends ImageApiBase {
         super(settings, debug);
     }
 
-    // - the tab title should be tabName
-    // - the majority of pixels (depends on the cropping area) should be white if the tab is selected
-    private boolean isTabSelected(final BufferedImage image, final RectangleDto coordinates, final String tabName,
-                                  final String fileName, final String step) {
-
-        final Optional<BufferedImage> croppedImage = crop(coordinates, image);
-        if (!croppedImage.isPresent()) {
-            return false;
-        }
-
-        final BufferedImage ocrInputImage = filterRedAndBinarize(invert(croppedImage.get()), settings.ocr.filterRedChannelMin);
-
-        saveImageAtStage(ocrInputImage, fileName, step);
-
-        final String title = ocrRectangle(ocrInputImage);
-        if (null == title) {
-            return false;
-        }
-
-        if (!tabName.equals(title.trim().replace("0", "O"))) {
-            return false;
-        }
-
-        final double blacknessPct = ImageUtil.percentBlack(ocrInputImage);
-        return blacknessPct < 50;
-    }
-
-    @Override
-    public InputImage prepareAndClassifyImage(final File file) {
-
-        LOGGER.info("verifying if file " + file.getName() + " is a power play screenshot");
-
-        //1. load image in memory
-        final Optional<BufferedImage> maybeImage = ImageUtil.readImageFromFile(file);
-        if (!maybeImage.isPresent()) {
-            return new InputImage(file, null, ImageType.UNKNOWN);
-        }
-        final BufferedImage image = maybeImage.get();
-
-        //2. fetch settings for this image resolution
-        final Optional<RectangleCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
-        if (!maybeCoord.isPresent()) {
-            LOGGER.info("Could not find coordinates settings for image " + file.getName() +
-                    " at " + image.getWidth() + "x" + image.getHeight());
-            return new InputImage(file, null, ImageType.UNKNOWN);
-        }
-        final RectangleCoordinatesDto coord = maybeCoord.get();
-
-        //3. which tab is selected
-        final ImageType type;
-        if (isTabSelected(image, coord.preparationTab, "PREPARATION", file.getName(), "classify-image-preparation")) {
-            type = ImageType.PREPARATION;
-        } else if (isTabSelected(image, coord.expansionTab, "EXPANSION", file.getName(), "classify-image-expansion")) {
-            type = ImageType.EXPANSION;
-        } else if (isTabSelected(image, coord.controlTab, "CONTROL", file.getName(), "classify-image-control")) {
-            type = ImageType.CONTROL;
-        } else {
-            type = ImageType.UNKNOWN;
-        }
-
-        LOGGER.info("Image:" + file.getName() + " type is: " + type);
-
-        //5. keep only interesting data which is above a certain level of red and make the image grayscale
-        final BufferedImage preparedImage = filterRedAndBinarize(maybeImage.get(), settings.ocr.filterRedChannelMin);
-        saveImageAtStage(preparedImage, file.getName(), "classify-prepared");
-
-        return new InputImage(file, preparedImage, type);
-    }
-
-    public InputImage detectLines(final InputImage image) {
-
-        final IplImage img = ImageUtil.bufferedImageToIplImage(image.getImage());
+    private List<LineSegment> detectLines(final BufferedImage image, final File file, final int pixelResolution,
+                                          final int threshold, final int minLength, final int maxGap) {
+        final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
         cvCanny(img, dst, 400, 500, 3);
-        saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), image.getFile().getName(), "line-detection-begin");
+        saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
 
-//        cvCvtColor(dst, colorDst, CV_GRAY2BGR);
         final CvMemStorage storage = cvCreateMemStorage(0);
 
-        final double angleResolution = CV_PI / 180;
-        final int pixelResolution = 1;
-        final int threshold = 10;
-        final int minLength = 200;
-        final int maxGap = 1;
+        final double angleResolution = CV_PI / 2;
         final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
                 threshold, minLength, maxGap, 0, CV_PI);
 
@@ -127,33 +51,165 @@ public class ImageApiV2 extends ImageApiBase {
 
             final CvPoint pt1 = new CvPoint(line.position(0));
             final CvPoint pt2 = new CvPoint(line.position(1));
-            segments.add(new LineSegment(pt1.x(), pt1.y(),pt2.x(), pt2.y()));
-
-//            System.out.println("Line spotted: ");
-//            System.out.println("\t rho= " + rho);
-//            System.out.println("\t theta= " + theta);
-            System.out.println("coords: from (" + pt1.x() + "," + pt1.y() + ") to (" + pt2.x() + "," + pt2.y() + ")");
-
+            segments.add(new LineSegment(pt1.x(), pt1.y(), pt2.x(), pt2.y()));
         }
 
-        //filter horizontal segments, sort by y and show
-        final List<LineSegment> segs = segments
+        if (debug) {
+            CvFont font = new CvFont();
+            cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
+            for (int i = 0; i < segments.size(); i++) {
+                final LineSegment s = segments.get(i);
+                final CvPoint pt1 = new CvPoint(s.x0, s.y0);
+                final CvPoint pt2 = new CvPoint(s.x1, s.y1);
+                cvLine(img, pt1, pt2, CV_RGB(0, 0, 255), 2, CV_AA, 0);
+                cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
+            }
+            saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), file, "line-detection-end");
+        }
+        return segments;
+    }
+
+    private List<LineSegment> detectHorizontalLines(final BufferedImage image, final File file,
+                                                    final int pixelResolution, final int threshold, final int minLength,
+                                                    final int maxGap, final int maxLength) {
+        return detectLines(image, file, pixelResolution, threshold, minLength, maxGap)
                 .stream()
-//                .filter(s -> s.y0 == s.y1)
-                .filter(s -> s.x0 == s.x1)
-                .sorted((s1, s2) -> s1.y0 - s2.y1)
+                .filter(s -> s.y0 == s.y1 && s.x1 - s.x0 <= maxLength)
+                .sorted((s1, s2) -> s1.y0 - s2.y0)
                 .collect(Collectors.toList());
-        CvFont font = new CvFont();
-        cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
-        for (int i = 0; i<segs.size();i++) {
-            final LineSegment s = segs.get(i);
-            final CvPoint pt1 = new CvPoint(s.x0, s.y0);
-            final CvPoint pt2 = new CvPoint(s.x1, s.y1);
-            cvLine(img, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
-            cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
+    }
+
+    private List<LineSegment> detectVerticalLines(final BufferedImage image, final File file,
+                                                  final int pixelResolution, final int threshold, final int minLength,
+                                                  final int maxGap, final int maxLength) {
+        return detectLines(image, file, pixelResolution, threshold, minLength, maxGap)
+                .stream()
+                .filter(s -> s.x0 == s.x1 && s.y1 - s.y0 <= maxLength)
+                .sorted((s1, s2) -> s1.x0 - s2.x0)
+                .collect(Collectors.toList());
+    }
+
+    private Optional<ControlSystem> extractControl(final ClassifiedImage input) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<ClassifiedImage> classify(final InputImage inputImage) {
+
+        final File file = inputImage.getFile();
+        final BufferedImage originalImage = inputImage.getImage();
+        LOGGER.info("classification start: " + file.getAbsolutePath());
+
+       //crop aprox a band from the top of the image which should contain the power play tabs
+        final RectangleDto rect1 = new RectangleDto();
+        rect1.x = 0;
+        rect1.y = 0;
+        rect1.height = (int) (originalImage.getHeight() * 0.20);
+        rect1.width = originalImage.getWidth();
+        final Optional<BufferedImage> maybeImage2 = ImageUtil.crop(rect1, originalImage);
+        if (!maybeImage2.isPresent()) {
+            return Optional.empty();
         }
-        saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), image.getFile().getName(), "line-detection-end");
-        return image;
+
+        final BufferedImage image2 = maybeImage2.get();
+        saveImageAtStage(image2, file, "classify-aprox-cropped");
+
+        //find the 2 horizontal lines that are above and on top of the tab menu
+        final int minLength1 = (int) (image2.getWidth() * 0.9);
+        final int maxLength1 = image2.getWidth();
+        final List<LineSegment> segments1 = detectHorizontalLines(image2, file, 5, 900, minLength1, 0, maxLength1);
+        if (segments1.size() < 2) {
+            return Optional.empty();
+        }
+
+        //do an exact cropping of the power play tabs
+        final RectangleDto rect2 = new RectangleDto();
+        rect2.x = segments1.get(0).x0;
+        rect2.y = segments1.get(0).y0;
+        //there are two lines very close to each other, sometimes they are detected separately
+        rect2.width = segments1.get(segments1.size() - 1).x1 - rect2.x;
+        rect2.height = segments1.get(segments1.size() - 1).y1 - rect2.y;
+        final Optional<BufferedImage> maybeImage3 = ImageUtil.crop(rect2, image2);
+        if (!maybeImage3.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage image3 = maybeImage3.get();
+        saveImageAtStage(image3, file, "classify-precise-cropped");
+
+        //find the horizontal lines that are above and below the selected tab (part of the rectangle)
+        final int minLength2 = rect2.width / 8; //aprox. width of a tab
+        final int maxLength2 = (int) (rect2.width * 0.7);
+        final List<LineSegment> segments2 = detectHorizontalLines(image3, file, 1, 200, minLength2, 2, maxLength2);
+        if (segments2.size() != 2) {
+            return Optional.empty();
+        }
+        final RectangleDto rect3 = new RectangleDto();
+        rect3.x = segments2.get(0).x0 + 5; //shaving the vertical band from the beggining of the tab rectangle
+        rect3.y = segments2.get(0).y0;
+        rect3.width = segments2.get(1).x1 - rect3.x;
+        rect3.height = segments2.get(1).y1 - rect3.y;
+
+        final Optional<BufferedImage> maybeImage4 = ImageUtil.crop(rect3, image3);
+        if (!maybeImage4.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage image4 = maybeImage4.get();
+        saveImageAtStage(image4, file, "classify-precise-tab-cropped");
+
+        final BufferedImage ocrInputImage = invert(scale(image4));
+
+        saveImageAtStage(ocrInputImage, file, "classify-ocr-tab-input");
+
+        final String str = ocrRectangle(ocrInputImage);
+        if (null == str || str.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final String title = str.trim().replace("0", "O");
+        LOGGER.info("Ocr raw:[" + str + "], corrected:[" + title + "]");
+        final ImageType type;
+        if ("PREPARATION".equals(title)) {
+            type = ImageType.PP_PREPARATION;
+        } else if ("EXPANSION".equals(title)) {
+            type = ImageType.PP_EXPANSION;
+        } else if ("CONTROL".equals(title)) {
+            type = PP_CONTROL;
+        } else if ("TURMOIL".equals(title)) {
+            type = ImageType.PP_TURMOIL;
+        } else {
+            type = ImageType.UNKNOWN;
+        }
+
+        //crop aprox a band from the top of the image which should contain the power play tabs
+        final RectangleDto rect4 = new RectangleDto();
+        rect4.x = 0;
+        rect4.y = segments1.get(segments1.size() - 1).y0;
+        rect4.height = 100;
+        rect4.width = originalImage.getWidth();
+        final Optional<BufferedImage> maybeImage5 = ImageUtil.crop(rect4, originalImage);
+        if (!maybeImage5.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage image5 = maybeImage5.get();
+        saveImageAtStage(image5, file, "classify-power-name");
+
+        LOGGER.info("classification end:" + file.getAbsolutePath() + ", type is: " + type);
+
+        return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
+    }
+
+    public Optional<ControlSystem> extract(final ClassifiedImage input) {
+        switch (input.getType()) {
+            case PP_CONTROL:
+                return extractControl(input);
+            case PP_EXPANSION:
+                return Optional.empty();
+            case PP_PREPARATION:
+                return Optional.empty();
+            case PP_TURMOIL:
+                return Optional.empty();
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -161,10 +217,20 @@ public class ImageApiV2 extends ImageApiBase {
 
         files
                 .stream()
-                .map(this::prepareAndClassifyImage)
+                .map(this::load)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(this::classify)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .filter(img -> ImageType.UNKNOWN != img.getType())
-                .map(this::detectLines)
                 .collect(Collectors.toList());
+//        files
+//                .stream()
+//                .map(this::prepareAndClassifyImage)
+//                .filter(img -> ImageType.UNKNOWN != img.getType())
+//                .map(this::detectLines)
+//                .collect(Collectors.toList());
            /*
 
         pipeline*:
@@ -210,8 +276,15 @@ public class ImageApiV2 extends ImageApiBase {
         try {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
-                    new File("data/control_images/1920x1080/mahon/control/12.bmp"),
-                    new File("data/control_images/1920x1080/mahon/control/26.bmp")
+                    new File("data/control_images/1920x1080/mahon/control/1.bmp"),
+                    new File("data/control_images/1920x1080/ald/control/1.bmp"),
+                    new File("data/control_images/1920x1200/ald/control/1.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/1.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/4.bmp"),
+                    new File("data/control_images/1920x1200/mahon/expansion/1.bmp"),
+                    new File("data/control_images/1920x1200/ald/expansion/1.bmp"),
+                    new File("data/control_images/1920x1080/antal/preparation/1.bmp"),
+                    new File("data/control_images/1920x1200/ald/preparation/1.bmp")
 
             );
             api.extractDataFromImages(images);

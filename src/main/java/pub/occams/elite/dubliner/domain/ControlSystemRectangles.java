@@ -4,45 +4,48 @@ import java.awt.image.BufferedImage;
 
 public class ControlSystemRectangles {
 
-    private InputImage inputImage;
+    private ClassifiedImage input;
     private BufferedImage systemName;
-    private BufferedImage upkeepCost;
+    private BufferedImage upkeepFromLastCycle;
     private BufferedImage defaultUpkeepCost;
     private BufferedImage costIfFortified;
     private BufferedImage costIfUndermined;
+    private BufferedImage baseIncome;
     private BufferedImage fortificationTotal;
     private BufferedImage fortificationTrigger;
     private BufferedImage underminingTotal;
     private BufferedImage underminingTrigger;
 
-    public ControlSystemRectangles(final InputImage inputImage,
+    public ControlSystemRectangles(final ClassifiedImage input,
                                    final BufferedImage systemName,
-                                   final BufferedImage upkeepCost, final BufferedImage defaultUpkeepCost,
+                                   final BufferedImage upkeepFromLastCycle, final BufferedImage defaultUpkeepCost,
                                    final BufferedImage costIfFortified, final BufferedImage costIfUndermined,
+                                   final BufferedImage baseIncome,
                                    final BufferedImage fortificationTotal, final BufferedImage fortificationTrigger,
                                    final BufferedImage underminingTotal, final BufferedImage underminingTrigger) {
-        this.inputImage = inputImage;
+        this.input = input;
         this.systemName = systemName;
-        this.upkeepCost = upkeepCost;
+        this.upkeepFromLastCycle = upkeepFromLastCycle;
         this.defaultUpkeepCost = defaultUpkeepCost;
         this.costIfFortified = costIfFortified;
         this.costIfUndermined = costIfUndermined;
+        this.baseIncome = baseIncome;
         this.fortificationTotal = fortificationTotal;
         this.fortificationTrigger = fortificationTrigger;
         this.underminingTotal = underminingTotal;
         this.underminingTrigger = underminingTrigger;
     }
 
-    public InputImage getInputImage() {
-        return inputImage;
+    public ClassifiedImage getInput() {
+        return input;
     }
 
     public BufferedImage getSystemName() {
         return systemName;
     }
 
-    public BufferedImage getUpkeepCost() {
-        return upkeepCost;
+    public BufferedImage getUpkeepFromLastCycle() {
+        return upkeepFromLastCycle;
     }
 
     public BufferedImage getDefaultUpkeepCost() {
@@ -55,6 +58,10 @@ public class ControlSystemRectangles {
 
     public BufferedImage getCostIfUndermined() {
         return costIfUndermined;
+    }
+
+    public BufferedImage getBaseIncome() {
+        return baseIncome;
     }
 
     public BufferedImage getFortificationTotal() {

@@ -25,8 +25,8 @@ public class RectangleCoordinatesDto {
     @JsonProperty("name")
     public RectangleDto name;
 
-    @JsonProperty("upkeepCost")
-    public RectangleDto upkeepCost;
+    @JsonProperty("upkeepFromLastCycle")
+    public RectangleDto upkeepFromLastCycle;
 
     @JsonProperty("defaultUpkeepCost")
     public RectangleDto defaultUpkeepCost;
@@ -36,6 +36,9 @@ public class RectangleCoordinatesDto {
 
     @JsonProperty("costIfUndermined")
     public RectangleDto costIfUndermined;
+
+    @JsonProperty("baseIncome")
+    public RectangleDto baseIncome;
 
     @JsonProperty("fortificationTotal")
     public RectangleDto fortificationTotal;

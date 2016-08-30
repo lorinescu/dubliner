@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
+<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
     <children>
         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" nodeOrientation="LEFT_TO_RIGHT" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
@@ -54,9 +54,9 @@
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                   <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                   <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
-                                  <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                     <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
@@ -65,33 +65,33 @@
                                  <children>
                                     <Label text="Original image" />
                                     <Label text="System name" GridPane.rowIndex="1" />
-                                    <Label layoutX="10.0" layoutY="32.0" text="Upkeep cost" GridPane.rowIndex="2" />
-                                    <Label layoutX="10.0" layoutY="92.0" text="Default upkeep cost" GridPane.rowIndex="3" />
-                                    <Label layoutX="10.0" layoutY="77.0" text="Cost if fortified" GridPane.rowIndex="4" />
-                                    <Label layoutX="10.0" layoutY="107.0" text="Cost if undermined" GridPane.rowIndex="5" />
+                                    <Label layoutX="10.0" layoutY="32.0" text="Upkeep cost from last cycle" GridPane.rowIndex="2" />
+                                    <Label layoutX="10.0" layoutY="77.0" text="Cost if fortified" GridPane.rowIndex="3" />
+                                    <Label layoutX="10.0" layoutY="107.0" text="Cost if undermined" GridPane.rowIndex="4" />
                                     <Label layoutX="10.0" layoutY="137.0" text="Fortify total" GridPane.rowIndex="6" />
                                     <Label layoutX="10.0" layoutY="167.0" text="Fortify trigger" GridPane.rowIndex="7" />
                                     <Label layoutX="10.0" layoutY="197.0" text="Undermine total" GridPane.rowIndex="8" />
                                     <Label layoutX="10.0" layoutY="227.0" text="Undermine trigger" GridPane.rowIndex="9" />
                                     <TextField fx:id="nameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                    <TextField fx:id="upkeepText" editable="false" layoutX="142.0" layoutY="7.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                    <TextField fx:id="defaultUpkeepText" editable="false" layoutX="142.0" layoutY="37.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                    <TextField fx:id="fortifiedCostText" editable="false" layoutX="142.0" layoutY="67.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                    <TextField fx:id="underminedCostText" editable="false" layoutX="142.0" layoutY="97.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                    <TextField fx:id="upkeepFromLastCycleText" editable="false" layoutX="142.0" layoutY="7.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <TextField fx:id="fortifiedCostText" editable="false" layoutX="142.0" layoutY="67.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <TextField fx:id="underminedCostText" editable="false" layoutX="142.0" layoutY="97.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                     <TextField fx:id="fortifyTotalText" editable="false" layoutX="142.0" layoutY="127.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                     <TextField fx:id="fortifyTriggerText" editable="false" layoutX="142.0" layoutY="157.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     <TextField fx:id="undermineTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                                     <TextField fx:id="undermineTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="9" />
                                     <ImageView fx:id="nameImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                                    <ImageView fx:id="upkeepImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                                    <ImageView fx:id="defaultUpkeepImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="37.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                                    <ImageView fx:id="fortifiedCostImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="67.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                                    <ImageView fx:id="underminedCostImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="97.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                                    <ImageView fx:id="upkeepFromLastCycleImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                    <ImageView fx:id="fortifiedCostImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="67.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                    <ImageView fx:id="underminedCostImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="97.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="4" />
                                     <ImageView fx:id="fortifyTotalImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="127.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="6" />
                                     <ImageView fx:id="fortifyTriggerImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="157.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="7" />
                                     <ImageView fx:id="undermineTotalImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="187.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="8" />
                                     <ImageView fx:id="undermineTriggerImage" fitHeight="30.0" fitWidth="350.0" layoutX="324.0" layoutY="217.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="9" />
                                     <Button mnemonicParsing="false" onAction="#showOriginalImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                    <Label layoutX="10.0" layoutY="205.0" text="Base income" GridPane.rowIndex="5" />
+                                    <TextField fx:id="baseIncomeText" editable="false" layoutX="201.0" layoutY="195.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                    <ImageView fx:id="baseIncomeImage" fitHeight="30.0" fitWidth="350.0" layoutX="393.0" layoutY="198.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
                                  </children>
                               </GridPane>
                            </children>

@@ -1,10 +1,7 @@
 package pub.occams.elite.dubliner.application;
 
 import org.apache.commons.io.FileUtils;
-import pub.occams.elite.dubliner.domain.ControlSystem;
-import pub.occams.elite.dubliner.domain.ControlSystemRectangles;
-import pub.occams.elite.dubliner.domain.ImageType;
-import pub.occams.elite.dubliner.domain.InputImage;
+import pub.occams.elite.dubliner.domain.*;
 import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
@@ -25,27 +22,29 @@ public class ImageApiV1 extends ImageApiBase {
     }
 
     private ControlSystemRectangles saveControlSystem(final ControlSystemRectangles rectangles, final String stage) {
-        saveImageAtStage(rectangles.getSystemName(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getUpkeepCost(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getDefaultUpkeepCost(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getCostIfFortified(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getCostIfUndermined(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getFortificationTotal(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getUnderminingTotal(), rectangles.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(rectangles.getUnderminingTrigger(), rectangles.getInputImage().getFile().getName(), stage);
+        final File file = rectangles.getInput().getInputImage().getFile();
+        saveImageAtStage(rectangles.getSystemName(), file, stage);
+        saveImageAtStage(rectangles.getUpkeepFromLastCycle(), file, stage);
+        saveImageAtStage(rectangles.getDefaultUpkeepCost(), file, stage);
+        saveImageAtStage(rectangles.getCostIfFortified(), file, stage);
+        saveImageAtStage(rectangles.getCostIfUndermined(), file, stage);
+        saveImageAtStage(rectangles.getFortificationTotal(), file, stage);
+        saveImageAtStage(rectangles.getUnderminingTotal(), file, stage);
+        saveImageAtStage(rectangles.getUnderminingTrigger(), file, stage);
         return rectangles;
     }
 
     private ControlSystemRectangles isolateTextColors(final ControlSystemRectangles rectangles) {
-        LOGGER.info("isolating text colors for image " + rectangles.getInputImage().getFile().getName());
+        LOGGER.info("isolating text colors for image " + rectangles.getInput().getInputImage().getFile().getName());
         int minRed = settings.ocr.filterRedChannelMin;
         return new ControlSystemRectangles(
-                rectangles.getInputImage(),
+                rectangles.getInput(),
                 filterRedAndBinarize(rectangles.getSystemName(), minRed),
-                filterRedAndBinarize(rectangles.getUpkeepCost(), minRed),
+                filterRedAndBinarize(rectangles.getUpkeepFromLastCycle(), minRed),
                 filterRedAndBinarize(rectangles.getDefaultUpkeepCost(), minRed),
                 filterRedAndBinarize(rectangles.getCostIfFortified(), minRed),
                 filterRedAndBinarize(rectangles.getCostIfUndermined(), minRed),
+                filterRedAndBinarize(rectangles.getBaseIncome(), minRed),
                 filterRedAndBinarize(rectangles.getFortificationTotal(), minRed),
                 filterRedAndBinarize(rectangles.getFortificationTrigger(), minRed),
                 filterRedAndBinarize(rectangles.getUnderminingTotal(), minRed),
@@ -53,10 +52,10 @@ public class ImageApiV1 extends ImageApiBase {
         );
     }
 
-    private Optional<ControlSystemRectangles> extractRectangles(final InputImage inputImage) {
+    private Optional<ControlSystemRectangles> extractRectangles(final ClassifiedImage input) {
 
-        LOGGER.info("extracting rectangles from image " + inputImage.getFile().getName());
-        final BufferedImage image = inputImage.getImage();
+        LOGGER.info("extracting rectangles from image " + input.getInputImage().getFile().getName());
+        final BufferedImage image = input.getInputImage().getImage();
         final Optional<RectangleCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
             return Optional.empty();
@@ -69,8 +68,8 @@ public class ImageApiV1 extends ImageApiBase {
             return Optional.empty();
         }
 
-        final Optional<BufferedImage> upkeepCost = crop(coord.upkeepCost, image);
-        if (!upkeepCost.isPresent()) {
+        final Optional<BufferedImage> upkeepFromLastCycle = crop(coord.upkeepFromLastCycle, image);
+        if (!upkeepFromLastCycle.isPresent()) {
             return Optional.empty();
         }
 
@@ -86,6 +85,11 @@ public class ImageApiV1 extends ImageApiBase {
 
         final Optional<BufferedImage> costIfUndermined = crop(coord.costIfUndermined, image);
         if (!costIfUndermined.isPresent()) {
+            return Optional.empty();
+        }
+
+        final Optional<BufferedImage> baseIncome = crop(coord.baseIncome, image);
+        if (!baseIncome.isPresent()) {
             return Optional.empty();
         }
 
@@ -110,23 +114,25 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         return Optional.of(new ControlSystemRectangles(
-                inputImage,
+                input,
                 systemName.get(),
-                upkeepCost.get(), defaultUpkeepCost.get(), costIfFortified.get(), costIfUndermined.get(),
+                upkeepFromLastCycle.get(), defaultUpkeepCost.get(), costIfFortified.get(), costIfUndermined.get(),
+                baseIncome.get(),
                 fortificationTotal.get(), fortificationTrigger.get(),
                 underminingTotal.get(), underminingTrigger.get()));
     }
 
 
     private ControlSystemRectangles scaleRectangle(final ControlSystemRectangles rectangles) {
-        LOGGER.info("scaling rectangles for image " + rectangles.getInputImage().getFile().getName());
+        LOGGER.info("scaling rectangles for image " + rectangles.getInput().getInputImage().getFile().getName());
         return new ControlSystemRectangles(
-                rectangles.getInputImage(),
+                rectangles.getInput(),
                 scale(rectangles.getSystemName()),
-                scale(rectangles.getUpkeepCost()),
+                scale(rectangles.getUpkeepFromLastCycle()),
                 scale(rectangles.getDefaultUpkeepCost()),
                 scale(rectangles.getCostIfFortified()),
                 scale(rectangles.getCostIfUndermined()),
+                scale(rectangles.getBaseIncome()),
                 scale(rectangles.getFortificationTotal()),
                 scale(rectangles.getFortificationTrigger()),
                 scale(rectangles.getUnderminingTotal()),
@@ -137,29 +143,31 @@ public class ImageApiV1 extends ImageApiBase {
     //FIXME: dedup cleanups and everything in here
     private ControlSystem rectanglesToText(final ControlSystemRectangles rectangles) {
 
-        LOGGER.info("converting rectangles to text for image " + rectangles.getInputImage().getFile().getName());
+        LOGGER.info("converting rectangles to text for image " + rectangles.getInput().getInputImage().getFile()
+                .getName());
         String name = ocrRectangle(rectangles.getSystemName()).trim();
         name = cleanName(name);
 
         int upkeepCost = -1;
-        final String upkeepCostStr = ocrNumberRectangle(rectangles.getUpkeepCost());
+        final String upkeepCostStr = ocrNumberRectangle(rectangles.getUpkeepFromLastCycle());
         if (null != upkeepCostStr && !upkeepCostStr.isEmpty()) {
             try {
                 final String cleanString = cleanNumber(upkeepCostStr);
                 upkeepCost = Integer.parseInt(cleanString);
-                LOGGER.info("[upkeepCost] extracted raw string: " + upkeepCostStr.trim() + " and cleaned to: " + cleanString);
+                LOGGER.info("[upkeepFromLastCycle] extracted raw string: " + upkeepCostStr.trim() + " and cleaned to: " + cleanString);
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                LOGGER.error("could not parse upkeepCost from: [" + upkeepCostStr + "]");
+                LOGGER.error("could not parse upkeepFromLastCycle from: [" + upkeepCostStr + "]");
             }
         }
 
-        int defaultUpkeepCost = -1;
-        final String defaultUpkeepCostStr = ocrNumberRectangle(rectangles.getDefaultUpkeepCost());
-        if (null != defaultUpkeepCostStr && !defaultUpkeepCostStr.isEmpty()) {
+        int upkeepFromLastCycle = -1;
+        final String defaultUpkeepFromLastCycleStr = ocrNumberRectangle(rectangles.getUpkeepFromLastCycle());
+        if (null != defaultUpkeepFromLastCycleStr && !defaultUpkeepFromLastCycleStr.isEmpty()) {
             try {
-                defaultUpkeepCost = Integer.parseInt(cleanNumber(defaultUpkeepCostStr));
+                upkeepFromLastCycle = Integer.parseInt(cleanNumber(defaultUpkeepFromLastCycleStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                LOGGER.error("could not parse defaultUpkeepCost from: [" + defaultUpkeepCostStr + "]");
+                LOGGER.error("could not parse defaultUpkeepFromLastCycle from: [" + defaultUpkeepFromLastCycleStr +
+                        "]");
             }
         }
 
@@ -180,6 +188,17 @@ public class ImageApiV1 extends ImageApiBase {
                 costIfUndermined = Integer.parseInt(cleanNumber(costIfUnderminedStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse costIfUndermined from: [" + costIfUnderminedStr + "]");
+            }
+        }
+
+        int baseIncome = -1;
+        final String defaultBaseIncomeStr = ocrNumberRectangle(rectangles.getBaseIncome());
+        if (null != defaultBaseIncomeStr && !defaultBaseIncomeStr.isEmpty()) {
+            try {
+                baseIncome = Integer.parseInt(cleanNumber(defaultBaseIncomeStr));
+            } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                LOGGER.error("could not parse baseIncome from: [" + defaultUpkeepFromLastCycleStr +
+                        "]");
             }
         }
 
@@ -226,56 +245,50 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         return new ControlSystem(
-                rectangles,
+                rectangles, null,
                 name,
-                upkeepCost, defaultUpkeepCost, costIfFortified, costIfUndermined,
+                upkeepFromLastCycle, costIfFortified, costIfUndermined, baseIncome,
                 fortifyTotal, fortifyTrigger,
                 undermineTotal, undermineTrigger
         );
     }
 
     @Override
-    public InputImage prepareAndClassifyImage(final File file) {
+    public Optional<ClassifiedImage> classify(final InputImage input) {
 
-        LOGGER.info("verifying if file " + file.getName() + " is a screenshot of the Control tab");
+        LOGGER.info("verifying if file " + input.getFile().getName() + " is a screenshot of the Control tab");
 
-        final Optional<BufferedImage> maybeImage = ImageUtil.readImageFromFile(file);
-        if (!maybeImage.isPresent()) {
-            return new InputImage(file, null, ImageType.UNKNOWN);
-        }
-
-        final BufferedImage image = maybeImage.get();
-
+        final BufferedImage image = input.getImage();
         final Optional<RectangleCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
-            LOGGER.info("Could not find coordinates settings for image " + file.getName() +
+            LOGGER.info("Could not find coordinates settings for image " + input.getFile().getName() +
                     " at " + image.getWidth() + "x" + image.getHeight());
-            return new InputImage(file, image, ImageType.UNKNOWN);
+            return Optional.empty();
         }
         final RectangleCoordinatesDto coord = maybeCoord.get();
 
-        final Optional<BufferedImage> croppedImage = crop(coord.controlTab, image);
-        if (!croppedImage.isPresent()) {
-            return new InputImage(file, image, ImageType.UNKNOWN);
+        final Optional<BufferedImage> maybeCroppedImage = crop(coord.controlTab, image);
+        if (!maybeCroppedImage.isPresent()) {
+            return Optional.empty();
         }
+        final BufferedImage croppedImage = maybeCroppedImage.get();
+        saveImageAtStage(croppedImage, input.getFile(), "classify-cropped");
 
+        final BufferedImage ocrInputImage = scale(filterRedAndBinarize(invert(croppedImage), settings.ocr
+                .filterRedChannelMin));
+
+        saveImageAtStage(ocrInputImage, input.getFile(), "classify-ocr-input");
         LOGGER.info("ocr-ing selected tab title");
-        final String tabTitle = ocrRectangle(
-                scale(filterRedAndBinarize(
-                        invert(croppedImage.get()),
-                        settings.ocr.filterRedChannelMin
-                        )
-                )
-        );
+        final String tabTitle = ocrRectangle(ocrInputImage);
 
         if (null != tabTitle && !tabTitle.isEmpty()) {
             final boolean isControlTabSelected = "CONTROL".equals(tabTitle.trim().replace("0", "O"));
-            LOGGER.info(("image " + file.getName() + " is a control tab screenshot: " + isControlTabSelected));
+            LOGGER.info(("image " + input.getFile().getName() + " is a control tab screenshot: " + isControlTabSelected));
             if (isControlTabSelected) {
-                return new InputImage(file, image, ImageType.CONTROL);
+                return Optional.of(new ClassifiedImage(input, ImageType.PP_CONTROL, null));
             }
         }
-        return new InputImage(file, image, ImageType.UNKNOWN);
+        return Optional.empty();
     }
 
     @Override
@@ -294,13 +307,21 @@ public class ImageApiV1 extends ImageApiBase {
         return
                 images
                         .stream()
-                        .map(this::prepareAndClassifyImage)
-                        .filter(img -> img.getType() == ImageType.CONTROL)
+                        .map(this::load)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .map(this::classify)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .filter(img -> img.getType() == ImageType.PP_CONTROL)
                         .map(this::extractRectangles)
                         .filter(Optional::isPresent)
-                        .map(Optional::get).map(css -> saveControlSystem(css, "rectangles"))
-                        .map(this::isolateTextColors).map(css -> saveControlSystem(css, "isolateTextColors"))
-                        .map(this::scaleRectangle).map(css -> saveControlSystem(css, "scale"))
+                        .map(Optional::get)
+                        .map(css -> saveControlSystem(css, "rectangles"))
+                        .map(this::isolateTextColors)
+                        .map(css -> saveControlSystem(css, "isolateTextColors"))
+                        .map(this::scaleRectangle)
+                        .map(css -> saveControlSystem(css, "scale"))
 //                        .map(this::increaseSegmentsContrast).map(css -> saveControlSystem(css, "contrast"))
 //                        .map(this::binarizeSegments).map(css -> saveControlSystem(css, "binarize"))
 //                        .map(this::invertSegments).map(css -> saveControlSystem(css, "invert"))

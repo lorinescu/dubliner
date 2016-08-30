@@ -3,26 +3,31 @@ package pub.occams.elite.dubliner.domain;
 public class ControlSystem {
 
     private final ControlSystemRectangles controlSystemRectangles;
+    private final Power power;
     private final String systemName;
-    private final Integer upkeepCost;
-    private final Integer defaultUpkeepCost;
+    private final Integer upkeepFromLastCycle;
     private final Integer costIfFortified;
     private final Integer costIfUndermined;
+    private final Integer baseIncome;
     private final Integer fortifyTotal;
     private final Integer fortifyTrigger;
     private final Integer underminingTotal;
     private final Integer underminingTrigger;
 
-    public ControlSystem(final ControlSystemRectangles controlSystemRectangles, final String systemName,
-                         final Integer upkeepCost, final Integer defaultUpkeepCost, final Integer costIfFortified,
-                         final Integer costIfUndermined, final Integer fortifyTotal, final Integer fortifyTrigger,
+
+    public ControlSystem(final ControlSystemRectangles controlSystemRectangles, final Power power,
+                         final String systemName,
+                         final Integer upkeepFromLastCycle,
+                         final Integer costIfFortified, final Integer costIfUndermined, final Integer baseIncome,
+                         final Integer fortifyTotal, final Integer fortifyTrigger,
                          final Integer underminingTotal, final Integer underminingTrigger) {
         this.controlSystemRectangles = controlSystemRectangles;
+        this.power = power;
         this.systemName = systemName;
-        this.upkeepCost = upkeepCost;
-        this.defaultUpkeepCost = defaultUpkeepCost;
+        this.upkeepFromLastCycle = upkeepFromLastCycle;
         this.costIfFortified = costIfFortified;
         this.costIfUndermined = costIfUndermined;
+        this.baseIncome = baseIncome;
         this.fortifyTotal = fortifyTotal;
         this.fortifyTrigger = fortifyTrigger;
         this.underminingTotal = underminingTotal;
@@ -33,16 +38,16 @@ public class ControlSystem {
         return controlSystemRectangles;
     }
 
+    public Power getPower() {
+        return power;
+    }
+
     public String getSystemName() {
         return systemName;
     }
 
-    public Integer getUpkeepCost() {
-        return upkeepCost;
-    }
-
-    public Integer getDefaultUpkeepCost() {
-        return defaultUpkeepCost;
+    public Integer getUpkeepFromLastCycle() {
+        return upkeepFromLastCycle;
     }
 
     public Integer getCostIfFortified() {
@@ -51,6 +56,10 @@ public class ControlSystem {
 
     public Integer getCostIfUndermined() {
         return costIfUndermined;
+    }
+
+    public Integer getBaseIncome() {
+        return baseIncome;
     }
 
     public Integer getFortifyTotal() {
@@ -71,14 +80,15 @@ public class ControlSystem {
 
     @Override
     public String toString() {
-        return systemName
-                + "," + upkeepCost
-                + "," + defaultUpkeepCost
-                + ","+ costIfFortified
-                + "," + costIfUndermined
-                + "," + fortifyTotal
-                + "," + fortifyTrigger
-                + "," + underminingTotal
-                + "," + underminingTrigger;
+        return power +
+                "," + systemName +
+                "," + upkeepFromLastCycle +
+                "," + costIfFortified +
+                "," + costIfUndermined +
+                "," + baseIncome +
+                "," + fortifyTotal +
+                "," + fortifyTrigger +
+                "," + underminingTotal +
+                "," + underminingTrigger;
     }
 }
