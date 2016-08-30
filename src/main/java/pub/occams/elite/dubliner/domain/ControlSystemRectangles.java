@@ -2,7 +2,7 @@ package pub.occams.elite.dubliner.domain;
 
 import java.awt.image.BufferedImage;
 
-public class ControlSystemSegments {
+public class ControlSystemRectangles {
 
     private InputImage inputImage;
     private BufferedImage systemName;
@@ -15,12 +15,12 @@ public class ControlSystemSegments {
     private BufferedImage underminingTotal;
     private BufferedImage underminingTrigger;
 
-    public ControlSystemSegments(final InputImage inputImage,
-                                 final BufferedImage systemName,
-                                 final BufferedImage upkeepCost, final BufferedImage defaultUpkeepCost,
-                                 final BufferedImage costIfFortified, final BufferedImage costIfUndermined,
-                                 final BufferedImage fortificationTotal, final BufferedImage fortificationTrigger,
-                                 final BufferedImage underminingTotal, final BufferedImage underminingTrigger) {
+    public ControlSystemRectangles(final InputImage inputImage,
+                                   final BufferedImage systemName,
+                                   final BufferedImage upkeepCost, final BufferedImage defaultUpkeepCost,
+                                   final BufferedImage costIfFortified, final BufferedImage costIfUndermined,
+                                   final BufferedImage fortificationTotal, final BufferedImage fortificationTrigger,
+                                   final BufferedImage underminingTotal, final BufferedImage underminingTrigger) {
         this.inputImage = inputImage;
         this.systemName = systemName;
         this.upkeepCost = upkeepCost;

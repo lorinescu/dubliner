@@ -5,8 +5,8 @@ import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.dto.settings.SegmentDto;
-import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import javax.imageio.ImageIO;
@@ -41,15 +41,15 @@ public class ImageUtil {
         return Optional.empty();
     }
 
-    public static Optional<SegmentsCoordinatesDto> getCoordinatesForImage(final BufferedImage image,
-                                                                          final SettingsDto settings) {
-        return settings.segmentsCoordinates
+    public static Optional<RectangleCoordinatesDto> getCoordinatesForImage(final BufferedImage image,
+                                                                           final SettingsDto settings) {
+        return settings.rectangleCoordinates
                 .stream()
                 .filter(coord -> coord.screenWidth.equals(image.getWidth()) && coord.screenHeight.equals(image.getHeight()))
                 .findFirst();
     }
 
-    public static Optional<BufferedImage> crop(final SegmentDto coord, final BufferedImage image) {
+    public static Optional<BufferedImage> crop(final RectangleDto coord, final BufferedImage image) {
         try {
             return Optional.of(image.getSubimage(coord.x, coord.y, coord.width, coord.height));
         } catch (RasterFormatException e) {

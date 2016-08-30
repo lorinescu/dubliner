@@ -182,14 +182,14 @@ public class ScanController extends Controller<AnchorPane> {
             return;
         }
 
-        final BufferedImage originalImage = system.getControlSystemSegments().getInputImage().getImage();
+        final BufferedImage originalImage = system.getControlSystemRectangles().getInputImage().getImage();
         if (null == originalImage) {
             return;
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.getDialogPane().setContent(new ImageView(toFXImage(originalImage, null)));
-        alert.setHeaderText(system.getControlSystemSegments().getInputImage().getFile().getAbsolutePath());
+        alert.setHeaderText(system.getControlSystemRectangles().getInputImage().getFile().getAbsolutePath());
         alert.show();
     }
 
@@ -229,31 +229,31 @@ public class ScanController extends Controller<AnchorPane> {
     }
     private void setDetails(final ControlSystem cs) {
         nameText.setText(cs.getSystemName());
-        nameImage.setImage(toFXImage(cs.getControlSystemSegments().getSystemName(), null));
+        nameImage.setImage(toFXImage(cs.getControlSystemRectangles().getSystemName(), null));
 
         upkeepText.setText(String.valueOf(cs.getUpkeepCost()));
-        upkeepImage.setImage(toFXImage(cs.getControlSystemSegments().getUpkeepCost(), null));
+        upkeepImage.setImage(toFXImage(cs.getControlSystemRectangles().getUpkeepCost(), null));
 
         defaultUpkeepText.setText(String.valueOf(cs.getDefaultUpkeepCost()));
-        defaultUpkeepImage.setImage(toFXImage(cs.getControlSystemSegments().getDefaultUpkeepCost(), null));
+        defaultUpkeepImage.setImage(toFXImage(cs.getControlSystemRectangles().getDefaultUpkeepCost(), null));
 
         fortifiedCostText.setText(String.valueOf(cs.getCostIfFortified()));
-        fortifiedCostImage.setImage(toFXImage(cs.getControlSystemSegments().getCostIfFortified(), null));
+        fortifiedCostImage.setImage(toFXImage(cs.getControlSystemRectangles().getCostIfFortified(), null));
 
         underminedCostText.setText(String.valueOf(cs.getCostIfUndermined()));
-        underminedCostImage.setImage(toFXImage(cs.getControlSystemSegments().getCostIfUndermined(), null));
+        underminedCostImage.setImage(toFXImage(cs.getControlSystemRectangles().getCostIfUndermined(), null));
 
         fortifyTotalText.setText(String.valueOf(cs.getFortifyTotal()));
-        fortifyTotalImage.setImage(toFXImage(cs.getControlSystemSegments().getFortificationTotal(), null));
+        fortifyTotalImage.setImage(toFXImage(cs.getControlSystemRectangles().getFortificationTotal(), null));
 
         fortifyTriggerText.setText(String.valueOf(cs.getFortifyTrigger()));
-        fortifyTriggerImage.setImage(toFXImage(cs.getControlSystemSegments().getFortificationTrigger(), null));
+        fortifyTriggerImage.setImage(toFXImage(cs.getControlSystemRectangles().getFortificationTrigger(), null));
 
         undermineTotalText.setText(String.valueOf(cs.getUnderminingTotal()));
-        undermineTotalImage.setImage(toFXImage(cs.getControlSystemSegments().getUnderminingTotal(), null));
+        undermineTotalImage.setImage(toFXImage(cs.getControlSystemRectangles().getUnderminingTotal(), null));
 
         undermineTriggerText.setText(String.valueOf(cs.getUnderminingTrigger()));
-        undermineTriggerImage.setImage(toFXImage(cs.getControlSystemSegments().getUnderminingTrigger(), null));
+        undermineTriggerImage.setImage(toFXImage(cs.getControlSystemRectangles().getUnderminingTrigger(), null));
     }
 
     private void resetDetails() {

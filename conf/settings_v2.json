@@ -106,7 +106,7 @@
       "Z0SI": "ZOSI"
     }
   },
-  "segmentsCoordinates": [
+  "rectangleCoordinates": [
     {
       "screenWidth": "1920",
       "screenHeight": "1200",

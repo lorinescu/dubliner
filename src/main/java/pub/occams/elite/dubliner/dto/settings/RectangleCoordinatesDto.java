@@ -2,7 +2,7 @@ package pub.occams.elite.dubliner.dto.settings;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SegmentsCoordinatesDto {
+public class RectangleCoordinatesDto {
 
     @JsonProperty("screenWidth")
     public Integer screenWidth;
@@ -11,41 +11,41 @@ public class SegmentsCoordinatesDto {
     public Integer screenHeight;
 
     @JsonProperty("overviewTab")
-    public SegmentDto overviewTab;
+    public RectangleDto overviewTab;
 
     @JsonProperty("preparationTab")
-    public SegmentDto preparationTab;
+    public RectangleDto preparationTab;
 
     @JsonProperty("expansionTab")
-    public SegmentDto expansionTab;
+    public RectangleDto expansionTab;
 
     @JsonProperty("controlTab")
-    public SegmentDto controlTab;
+    public RectangleDto controlTab;
 
     @JsonProperty("name")
-    public SegmentDto name;
+    public RectangleDto name;
 
     @JsonProperty("upkeepCost")
-    public SegmentDto upkeepCost;
+    public RectangleDto upkeepCost;
 
     @JsonProperty("defaultUpkeepCost")
-    public SegmentDto defaultUpkeepCost;
+    public RectangleDto defaultUpkeepCost;
 
     @JsonProperty("costIfFortified")
-    public SegmentDto costIfFortified;
+    public RectangleDto costIfFortified;
 
     @JsonProperty("costIfUndermined")
-    public SegmentDto costIfUndermined;
+    public RectangleDto costIfUndermined;
 
     @JsonProperty("fortificationTotal")
-    public SegmentDto fortificationTotal;
+    public RectangleDto fortificationTotal;
 
     @JsonProperty("fortificationTrigger")
-    public SegmentDto fortificationTrigger;
+    public RectangleDto fortificationTrigger;
 
     @JsonProperty("underminingTotal")
-    public SegmentDto underminingTotal;
+    public RectangleDto underminingTotal;
 
     @JsonProperty("underminingTrigger")
-    public SegmentDto underminingTrigger;
+    public RectangleDto underminingTrigger;
 }

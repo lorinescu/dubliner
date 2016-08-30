@@ -2,20 +2,22 @@ package pub.occams.elite.dubliner.domain;
 
 public class ControlSystem {
 
-    private ControlSystemSegments controlSystemSegments;
-    private String systemName;
-    private Integer upkeepCost;
-    private Integer defaultUpkeepCost;
-    private Integer costIfFortified;
-    private Integer costIfUndermined;
-    private Integer fortifyTotal;
-    private Integer fortifyTrigger;
-    private Integer underminingTotal;
-    private Integer underminingTrigger;
+    private final ControlSystemRectangles controlSystemRectangles;
+    private final String systemName;
+    private final Integer upkeepCost;
+    private final Integer defaultUpkeepCost;
+    private final Integer costIfFortified;
+    private final Integer costIfUndermined;
+    private final Integer fortifyTotal;
+    private final Integer fortifyTrigger;
+    private final Integer underminingTotal;
+    private final Integer underminingTrigger;
 
-    public ControlSystem(final ControlSystemSegments controlSystemSegments, String systemName, Integer upkeepCost,
-                         Integer defaultUpkeepCost, Integer costIfFortified, Integer costIfUndermined, Integer fortifyTotal, Integer fortifyTrigger, Integer underminingTotal, Integer underminingTrigger) {
-        this.controlSystemSegments = controlSystemSegments;
+    public ControlSystem(final ControlSystemRectangles controlSystemRectangles, final String systemName,
+                         final Integer upkeepCost, final Integer defaultUpkeepCost, final Integer costIfFortified,
+                         final Integer costIfUndermined, final Integer fortifyTotal, final Integer fortifyTrigger,
+                         final Integer underminingTotal, final Integer underminingTrigger) {
+        this.controlSystemRectangles = controlSystemRectangles;
         this.systemName = systemName;
         this.upkeepCost = upkeepCost;
         this.defaultUpkeepCost = defaultUpkeepCost;
@@ -27,8 +29,8 @@ public class ControlSystem {
         this.underminingTrigger = underminingTrigger;
     }
 
-    public ControlSystemSegments getControlSystemSegments() {
-        return controlSystemSegments;
+    public ControlSystemRectangles getControlSystemRectangles() {
+        return controlSystemRectangles;
     }
 
     public String getSystemName() {

@@ -82,7 +82,7 @@ public abstract class ImageApiBase implements ImageApi {
         }
     }
 
-    protected String ocrNumberSegment(final BufferedImage image) {
+    protected String ocrNumberRectangle(final BufferedImage image) {
         try {
             return tessForNumbers.doOCR(image);
         } catch (TesseractException e) {
@@ -91,7 +91,7 @@ public abstract class ImageApiBase implements ImageApi {
         return "";
     }
 
-    protected String ocrSegment(final BufferedImage image) {
+    protected String ocrRectangle(final BufferedImage image) {
         LOGGER.info("starting OCR");
         try {
             return tessForNames.doOCR(image);

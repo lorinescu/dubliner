@@ -6,8 +6,9 @@ import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.ImageType;
 import pub.occams.elite.dubliner.domain.InputImage;
-import pub.occams.elite.dubliner.dto.settings.SegmentDto;
-import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
+import pub.occams.elite.dubliner.domain.LineSegment;
+import pub.occams.elite.dubliner.dto.settings.RectangleDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -34,7 +35,7 @@ public class ImageApiV2 extends ImageApiBase {
 
     // - the tab title should be tabName
     // - the majority of pixels (depends on the cropping area) should be white if the tab is selected
-    private boolean isTabSelected(final BufferedImage image, final SegmentDto coordinates, final String tabName,
+    private boolean isTabSelected(final BufferedImage image, final RectangleDto coordinates, final String tabName,
                                   final String fileName, final String step) {
 
         final Optional<BufferedImage> croppedImage = crop(coordinates, image);
@@ -46,7 +47,7 @@ public class ImageApiV2 extends ImageApiBase {
 
         saveImageAtStage(ocrInputImage, fileName, step);
 
-        final String title = ocrSegment(ocrInputImage);
+        final String title = ocrRectangle(ocrInputImage);
         if (null == title) {
             return false;
         }
@@ -72,13 +73,13 @@ public class ImageApiV2 extends ImageApiBase {
         final BufferedImage image = maybeImage.get();
 
         //2. fetch settings for this image resolution
-        final Optional<SegmentsCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
+        final Optional<RectangleCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
             LOGGER.info("Could not find coordinates settings for image " + file.getName() +
                     " at " + image.getWidth() + "x" + image.getHeight());
             return new InputImage(file, null, ImageType.UNKNOWN);
         }
-        final SegmentsCoordinatesDto coord = maybeCoord.get();
+        final RectangleCoordinatesDto coord = maybeCoord.get();
 
         //3. which tab is selected
         final ImageType type;
@@ -106,39 +107,27 @@ public class ImageApiV2 extends ImageApiBase {
         final IplImage img = ImageUtil.bufferedImageToIplImage(image.getImage());
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
-        cvCanny(img, dst, 80, 200, 3);
+        cvCanny(img, dst, 400, 500, 3);
+        saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), image.getFile().getName(), "line-detection-begin");
+
 //        cvCvtColor(dst, colorDst, CV_GRAY2BGR);
         final CvMemStorage storage = cvCreateMemStorage(0);
 
         final double angleResolution = CV_PI / 180;
-        final int pixelResolution = 10;
+        final int pixelResolution = 1;
         final int threshold = 10;
         final int minLength = 200;
         final int maxGap = 1;
         final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
                 threshold, minLength, maxGap, 0, CV_PI);
 
-        class MyListSegment {
-            public final int x0;
-            public final int y0;
-            public final int x1;
-            public final int y1;
-
-            public MyListSegment(int x0, int y0, int x1, int y1) {
-                this.x0 = x0;
-                this.y0 = y0;
-                this.x1 = x1;
-                this.y1 = y1;
-            }
-        }
-
-        final List<MyListSegment> segments = new ArrayList<>();
+        final List<LineSegment> segments = new ArrayList<>();
         for (int i = 0; i < lines.total(); i++) {
             final Pointer line = new CvPoint2D32f(cvGetSeqElem(lines, i));
 
             final CvPoint pt1 = new CvPoint(line.position(0));
             final CvPoint pt2 = new CvPoint(line.position(1));
-            segments.add(new MyListSegment(pt1.x(), pt1.y(),pt2.x(), pt2.y()));
+            segments.add(new LineSegment(pt1.x(), pt1.y(),pt2.x(), pt2.y()));
 
 //            System.out.println("Line spotted: ");
 //            System.out.println("\t rho= " + rho);
@@ -148,7 +137,7 @@ public class ImageApiV2 extends ImageApiBase {
         }
 
         //filter horizontal segments, sort by y and show
-        final List<MyListSegment> segs = segments
+        final List<LineSegment> segs = segments
                 .stream()
 //                .filter(s -> s.y0 == s.y1)
                 .filter(s -> s.x0 == s.x1)
@@ -157,13 +146,13 @@ public class ImageApiV2 extends ImageApiBase {
         CvFont font = new CvFont();
         cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
         for (int i = 0; i<segs.size();i++) {
-            final MyListSegment s = segs.get(i);
+            final LineSegment s = segs.get(i);
             final CvPoint pt1 = new CvPoint(s.x0, s.y0);
             final CvPoint pt2 = new CvPoint(s.x1, s.y1);
             cvLine(img, pt1, pt2, CV_RGB(255, 0, 0), 2, CV_AA, 0);
             cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
         }
-        saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), image.getFile().getName(), "line-detection");
+        saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), image.getFile().getName(), "line-detection-end");
         return image;
     }
 

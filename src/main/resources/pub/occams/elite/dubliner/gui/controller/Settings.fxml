@@ -20,9 +20,9 @@
                   <VBox spacing="10.0">
                      <children>
                         <ComboBox fx:id="resolutionCombo" prefWidth="150.0" />
-                        <TableView fx:id="segmentsTable" editable="true" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="rectanglesTable" editable="true" VBox.vgrow="ALWAYS">
                           <columns>
-                            <TableColumn fx:id="segmentColumn" editable="false" minWidth="130.0" prefWidth="130.0" text="Segment" />
+                            <TableColumn fx:id="rectangleColumn" editable="false" minWidth="130.0" prefWidth="130.0" text="Segment" />
                             <TableColumn prefWidth="75.0" text="x" fx:id="xCoordColumn" />
                               <TableColumn fx:id="yColumn" prefWidth="75.0" text="y" />
                               <TableColumn fx:id="widthColumn" prefWidth="75.0" text="width" />

@@ -2,10 +2,10 @@ package pub.occams.elite.dubliner.application;
 
 import org.apache.commons.io.FileUtils;
 import pub.occams.elite.dubliner.domain.ControlSystem;
-import pub.occams.elite.dubliner.domain.ControlSystemSegments;
+import pub.occams.elite.dubliner.domain.ControlSystemRectangles;
 import pub.occams.elite.dubliner.domain.ImageType;
 import pub.occams.elite.dubliner.domain.InputImage;
-import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -24,45 +24,45 @@ public class ImageApiV1 extends ImageApiBase {
         super(settings, debug);
     }
 
-    private ControlSystemSegments saveControlSystem(final ControlSystemSegments segments, final String stage) {
-        saveImageAtStage(segments.getSystemName(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getUpkeepCost(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getDefaultUpkeepCost(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getCostIfFortified(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getCostIfUndermined(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getFortificationTotal(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getUnderminingTotal(), segments.getInputImage().getFile().getName(), stage);
-        saveImageAtStage(segments.getUnderminingTrigger(), segments.getInputImage().getFile().getName(), stage);
-        return segments;
+    private ControlSystemRectangles saveControlSystem(final ControlSystemRectangles rectangles, final String stage) {
+        saveImageAtStage(rectangles.getSystemName(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getUpkeepCost(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getDefaultUpkeepCost(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getCostIfFortified(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getCostIfUndermined(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getFortificationTotal(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getUnderminingTotal(), rectangles.getInputImage().getFile().getName(), stage);
+        saveImageAtStage(rectangles.getUnderminingTrigger(), rectangles.getInputImage().getFile().getName(), stage);
+        return rectangles;
     }
 
-    private ControlSystemSegments isolateTextColors(final ControlSystemSegments segments) {
-        LOGGER.info("isolating text colors for image " + segments.getInputImage().getFile().getName());
+    private ControlSystemRectangles isolateTextColors(final ControlSystemRectangles rectangles) {
+        LOGGER.info("isolating text colors for image " + rectangles.getInputImage().getFile().getName());
         int minRed = settings.ocr.filterRedChannelMin;
-        return new ControlSystemSegments(
-                segments.getInputImage(),
-                filterRedAndBinarize(segments.getSystemName(), minRed),
-                filterRedAndBinarize(segments.getUpkeepCost(), minRed),
-                filterRedAndBinarize(segments.getDefaultUpkeepCost(), minRed),
-                filterRedAndBinarize(segments.getCostIfFortified(), minRed),
-                filterRedAndBinarize(segments.getCostIfUndermined(), minRed),
-                filterRedAndBinarize(segments.getFortificationTotal(), minRed),
-                filterRedAndBinarize(segments.getFortificationTrigger(), minRed),
-                filterRedAndBinarize(segments.getUnderminingTotal(), minRed),
-                filterRedAndBinarize(segments.getUnderminingTrigger(), minRed)
+        return new ControlSystemRectangles(
+                rectangles.getInputImage(),
+                filterRedAndBinarize(rectangles.getSystemName(), minRed),
+                filterRedAndBinarize(rectangles.getUpkeepCost(), minRed),
+                filterRedAndBinarize(rectangles.getDefaultUpkeepCost(), minRed),
+                filterRedAndBinarize(rectangles.getCostIfFortified(), minRed),
+                filterRedAndBinarize(rectangles.getCostIfUndermined(), minRed),
+                filterRedAndBinarize(rectangles.getFortificationTotal(), minRed),
+                filterRedAndBinarize(rectangles.getFortificationTrigger(), minRed),
+                filterRedAndBinarize(rectangles.getUnderminingTotal(), minRed),
+                filterRedAndBinarize(rectangles.getUnderminingTrigger(), minRed)
         );
     }
 
-    private Optional<ControlSystemSegments> extractSegments(final InputImage inputImage) {
+    private Optional<ControlSystemRectangles> extractRectangles(final InputImage inputImage) {
 
-        LOGGER.info("extracting segments from image " + inputImage.getFile().getName());
+        LOGGER.info("extracting rectangles from image " + inputImage.getFile().getName());
         final BufferedImage image = inputImage.getImage();
-        final Optional<SegmentsCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
+        final Optional<RectangleCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
             return Optional.empty();
         }
 
-        final SegmentsCoordinatesDto coord = maybeCoord.get();
+        final RectangleCoordinatesDto coord = maybeCoord.get();
 
         final Optional<BufferedImage> systemName = crop(coord.name, image);
         if (!systemName.isPresent()) {
@@ -109,7 +109,7 @@ public class ImageApiV1 extends ImageApiBase {
             return Optional.empty();
         }
 
-        return Optional.of(new ControlSystemSegments(
+        return Optional.of(new ControlSystemRectangles(
                 inputImage,
                 systemName.get(),
                 upkeepCost.get(), defaultUpkeepCost.get(), costIfFortified.get(), costIfUndermined.get(),
@@ -118,31 +118,31 @@ public class ImageApiV1 extends ImageApiBase {
     }
 
 
-    private ControlSystemSegments scaleSegments(final ControlSystemSegments segments) {
-        LOGGER.info("scaling segments for image " + segments.getInputImage().getFile().getName());
-        return new ControlSystemSegments(
-                segments.getInputImage(),
-                scale(segments.getSystemName()),
-                scale(segments.getUpkeepCost()),
-                scale(segments.getDefaultUpkeepCost()),
-                scale(segments.getCostIfFortified()),
-                scale(segments.getCostIfUndermined()),
-                scale(segments.getFortificationTotal()),
-                scale(segments.getFortificationTrigger()),
-                scale(segments.getUnderminingTotal()),
-                scale(segments.getUnderminingTrigger())
+    private ControlSystemRectangles scaleRectangle(final ControlSystemRectangles rectangles) {
+        LOGGER.info("scaling rectangles for image " + rectangles.getInputImage().getFile().getName());
+        return new ControlSystemRectangles(
+                rectangles.getInputImage(),
+                scale(rectangles.getSystemName()),
+                scale(rectangles.getUpkeepCost()),
+                scale(rectangles.getDefaultUpkeepCost()),
+                scale(rectangles.getCostIfFortified()),
+                scale(rectangles.getCostIfUndermined()),
+                scale(rectangles.getFortificationTotal()),
+                scale(rectangles.getFortificationTrigger()),
+                scale(rectangles.getUnderminingTotal()),
+                scale(rectangles.getUnderminingTrigger())
         );
     }
 
     //FIXME: dedup cleanups and everything in here
-    private ControlSystem segmentsToText(final ControlSystemSegments segments) {
+    private ControlSystem rectanglesToText(final ControlSystemRectangles rectangles) {
 
-        LOGGER.info("converting segments to text for image " + segments.getInputImage().getFile().getName());
-        String name = ocrSegment(segments.getSystemName()).trim();
+        LOGGER.info("converting rectangles to text for image " + rectangles.getInputImage().getFile().getName());
+        String name = ocrRectangle(rectangles.getSystemName()).trim();
         name = cleanName(name);
 
         int upkeepCost = -1;
-        final String upkeepCostStr = ocrNumberSegment(segments.getUpkeepCost());
+        final String upkeepCostStr = ocrNumberRectangle(rectangles.getUpkeepCost());
         if (null != upkeepCostStr && !upkeepCostStr.isEmpty()) {
             try {
                 final String cleanString = cleanNumber(upkeepCostStr);
@@ -154,7 +154,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int defaultUpkeepCost = -1;
-        final String defaultUpkeepCostStr = ocrNumberSegment(segments.getDefaultUpkeepCost());
+        final String defaultUpkeepCostStr = ocrNumberRectangle(rectangles.getDefaultUpkeepCost());
         if (null != defaultUpkeepCostStr && !defaultUpkeepCostStr.isEmpty()) {
             try {
                 defaultUpkeepCost = Integer.parseInt(cleanNumber(defaultUpkeepCostStr));
@@ -164,7 +164,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int costIfFortified = -1;
-        final String costIfFortifiedStr = ocrNumberSegment(segments.getCostIfFortified());
+        final String costIfFortifiedStr = ocrNumberRectangle(rectangles.getCostIfFortified());
         if (null != costIfFortifiedStr && !costIfFortifiedStr.isEmpty()) {
             try {
                 costIfFortified = Integer.parseInt(cleanNumber(costIfFortifiedStr));
@@ -174,7 +174,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int costIfUndermined = -1;
-        final String costIfUnderminedStr = ocrNumberSegment(segments.getCostIfUndermined());
+        final String costIfUnderminedStr = ocrNumberRectangle(rectangles.getCostIfUndermined());
         if (null != costIfUnderminedStr && !costIfUnderminedStr.isEmpty()) {
             try {
                 costIfUndermined = Integer.parseInt(cleanNumber(costIfUnderminedStr));
@@ -184,7 +184,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int fortifyTotal = -1;
-        final String fortifyTotalStr = ocrNumberSegment(segments.getFortificationTotal());
+        final String fortifyTotalStr = ocrNumberRectangle(rectangles.getFortificationTotal());
         if (null != fortifyTotalStr && !fortifyTotalStr.isEmpty()) {
             try {
                 fortifyTotal = Integer.parseInt(cleanNumber(fortifyTotalStr));
@@ -194,7 +194,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int fortifyTrigger = -1;
-        final String fortifyTriggerStr = ocrNumberSegment(segments.getFortificationTrigger());
+        final String fortifyTriggerStr = ocrNumberRectangle(rectangles.getFortificationTrigger());
         if (null != fortifyTriggerStr && !fortifyTriggerStr.isEmpty()) {
 
             try {
@@ -205,7 +205,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int undermineTotal = -1;
-        final String undermineTotalStr = ocrNumberSegment(segments.getUnderminingTotal());
+        final String undermineTotalStr = ocrNumberRectangle(rectangles.getUnderminingTotal());
         if (null != undermineTotalStr && !undermineTotalStr.isEmpty()) {
 
             try {
@@ -216,7 +216,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         int undermineTrigger = -1;
-        final String undermineTriggerStr = ocrNumberSegment(segments.getUnderminingTrigger());
+        final String undermineTriggerStr = ocrNumberRectangle(rectangles.getUnderminingTrigger());
         if (null != undermineTriggerStr && !undermineTriggerStr.isEmpty()) {
             try {
                 undermineTrigger = Integer.parseInt(cleanNumber(undermineTriggerStr));
@@ -226,7 +226,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         return new ControlSystem(
-                segments,
+                rectangles,
                 name,
                 upkeepCost, defaultUpkeepCost, costIfFortified, costIfUndermined,
                 fortifyTotal, fortifyTrigger,
@@ -246,13 +246,13 @@ public class ImageApiV1 extends ImageApiBase {
 
         final BufferedImage image = maybeImage.get();
 
-        final Optional<SegmentsCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
+        final Optional<RectangleCoordinatesDto> maybeCoord = ImageUtil.getCoordinatesForImage(image, settings);
         if (!maybeCoord.isPresent()) {
             LOGGER.info("Could not find coordinates settings for image " + file.getName() +
                     " at " + image.getWidth() + "x" + image.getHeight());
             return new InputImage(file, image, ImageType.UNKNOWN);
         }
-        final SegmentsCoordinatesDto coord = maybeCoord.get();
+        final RectangleCoordinatesDto coord = maybeCoord.get();
 
         final Optional<BufferedImage> croppedImage = crop(coord.controlTab, image);
         if (!croppedImage.isPresent()) {
@@ -260,7 +260,7 @@ public class ImageApiV1 extends ImageApiBase {
         }
 
         LOGGER.info("ocr-ing selected tab title");
-        final String tabTitle = ocrSegment(
+        final String tabTitle = ocrRectangle(
                 scale(filterRedAndBinarize(
                         invert(croppedImage.get()),
                         settings.ocr.filterRedChannelMin
@@ -296,17 +296,17 @@ public class ImageApiV1 extends ImageApiBase {
                         .stream()
                         .map(this::prepareAndClassifyImage)
                         .filter(img -> img.getType() == ImageType.CONTROL)
-                        .map(this::extractSegments)
+                        .map(this::extractRectangles)
                         .filter(Optional::isPresent)
-                        .map(Optional::get).map(css -> saveControlSystem(css, "segments"))
+                        .map(Optional::get).map(css -> saveControlSystem(css, "rectangles"))
                         .map(this::isolateTextColors).map(css -> saveControlSystem(css, "isolateTextColors"))
-                        .map(this::scaleSegments).map(css -> saveControlSystem(css, "scale"))
+                        .map(this::scaleRectangle).map(css -> saveControlSystem(css, "scale"))
 //                        .map(this::increaseSegmentsContrast).map(css -> saveControlSystem(css, "contrast"))
 //                        .map(this::binarizeSegments).map(css -> saveControlSystem(css, "binarize"))
 //                        .map(this::invertSegments).map(css -> saveControlSystem(css, "invert"))
-////                        .map(this::segmentsToGray).map(css -> saveControlSystem(css, "toGray"))
+////                        .map(this::rectanglesToGray).map(css -> saveControlSystem(css, "toGray"))
 
-                        .map(this::segmentsToText)
+                        .map(this::rectanglesToText)
                         .collect(Collectors.toList());
     }
 }

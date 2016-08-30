@@ -15,7 +15,7 @@ public class SettingsDto {
     @JsonProperty("corrections")
     public CorrectionsDto corrections;
 
-    @JsonProperty("segmentsCoordinates")
-    public List<SegmentsCoordinatesDto> segmentsCoordinates;
+    @JsonProperty("rectangleCoordinates")
+    public List<RectangleCoordinatesDto> rectangleCoordinates;
 
 }

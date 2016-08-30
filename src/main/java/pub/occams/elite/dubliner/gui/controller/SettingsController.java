@@ -14,8 +14,8 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.converter.NumberStringConverter;
 import pub.occams.elite.dubliner.application.ImageApi;
-import pub.occams.elite.dubliner.dto.settings.SegmentDto;
-import pub.occams.elite.dubliner.dto.settings.SegmentsCoordinatesDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.model.CorrectionModel;
 import pub.occams.elite.dubliner.gui.model.ResolutionsModel;
@@ -29,9 +29,9 @@ public class SettingsController extends Controller<Pane> {
     @FXML
     private ComboBox<ResolutionsModel> resolutionCombo;
     @FXML
-    private TableView<SegmentModel> segmentsTable;
+    private TableView<SegmentModel> rectanglesTable;
     @FXML
-    private TableColumn<SegmentModel, String> segmentColumn;
+    private TableColumn<SegmentModel, String> rectangleColumn;
     @FXML
     private TableColumn<SegmentModel, Number> xCoordColumn;
     @FXML
@@ -50,7 +50,7 @@ public class SettingsController extends Controller<Pane> {
     private TableColumn<CorrectionModel, String> toColumn;
 
     private final ObservableList<ResolutionsModel> resolutionData = FXCollections.observableArrayList();
-    private final ObservableList<SegmentModel> segmentsData = FXCollections.observableArrayList();
+    private final ObservableList<SegmentModel> rectanglesData = FXCollections.observableArrayList();
     private final ObservableList<CorrectionModel> correctionsData = FXCollections.observableArrayList();
 
     private final Stage stage = new Stage();
@@ -62,9 +62,9 @@ public class SettingsController extends Controller<Pane> {
 
         resolutionCombo.setItems(resolutionData);
 
-        segmentsTable.setItems(segmentsData);
+        rectanglesTable.setItems(rectanglesData);
 
-        segmentColumn.setCellValueFactory(data -> data.getValue().nameProperty());
+        rectangleColumn.setCellValueFactory(data -> data.getValue().nameProperty());
         xCoordColumn.setCellFactory(TextFieldTableCell.forTableColumn(new NumberStringConverter()));
         xCoordColumn.setCellValueFactory(data -> data.getValue().xProperty());
         yColumn.setCellFactory(TextFieldTableCell.forTableColumn(new NumberStringConverter()));
@@ -91,7 +91,7 @@ public class SettingsController extends Controller<Pane> {
         new Alert(Alert.AlertType.ERROR, "NOT IMPLEMENTED").showAndWait();
     }
 
-    private SegmentModel segmentToModel(final String name, final SegmentDto s) {
+    private SegmentModel rectangleToModel(final String name, final RectangleDto s) {
         return new SegmentModel(name, s.x, s.y, s.width, s.height);
     }
 
@@ -99,12 +99,12 @@ public class SettingsController extends Controller<Pane> {
         final SettingsDto settings = imageApi.getSettings();
 
         resolutionData.clear();
-        settings.segmentsCoordinates.forEach(
+        settings.rectangleCoordinates.forEach(
                 coord -> resolutionData.add(new ResolutionsModel(coord.screenWidth, coord.screenHeight))
         );
         resolutionCombo.valueProperty().addListener(
                 (observable, oldValue, newValue) -> {
-                    final Optional<SegmentsCoordinatesDto> maybeCoord = settings.segmentsCoordinates
+                    final Optional<RectangleCoordinatesDto> maybeCoord = settings.rectangleCoordinates
                             .stream()
                             .filter(coord -> coord.screenWidth.equals(newValue.getWidth()) &&
                                     coord.screenHeight.equals(newValue.getHeight()))
@@ -114,18 +114,18 @@ public class SettingsController extends Controller<Pane> {
                         return;
                     }
 
-                    final SegmentsCoordinatesDto c = maybeCoord.get();
-                    segmentsData.add(segmentToModel("controlTab", c.controlTab));
-                    segmentsData.add(segmentToModel("costIfFortified", c.costIfFortified));
-                    segmentsData.add(segmentToModel("costIfUndermined", c.costIfUndermined));
-                    segmentsData.add(segmentToModel("defaultUpkeepCost", c.defaultUpkeepCost));
-                    segmentsData.add(segmentToModel("fortificationTotal", c.fortificationTotal));
-                    segmentsData.add(segmentToModel("fortificationTrigger", c.fortificationTrigger));
-                    segmentsData.add(segmentToModel("underminingTotal", c.underminingTotal));
-                    segmentsData.add(segmentToModel("underminingTrigger", c.underminingTrigger));
+                    final RectangleCoordinatesDto c = maybeCoord.get();
+                    rectanglesData.add(rectangleToModel("controlTab", c.controlTab));
+                    rectanglesData.add(rectangleToModel("costIfFortified", c.costIfFortified));
+                    rectanglesData.add(rectangleToModel("costIfUndermined", c.costIfUndermined));
+                    rectanglesData.add(rectangleToModel("defaultUpkeepCost", c.defaultUpkeepCost));
+                    rectanglesData.add(rectangleToModel("fortificationTotal", c.fortificationTotal));
+                    rectanglesData.add(rectangleToModel("fortificationTrigger", c.fortificationTrigger));
+                    rectanglesData.add(rectangleToModel("underminingTotal", c.underminingTotal));
+                    rectanglesData.add(rectangleToModel("underminingTrigger", c.underminingTrigger));
                 }
         );
-        segmentsData.clear();
+        rectanglesData.clear();
 
         correctionsData.clear();
         settings.corrections.systemName.forEach(

@@ -1,7 +1,6 @@
 package pub.occams.elite.dubliner.application;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.junit.Before;
 import org.junit.Test;
 import pub.occams.elite.dubliner.App;
@@ -9,7 +8,6 @@ import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.ImageType;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -57,7 +55,7 @@ public class ImageApiV1Test {
             final Optional<ControlSystem> system =
                     systems
                             .stream()
-                            .filter(cs -> file.getAbsolutePath().equals(cs.getControlSystemSegments().getInputImage().getFile().getAbsolutePath()))
+                            .filter(cs -> file.getAbsolutePath().equals(cs.getControlSystemRectangles().getInputImage().getFile().getAbsolutePath()))
                             .findFirst();
 
             assertTrue("file not found:" + fileName, system.isPresent());

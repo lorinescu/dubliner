@@ -2,7 +2,7 @@ package pub.occams.elite.dubliner.dto.settings;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SegmentDto {
+public class RectangleDto {
 
     @JsonProperty("x")
     public Integer x;

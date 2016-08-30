@@ -25,8 +25,8 @@ public class HelpController extends Controller<AnchorPane> {
                 + " \"AL1OTH\" : \"ALIOTH\" \n"
                 + "The next time AL1OTH is found it will be replaced with ALIOTH\n");
         info.appendText("\n");
-        info.appendText("In \"segmentsCoordinates\" add coordinates for resolution specific segment extraction. \n"
-                + "A segment is a rectangle cropped from a screenshot which contains interesting information to be \n"
+        info.appendText("In \"rectangleCoordinates\" add coordinates for resolution specific rectangle extraction. \n"
+                + "A rectangle is a rectangular area cropped from a screenshot which contains interesting information to be \n"
                 + "feed to OCR. In case your resolution (screenWidth by screenHeight) is not in there you can take a screenshot, fire \n"
                 + "up Gimp/Photoshop/Paint and start counting pixels. Or you can send me the images and some palladium and \n"
                 + "I'll add the coordinates.\n");
