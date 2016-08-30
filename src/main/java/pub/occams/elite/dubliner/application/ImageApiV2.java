@@ -21,9 +21,9 @@ import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.domain.ImageType.PP_CONTROL;
+import static pub.occams.elite.dubliner.domain.ImageType.UNKNOWN;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.invert;
-import static sun.plugin.javascript.navig.JSType.Image;
 
 public class ImageApiV2 extends ImageApiBase {
 
@@ -100,7 +100,7 @@ public class ImageApiV2 extends ImageApiBase {
         final BufferedImage originalImage = inputImage.getImage();
         LOGGER.info("classification start: " + file.getAbsolutePath());
 
-       //crop aprox a band from the top of the image which should contain the power play tabs
+        //crop aprox a band from the top of the image which should contain the power play tabs
         final RectangleDto rect1 = new RectangleDto();
         rect1.x = 0;
         rect1.y = 0;
@@ -198,6 +198,74 @@ public class ImageApiV2 extends ImageApiBase {
         return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
     }
 
+    private List<LineSegment> mergeSegments(final BufferedImage img, final File file,final List<LineSegment> segments,
+                                            final boolean
+            isVertical,
+                                            final int threshold) {
+        final List<LineSegment> out = new ArrayList<>();
+        boolean mergeOccured = false;
+        for (int i = 1; i < segments.size(); i++) {
+            final LineSegment prev = segments.get(i - 1);
+            final LineSegment curr = segments.get(i);
+            int delta = 0;
+            if (isVertical) {
+                delta = curr.x0 - prev.x0;
+            } else {
+                delta = curr.y0 - prev.y0;
+            }
+            if (delta < threshold) {
+                out.add(prev);
+                mergeOccured = true;
+            } else {
+                out.add(curr);
+            }
+        }
+        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "classify2-merged-progress");
+        if (mergeOccured) {
+            return mergeSegments(img, file, out, isVertical, threshold);
+        }
+        return out;
+    }
+
+    public Optional<ClassifiedImage> classify2(final InputImage inputImage) {
+        final File file = inputImage.getFile();
+        final BufferedImage originalImage = inputImage.getImage();
+        LOGGER.info("classification start: " + file.getAbsolutePath());
+
+        final BufferedImage img = filterRedAndBinarize(originalImage, 85);
+//        final BufferedImage img = originalImage;
+        saveImageAtStage(img, file, "classify2-filterRedAndBinarize");
+
+        final List<LineSegment> segments = detectLines(img, file, 1, 80, 200, 0);
+        final List<LineSegment> horizontals = segments
+                .stream()
+                .filter(s -> s.y0 == s.y1)
+                .sorted((s1, s2) -> s1.y0 - s2.y0)
+                .collect(Collectors.toList());
+        final List<LineSegment> verticals = segments
+                .stream()
+                .filter(s -> s.x0 == s.x1)
+                .sorted((s1, s2) -> s1.x0 - s2.x0)
+                .collect(Collectors.toList());
+        final int joinThreshold = 3; //if two lines are less than n px apart they are considered a single line
+        final List<LineSegment> mergedHorizontals = mergeSegments(img, file, horizontals, false, joinThreshold);
+        final List<LineSegment> mergedVerticals = mergeSegments(img, file, verticals, true, joinThreshold);
+
+
+        final List<LineSegment> merged = new ArrayList<>(mergedHorizontals);
+        merged.addAll(mergedVerticals);
+        final BufferedImage img2 = ImageUtil.drawSegments(img, merged);
+
+        saveImageAtStage(img2, file, "classify2-merged");
+
+        final ImageType type = UNKNOWN;
+        LOGGER.info("classification end:" + file.getAbsolutePath() + ", type is: " + type);
+
+        return Optional.empty();
+//        return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
+    }
+
+
     public Optional<ControlSystem> extract(final ClassifiedImage input) {
         switch (input.getType()) {
             case PP_CONTROL:
@@ -220,7 +288,8 @@ public class ImageApiV2 extends ImageApiBase {
                 .map(this::load)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .map(this::classify)
+//                .map(this::classify)
+                .map(this::classify2)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .filter(img -> ImageType.UNKNOWN != img.getType())

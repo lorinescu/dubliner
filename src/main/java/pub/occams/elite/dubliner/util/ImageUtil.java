@@ -5,16 +5,19 @@ import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
+import pub.occams.elite.dubliner.domain.LineSegment;
 import pub.occams.elite.dubliner.dto.settings.RectangleDto;
 import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.List;
 
 public class ImageUtil {
 
@@ -75,6 +78,26 @@ public class ImageUtil {
                 output.setRGB(x, y, color);
             }
         }
+        return output;
+    }
+
+    public static BufferedImage drawSegments(final BufferedImage image, final List<LineSegment> segments) {
+        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+        Graphics g = output.getGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        Graphics2D g2 = output.createGraphics();
+        int i=0;
+        for (final LineSegment s : segments) {
+            g2.setColor(Color.BLUE);
+            BasicStroke stroke=new BasicStroke(3);
+            g2.setStroke(stroke);
+            g2.drawLine(s.x0, s.y0, s.x1, s.y1);
+            g2.drawString("L="+i,s.x0,s.y0);
+            i++;
+        }
+        g2.dispose();
         return output;
     }
 
