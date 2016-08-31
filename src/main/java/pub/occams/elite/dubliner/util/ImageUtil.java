@@ -5,19 +5,19 @@ import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.domain.LineSegment;
-import pub.occams.elite.dubliner.dto.settings.RectangleDto;
+import pub.occams.elite.dubliner.domain.geometry.LineSegment;
+import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
+import pub.occams.elite.dubliner.dto.settings.RectangleDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 public class ImageUtil {
 
@@ -61,6 +61,27 @@ public class ImageUtil {
         return Optional.empty();
     }
 
+    public static Optional<BufferedImage> crop(final Rectangle r, final BufferedImage image) {
+        try {
+            return Optional.of(image.getSubimage(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0));
+        } catch (RasterFormatException e) {
+            LOGGER.error("Failed to crop image, incorrect bounds");
+        }
+        return Optional.empty();
+    }
+
+    public static Rectangle scale(final Rectangle r, final double factor) {
+        final int width = r.x1 - r.x0;
+        final double newWidth = width * factor;
+        final int widthDelta = (int) (width - newWidth) / 2;
+
+        final int height = r.y1 - r.y0;
+        final double newHeight = height * factor;
+        final int heightDelta = (int) (height - newHeight) / 2;
+
+        return new Rectangle(r.x0 + widthDelta, r.y0 + heightDelta, r.x1 - widthDelta, r.y1 - heightDelta);
+    }
+
     public static BufferedImage filterRedAndBinarize(final BufferedImage image, final int minRed) {
         final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
         for (int x = 0; x < image.getWidth(); x++) {
@@ -88,13 +109,13 @@ public class ImageUtil {
         g.dispose();
 
         Graphics2D g2 = output.createGraphics();
-        int i=0;
+        int i = 0;
         for (final LineSegment s : segments) {
             g2.setColor(Color.BLUE);
-            BasicStroke stroke=new BasicStroke(3);
+            BasicStroke stroke = new BasicStroke(3);
             g2.setStroke(stroke);
             g2.drawLine(s.x0, s.y0, s.x1, s.y1);
-            g2.drawString("L="+i,s.x0,s.y0);
+            g2.drawString("L=" + i, s.x0, s.y0);
             i++;
         }
         g2.dispose();
@@ -144,5 +165,11 @@ public class ImageUtil {
 
     public static IplImage bufferedImageToIplImage(final BufferedImage image) {
         return CONVERTER1.convert(CONVERTER2.convert(image));
+    }
+
+    public static int distanceBetweenPoints(final int x0, final int y0, final int x1, final int y1) {
+        double xd = x0 - x1;
+        double yd = y0 - y1;
+        return (int) Math.sqrt(xd * xd + yd * yd);
     }
 }

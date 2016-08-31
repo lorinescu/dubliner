@@ -1,5 +1,7 @@
 package pub.occams.elite.dubliner.domain;
 
+import pub.occams.elite.dubliner.domain.geometry.LineSegment;
+
 public class ClassifiedImage {
     private final InputImage inputImage;
     private final ImageType type;

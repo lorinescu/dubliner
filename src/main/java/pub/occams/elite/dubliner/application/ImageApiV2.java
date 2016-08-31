@@ -4,6 +4,8 @@ import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.opencv_core.*;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.*;
+import pub.occams.elite.dubliner.domain.geometry.LineSegment;
+import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 import pub.occams.elite.dubliner.dto.settings.RectangleDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
@@ -21,7 +23,6 @@ import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.domain.ImageType.PP_CONTROL;
-import static pub.occams.elite.dubliner.domain.ImageType.UNKNOWN;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
@@ -32,7 +33,8 @@ public class ImageApiV2 extends ImageApiBase {
     }
 
     private List<LineSegment> detectLines(final BufferedImage image, final File file, final int pixelResolution,
-                                          final int threshold, final int minLength, final int maxGap) {
+                                          final int threshold, final int maxGap,
+                                          final int minLength, final int maxLength) {
         final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
@@ -51,6 +53,11 @@ public class ImageApiV2 extends ImageApiBase {
 
             final CvPoint pt1 = new CvPoint(line.position(0));
             final CvPoint pt2 = new CvPoint(line.position(1));
+
+
+            if (distanceBetweenPoints(pt1.x(), pt1.y(), pt2.x(), pt2.y()) > maxLength) {
+                continue;
+            }
             segments.add(new LineSegment(pt1.x(), pt1.y(), pt2.x(), pt2.y()));
         }
 
@@ -70,21 +77,19 @@ public class ImageApiV2 extends ImageApiBase {
     }
 
     private List<LineSegment> detectHorizontalLines(final BufferedImage image, final File file,
-                                                    final int pixelResolution, final int threshold, final int minLength,
-                                                    final int maxGap, final int maxLength) {
-        return detectLines(image, file, pixelResolution, threshold, minLength, maxGap)
+                                                    final int pixelResolution, final int threshold, final int maxGap,
+                                                    final int minLength, final int maxLength) {
+        return detectLines(image, file, pixelResolution, threshold, maxGap, minLength, maxLength)
                 .stream()
-                .filter(s -> s.y0 == s.y1 && s.x1 - s.x0 <= maxLength)
                 .sorted((s1, s2) -> s1.y0 - s2.y0)
                 .collect(Collectors.toList());
     }
 
     private List<LineSegment> detectVerticalLines(final BufferedImage image, final File file,
-                                                  final int pixelResolution, final int threshold, final int minLength,
-                                                  final int maxGap, final int maxLength) {
-        return detectLines(image, file, pixelResolution, threshold, minLength, maxGap)
+                                                  final int pixelResolution, final int threshold, final int maxGap,
+                                                  final int minLength, final int maxLength) {
+        return detectLines(image, file, pixelResolution, threshold, maxGap, minLength, maxLength)
                 .stream()
-                .filter(s -> s.x0 == s.x1 && s.y1 - s.y0 <= maxLength)
                 .sorted((s1, s2) -> s1.x0 - s2.x0)
                 .collect(Collectors.toList());
     }
@@ -198,21 +203,14 @@ public class ImageApiV2 extends ImageApiBase {
         return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
     }
 
-    private List<LineSegment> mergeSegments(final BufferedImage img, final File file,final List<LineSegment> segments,
-                                            final boolean
-            isVertical,
-                                            final int threshold) {
+    private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file, final List<LineSegment>
+            segments, final int threshold) {
         final List<LineSegment> out = new ArrayList<>();
         boolean mergeOccured = false;
         for (int i = 1; i < segments.size(); i++) {
             final LineSegment prev = segments.get(i - 1);
             final LineSegment curr = segments.get(i);
-            int delta = 0;
-            if (isVertical) {
-                delta = curr.x0 - prev.x0;
-            } else {
-                delta = curr.y0 - prev.y0;
-            }
+            int delta = curr.y0 - prev.y0;
             if (delta < threshold) {
                 out.add(prev);
                 mergeOccured = true;
@@ -227,39 +225,102 @@ public class ImageApiV2 extends ImageApiBase {
         return out;
     }
 
-    public Optional<ClassifiedImage> classify2(final InputImage inputImage) {
+    private Optional<ImageType> detectSelectedTab(final InputImage inputImage) {
+
         final File file = inputImage.getFile();
         final BufferedImage originalImage = inputImage.getImage();
+
+        final int totalPowerPlayTabs = 6;
+        final int maxLength = inputImage.getImage().getWidth() / totalPowerPlayTabs;
+        final int minLength = inputImage.getImage().getWidth() / (2 * totalPowerPlayTabs);
+        final List<LineSegment> segments = detectHorizontalLines(originalImage, file, 1, 80, 2, minLength, maxLength);
+
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawSegments(originalImage, segments), file, "detect-selected-tab-segments");
+        }
+
+        final int twoLineSegmentsOnTopAndBottomOfTheTabButton = 2;
+        if (segments.size() < twoLineSegmentsOnTopAndBottomOfTheTabButton) {
+            return Optional.empty();
+        }
+
+        final double scaleDownFactor = 0.8;
+        final Rectangle tab = ImageUtil.scale(new Rectangle(
+                segments.get(0).x0, segments.get(0).y0,
+                segments.get(1).x1, segments.get(1).y1
+        ), scaleDownFactor);
+
+        final Optional<BufferedImage> maybeTabImage = ImageUtil.crop(tab, originalImage);
+        if (!maybeTabImage.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage tabImage = maybeTabImage.get();
+        saveImageAtStage(tabImage, file, "detect-selected-tab-selection");
+
+        final BufferedImage ocrInputImage = invert(scale(tabImage));
+
+        saveImageAtStage(ocrInputImage, file, "detect-selected-tab-ocr-input");
+
+        final String str = ocrRectangle(ocrInputImage);
+        if (null == str || str.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final String title = str.trim().replace("0", "O");
+        LOGGER.info("Ocr raw:[" + str + "], corrected:[" + title + "]");
+        final ImageType type;
+        if ("PREPARATION".equals(title)) {
+            type = ImageType.PP_PREPARATION;
+        } else if ("EXPANSION".equals(title)) {
+            type = ImageType.PP_EXPANSION;
+        } else if ("CONTROL".equals(title)) {
+            type = PP_CONTROL;
+        } else if ("TURMOIL".equals(title)) {
+            type = ImageType.PP_TURMOIL;
+        } else {
+            return Optional.empty();
+        }
+        return Optional.of(type);
+    }
+
+    private Optional<Power> detectSelectedPower(final InputImage inputImage) {
+        final File file = inputImage.getFile();
+        final BufferedImage img = inputImage.getImage();
+
+        final double longSeparatorLinesLengthFactor = 0.8;
+        final int maxLength = inputImage.getImage().getWidth();
+        final int minLength = (int) (inputImage.getImage().getWidth() * longSeparatorLinesLengthFactor);
+        final List<LineSegment> segments = detectHorizontalLines(img, file, 1, 80, 10, minLength, maxLength);
+
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawSegments(img, segments), file, "classify2-long-separators");
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<ClassifiedImage> classify2(final InputImage inputImage) {
+        final File file = inputImage.getFile();
+//        final BufferedImage originalImage = inputImage.getImage();
         LOGGER.info("classification start: " + file.getAbsolutePath());
 
-        final BufferedImage img = filterRedAndBinarize(originalImage, 85);
+//        final BufferedImage img = filterRedAndBinarize(originalImage, 85);
 //        final BufferedImage img = originalImage;
-        saveImageAtStage(img, file, "classify2-filterRedAndBinarize");
+//        saveImageAtStage(img, file, "classify2-filterRedAndBinarize");
 
-        final List<LineSegment> segments = detectLines(img, file, 1, 80, 200, 0);
-        final List<LineSegment> horizontals = segments
-                .stream()
-                .filter(s -> s.y0 == s.y1)
-                .sorted((s1, s2) -> s1.y0 - s2.y0)
-                .collect(Collectors.toList());
-        final List<LineSegment> verticals = segments
-                .stream()
-                .filter(s -> s.x0 == s.x1)
-                .sorted((s1, s2) -> s1.x0 - s2.x0)
-                .collect(Collectors.toList());
-        final int joinThreshold = 3; //if two lines are less than n px apart they are considered a single line
-        final List<LineSegment> mergedHorizontals = mergeSegments(img, file, horizontals, false, joinThreshold);
-        final List<LineSegment> mergedVerticals = mergeSegments(img, file, verticals, true, joinThreshold);
+        final Optional<ImageType> maybeType = detectSelectedTab(inputImage);
+        if (!maybeType.isPresent()) {
+            return Optional.empty();
+        }
+        final ImageType imageType = maybeType.get();
 
+        final Optional<Power> maybePower = detectSelectedPower(inputImage);
+        if (!maybePower.isPresent()) {
+            return Optional.empty();
+        }
+        final Power power = maybePower.get();
 
-        final List<LineSegment> merged = new ArrayList<>(mergedHorizontals);
-        merged.addAll(mergedVerticals);
-        final BufferedImage img2 = ImageUtil.drawSegments(img, merged);
-
-        saveImageAtStage(img2, file, "classify2-merged");
-
-        final ImageType type = UNKNOWN;
-        LOGGER.info("classification end:" + file.getAbsolutePath() + ", type is: " + type);
+        LOGGER.info("classification end: " + power + "/" + imageType + ", for file: " + file.getAbsolutePath());
 
         return Optional.empty();
 //        return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
