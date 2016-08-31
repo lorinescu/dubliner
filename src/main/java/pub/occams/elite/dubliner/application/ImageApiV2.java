@@ -13,10 +13,8 @@ import pub.occams.elite.dubliner.util.ImageUtil;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
@@ -203,26 +201,27 @@ public class ImageApiV2 extends ImageApiBase {
         return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
     }
 
-    private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file, final List<LineSegment>
-            segments, final int threshold) {
-        final List<LineSegment> out = new ArrayList<>();
-        boolean mergeOccured = false;
+    private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file,
+                                                      final List<LineSegment> segments, final int threshold) {
+        final Set<LineSegment> out = new HashSet<>();
+        boolean mergeOccurred = false;
         for (int i = 1; i < segments.size(); i++) {
             final LineSegment prev = segments.get(i - 1);
             final LineSegment curr = segments.get(i);
             int delta = curr.y0 - prev.y0;
             if (delta < threshold) {
                 out.add(prev);
-                mergeOccured = true;
+                mergeOccurred = true;
             } else {
                 out.add(curr);
             }
         }
-        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "classify2-merged-progress");
-        if (mergeOccured) {
-            return mergeSegments(img, file, out, isVertical, threshold);
+        final List<LineSegment> lst = new ArrayList<>(out);
+        saveImageAtStage(ImageUtil.drawSegments(img, lst), file, "classify2-merged-progress");
+        if (mergeOccurred) {
+            return mergeHorizontalSegments(img, file, lst, threshold);
         }
-        return out;
+        return lst;
     }
 
     private Optional<ImageType> detectSelectedTab(final InputImage inputImage) {
@@ -291,9 +290,9 @@ public class ImageApiV2 extends ImageApiBase {
         final int maxLength = inputImage.getImage().getWidth();
         final int minLength = (int) (inputImage.getImage().getWidth() * longSeparatorLinesLengthFactor);
         final List<LineSegment> segments = detectHorizontalLines(img, file, 1, 80, 10, minLength, maxLength);
-
+        final List<LineSegment> merged = mergeHorizontalSegments(img, file, segments, 3);
         if (debug) {
-            saveImageAtStage(ImageUtil.drawSegments(img, segments), file, "classify2-long-separators");
+            saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "classify2-long-separators");
         }
 
         return Optional.empty();

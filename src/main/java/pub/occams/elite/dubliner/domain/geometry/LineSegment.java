@@ -13,4 +13,27 @@ public class LineSegment {
         this.x1 = x1;
         this.y1 = y1;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LineSegment that = (LineSegment) o;
+
+        if (x0 != that.x0) return false;
+        if (y0 != that.y0) return false;
+        if (x1 != that.x1) return false;
+        return y1 == that.y1;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = x0;
+        result = 31 * result + y0;
+        result = 31 * result + x1;
+        result = 31 * result + y1;
+        return result;
+    }
 }
