@@ -93,10 +93,6 @@ public class ImageApiV2 extends ImageApiBase {
                 .collect(Collectors.toList());
     }
 
-    private Optional<ControlSystem> extractControl(final ClassifiedImage input) {
-        return Optional.empty();
-    }
-
     //TODO: merge Horiz/Vert methods can be ... merged
     private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file,
                                                       final List<LineSegment> segments, final int threshold) {
@@ -107,6 +103,11 @@ public class ImageApiV2 extends ImageApiBase {
             Range foundRange = null;
             for (final Range range : clusters.keySet()) {
                 if (s.y0 >= range.low && s.y0 <= range.high) {
+                    //don't merge if the segments are colinear-ish by a few pixels
+                    final LineSegment rangeSegment = clusters.get(range);
+                    if (rangeSegment.x1 < s.x0 || rangeSegment.x0 > s.x1) {
+                        continue;
+                    }
                     foundRange = range;
                     break;
                 }
@@ -245,7 +246,7 @@ public class ImageApiV2 extends ImageApiBase {
         final BufferedImage powerImage = maybePowerImage.get();
         saveImageAtStage(powerImage, file, "detect-selected-power");
 
-        final BufferedImage ocrInputImage = invert(scale(powerImage));
+        final BufferedImage ocrInputImage = invert(scale(filterRedAndBinarize(powerImage, 85)));
 
         saveImageAtStage(ocrInputImage, file, "detect-selected-power-ocr-input");
 
@@ -256,7 +257,7 @@ public class ImageApiV2 extends ImageApiBase {
 
         Power power = null;
         for (final Power p : Power.values()) {
-            final String str1 = str.trim().toUpperCase();
+            final String str1 = cleanPowerName(str);
             final String str2 = p.getName();
             if (str1.contains(str2)) {
                 power = p;
@@ -268,6 +269,192 @@ public class ImageApiV2 extends ImageApiBase {
             return Optional.empty();
         }
         return Optional.of(new DataRectangle<>(power, powerNameSlice));
+    }
+
+    private Optional<DataRectangle<String>> extractSystemName(final ClassifiedImage input) {
+
+        final File file = input.getInputImage().getFile();
+        final BufferedImage img = input.getInputImage().getImage();
+
+        LOGGER.info("Name extraction start for file: " + file.getAbsolutePath());
+
+        final Rectangle reference = input.getPower().getRectangle();
+        final int x0 = reference.x0;
+        final int y0Offset = 10;//a few extra pictures to remove the line below the power name
+        final int y0 = reference.y1 + y0Offset;
+        final int x1 = reference.x1;
+        final int y1 = img.getHeight();
+        final Rectangle skipTabsAndPower = new Rectangle(x0, y0, x1, y1);
+        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
+        if (!maybeImg2.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage img2 = maybeImg2.get();
+        saveImageAtStage(img2, file, "extract-name-data-details-area");
+
+        final double horizontalLineBelowSystemNameLengthFactor = 0.3;
+        final int minLength = (int) (img2.getWidth() * horizontalLineBelowSystemNameLengthFactor);
+        final int maxLength = img2.getWidth();
+        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, 80, 1, minLength, maxLength);
+        final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawSegments(img2, merged), file, "extract-name-data-lines");
+        }
+
+        if (merged.size() < 1) {
+            return Optional.empty();
+        }
+
+        final LineSegment sysNameLine = merged.get(0);
+        final Rectangle sysNameRect = new Rectangle(
+                sysNameLine.x0, 0, sysNameLine.x1, sysNameLine.y1
+        );
+        final Optional<BufferedImage> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
+        if (!maybeImg3.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage img3 = maybeImg3.get();
+        saveImageAtStage(img3, file, "extract-name-data");
+
+        final BufferedImage ocrInputImage = invert(scale(img3));
+
+        saveImageAtStage(ocrInputImage, file, "extract-name-ocr-input");
+
+        final String str = ocrRectangle(ocrInputImage);
+        if (null == str || str.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final String sysName = cleanSystemName(str);
+        LOGGER.info("Selected system, raw OCR:[" + str + "], corrected:[" + sysName + "]");
+
+
+        final Rectangle realRect = new Rectangle(
+                sysNameRect.x0 + x0, sysNameRect.y0 + y0,
+                sysNameRect.x1 + x0, sysNameRect.y1 + y0
+        );
+        return Optional.of(new DataRectangle<>(sysName, realRect));
+    }
+
+
+    private Optional<ControlSystem> extractControl(final ClassifiedImage input,
+                                                   final DataRectangle<String> sysNameRect) {
+        final File file = input.getInputImage().getFile();
+        final BufferedImage img = input.getInputImage().getImage();
+
+        LOGGER.info("Control data extraction start for file: " + file.getAbsolutePath());
+
+        final Rectangle reference = sysNameRect.getRectangle();
+        final int x0 = reference.x0;
+        final int y0Offset = 10;//a few extra pictures to remove the line below the system name
+        final int y0 = reference.y1 + y0Offset;
+        final int x1 = reference.x1;
+        final int y1 = img.getHeight();
+        final Rectangle skipTabsPowerAndSystemName = new Rectangle(x0, y0, x1, y1);
+        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsPowerAndSystemName,
+                filterRedAndBinarize(img, settings.ocr.filterRedChannelMin)
+        );
+        if (!maybeImg2.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage img2 = maybeImg2.get();
+
+        saveImageAtStage(img2, file, "extract-control-data-details-area");
+
+        final double horizontalLineBelowSystemNameLengthFactor = 0.25;
+        final int minLength = (int) (img2.getWidth() * horizontalLineBelowSystemNameLengthFactor);
+        final int maxLength = img2.getWidth();
+        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, 80, 0, minLength, maxLength);
+        final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawSegments(img2, merged), file, "extract-control-data-lines");
+        }
+
+        //find the bottom line of the fortification rectangle and the top line of the undermining rectangle
+        //they are used to calculate the data rectangles coordinates
+        LineSegment bottomFortificationSegment = new LineSegment(0, 0, 0, 0);
+        LineSegment topUnderminingSegment = new LineSegment(999999, 999999, 0, 999999);
+        for (final LineSegment s : merged) {
+            if (s.x0 == 0 && s.y0 > bottomFortificationSegment.y0) {
+                bottomFortificationSegment = s;
+            }
+            if (s.x1 >= topUnderminingSegment.x1 || s.y1 < topUnderminingSegment.y1) {
+                topUnderminingSegment = s;
+            }
+        }
+
+        final Rectangle costsRectangle = new Rectangle(
+                bottomFortificationSegment.x1, 0,
+                img2.getWidth(), topUnderminingSegment.y0
+        );
+        final Rectangle fortificationRectangle = new Rectangle(
+                0, topUnderminingSegment.y0,
+                bottomFortificationSegment.x1, bottomFortificationSegment.y1
+        );
+        final Rectangle underminingRectangle = new Rectangle(
+                topUnderminingSegment.x0, topUnderminingSegment.y0,
+                topUnderminingSegment.x1, bottomFortificationSegment.y0
+        );
+
+        final Optional<BufferedImage> maybeCostsImg = ImageUtil.crop(costsRectangle, img2);
+        final Optional<BufferedImage> maybeFortificationImg = ImageUtil.crop(fortificationRectangle, img2);
+        final Optional<BufferedImage> maybeUnderminingImg = ImageUtil.crop(underminingRectangle, img2);
+
+        if (!(maybeCostsImg.isPresent() && maybeFortificationImg.isPresent() && maybeUnderminingImg.isPresent())) {
+            return Optional.empty();
+        }
+
+        final BufferedImage costsImg = maybeCostsImg.get();
+        saveImageAtStage(costsImg, file, "extract-control-data-costs");
+        final String str1 = ocrRectangle(costsImg);
+        if (null == str1 || str1.isEmpty()) {
+            return Optional.empty();
+        }
+        LOGGER.info("Systems costs:[" + str1 + "]");
+
+        final BufferedImage fortificationImg = maybeFortificationImg.get();
+        saveImageAtStage(fortificationImg, file, "extract-control-data-fortif");
+        final String str2 = ocrRectangle(fortificationImg);
+        if (null == str2 || str2.isEmpty()) {
+            return Optional.empty();
+        }
+        LOGGER.info("Fortifications:[" + str2 + "]");
+
+        final BufferedImage underminingImg = maybeUnderminingImg.get();
+        saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
+        final String str3 = ocrRectangle(underminingImg);
+        if (null == str3 || str3.isEmpty()) {
+            return Optional.empty();
+        }
+        LOGGER.info("Undermining:[" + str3 + "]");
+
+        if (debug) {
+            final DataRectangle<String> costsReal = new DataRectangle<>(
+                    "costs", new Rectangle(
+                    costsRectangle.x0 + x0, costsRectangle.y0 + y0,
+                    costsRectangle.x1 + x0, costsRectangle.y1 + y0
+            )
+            );
+            final DataRectangle<String> undermineReal = new DataRectangle<>(
+                    "undermine", new Rectangle(
+                    underminingRectangle.x0 + x0, underminingRectangle.y0 + y0,
+                    underminingRectangle.x1 + x0, underminingRectangle.y1 + y0
+            )
+            );
+            final DataRectangle<String> fortificationReal = new DataRectangle<>(
+                    "fortification", new Rectangle(
+                    fortificationRectangle.x0 + x0, fortificationRectangle.y0 + y0,
+                    fortificationRectangle.x1 + x0, fortificationRectangle.y1 + y0
+            )
+            );
+            saveImageAtStage(
+                    ImageUtil.drawDataRectangles(img, input.getType(), input.getPower(), sysNameRect, costsReal,
+                            undermineReal, fortificationReal),
+                    file,
+                    "extract-data-rects");
+        }
+
+        return Optional.empty();
     }
 
     @Override
@@ -294,69 +481,26 @@ public class ImageApiV2 extends ImageApiBase {
 
     public Optional<ControlSystem> extract(final ClassifiedImage input) {
 
-        final File file = input.getInputImage().getFile();
         final BufferedImage img = input.getInputImage().getImage();
+        final File file = input.getInputImage().getFile();
 
         LOGGER.info("Extraction start for file: " + file.getAbsolutePath());
 
+        final Optional<DataRectangle<String>> maybeSysName = extractSystemName(input);
+        if (!maybeSysName.isPresent()) {
+            return Optional.empty();
+        }
+        final DataRectangle<String> sysNameRect = maybeSysName.get();
+
         if (debug) {
-            saveImageAtStage(ImageUtil.drawDataRectangles(img, input.getType(), input.getPower()), file,
-                    "extract-data-previous-rects");
+            saveImageAtStage(ImageUtil.drawDataRectangles(img, input.getType(), input.getPower(), sysNameRect), file,
+                    "extract-data-rects");
         }
-
-        final Rectangle reference = input.getPower().getRectangle();
-        final int x0 = reference.x0;
-        final int y0 = reference.y1 + 10; //a few extra pictures to remove the line below the power name
-        final int x1 = reference.x1;
-        final int y1 = img.getHeight();
-        final Rectangle skipTabsAndPower = new Rectangle(x0, y0, x1, y1);
-        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
-        if (!maybeImg2.isPresent()) {
-            return Optional.empty();
-        }
-        final BufferedImage img2 = maybeImg2.get();
-        saveImageAtStage(img2, file, "extract-data-details-area");
-
-        final double horizontalLineBelowSystemNameLengthFactor = 0.3;
-        final int minLength = (int) (img2.getWidth() * horizontalLineBelowSystemNameLengthFactor);
-        final int maxLength = img2.getWidth();
-        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, 80, 1, minLength, maxLength);
-        final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
-        if (debug) {
-            saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "extract-data");
-        }
-
-        if (merged.size() < 1) {
-            return Optional.empty();
-        }
-
-        final LineSegment sysNameLine = merged.get(0);
-        final Rectangle sysNameRect = new Rectangle(
-                sysNameLine.x0, 0, sysNameLine.x1, sysNameLine.y1
-        );
-        final Optional<BufferedImage> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
-        if (!maybeImg3.isPresent()) {
-            return Optional.empty();
-        }
-        final BufferedImage img3 = maybeImg3.get();
-        saveImageAtStage(img3, file, "extract-data-system-name");
-
-        final BufferedImage ocrInputImage = invert(scale(img3));
-
-        saveImageAtStage(ocrInputImage, file, "extract-data-system-name-ocr-input");
-
-        final String str = ocrRectangle(ocrInputImage);
-        if (null == str || str.isEmpty()) {
-            return Optional.empty();
-        }
-
-        final String sysName = cleanSystemName(str);
-        LOGGER.info("Selected system, raw OCR:[" + str + "], corrected:[" + sysName + "]");
 
         Optional<ControlSystem> maybeCs = Optional.empty();
         switch (input.getType().getData()) {
             case PP_CONTROL:
-                maybeCs = extractControl(input);
+                maybeCs = extractControl(input, sysNameRect);
                 break;
             case PP_EXPANSION:
                 maybeCs = Optional.empty();
@@ -430,8 +574,8 @@ public class ImageApiV2 extends ImageApiBase {
         try {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
-                    new File("data/control_images/1920x1080/mahon/control/1.bmp")
-//                    new File("data/control_images/1920x1080/ald/control/1.bmp"),
+//                    new File("data/control_images/1920x1080/mahon/control/1.bmp"),
+                    new File("data/control_images/1920x1080/ald/control/1.bmp")
 //                    new File("data/control_images/1920x1200/ald/control/1.bmp"),
 //                    new File("data/control_images/1920x1200/mahon/control/1.bmp"),
 //                    new File("data/control_images/1920x1200/mahon/control/4.bmp"),

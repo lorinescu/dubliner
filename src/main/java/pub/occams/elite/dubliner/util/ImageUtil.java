@@ -134,9 +134,10 @@ public class ImageUtil {
             g2.setColor(Color.BLUE);
             BasicStroke stroke = new BasicStroke(3);
             g2.setStroke(stroke);
+            g2.setFont(new Font("Serif", Font.BOLD, 14));
             final Rectangle r = dr.getRectangle();
             g2.drawRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
-            g2.drawString(dr.getData().toString(), r.x0, r.y0);
+            g2.drawString(dr.getData().toString(), r.x0+10, r.y0+10);
         }
         g2.dispose();
         return output;

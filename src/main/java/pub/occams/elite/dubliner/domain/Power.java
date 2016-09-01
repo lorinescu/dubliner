@@ -8,7 +8,7 @@ public enum Power {
     EDMUND_MAHON("EDMUND MAHON"),
     FELICIA_WINTERS("aaaaaaaaaaaaa"),
     LI_YONG_RUI("aaaaaaaaaaaaa"),
-    PRANAV_ANTAL("aaaaaaaaaaaaa"),
+    PRANAV_ANTAL("PRANAV ANTAL"),
     ZACHARY_HUDSON("aaaaaaaaaaaaa"),
     ZEMINA_TORVAL("aaaaaaaaaaaaa");
 

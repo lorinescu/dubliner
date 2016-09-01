@@ -153,7 +153,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String upkeepCostStr = ocrNumberRectangle(rectangles.getUpkeepFromLastCycle());
         if (null != upkeepCostStr && !upkeepCostStr.isEmpty()) {
             try {
-                final String cleanString = cleanNumber(upkeepCostStr);
+                final String cleanString = cleanPositiveNumber(upkeepCostStr);
                 upkeepCost = Integer.parseInt(cleanString);
                 LOGGER.info("[upkeepFromLastCycle] extracted raw string: " + upkeepCostStr.trim() + " and cleaned to: " + cleanString);
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
@@ -165,7 +165,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String defaultUpkeepFromLastCycleStr = ocrNumberRectangle(rectangles.getUpkeepFromLastCycle());
         if (null != defaultUpkeepFromLastCycleStr && !defaultUpkeepFromLastCycleStr.isEmpty()) {
             try {
-                upkeepFromLastCycle = Integer.parseInt(cleanNumber(defaultUpkeepFromLastCycleStr));
+                upkeepFromLastCycle = Integer.parseInt(cleanPositiveNumber(defaultUpkeepFromLastCycleStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse defaultUpkeepFromLastCycle from: [" + defaultUpkeepFromLastCycleStr +
                         "]");
@@ -176,7 +176,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String costIfFortifiedStr = ocrNumberRectangle(rectangles.getCostIfFortified());
         if (null != costIfFortifiedStr && !costIfFortifiedStr.isEmpty()) {
             try {
-                costIfFortified = Integer.parseInt(cleanNumber(costIfFortifiedStr));
+                costIfFortified = Integer.parseInt(cleanPositiveNumber(costIfFortifiedStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse costIfFortified from: [" + costIfFortifiedStr + "]");
             }
@@ -186,7 +186,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String costIfUnderminedStr = ocrNumberRectangle(rectangles.getCostIfUndermined());
         if (null != costIfUnderminedStr && !costIfUnderminedStr.isEmpty()) {
             try {
-                costIfUndermined = Integer.parseInt(cleanNumber(costIfUnderminedStr));
+                costIfUndermined = Integer.parseInt(cleanPositiveNumber(costIfUnderminedStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse costIfUndermined from: [" + costIfUnderminedStr + "]");
             }
@@ -196,7 +196,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String defaultBaseIncomeStr = ocrNumberRectangle(rectangles.getBaseIncome());
         if (null != defaultBaseIncomeStr && !defaultBaseIncomeStr.isEmpty()) {
             try {
-                baseIncome = Integer.parseInt(cleanNumber(defaultBaseIncomeStr));
+                baseIncome = Integer.parseInt(cleanPositiveNumber(defaultBaseIncomeStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse baseIncome from: [" + defaultUpkeepFromLastCycleStr +
                         "]");
@@ -207,7 +207,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String fortifyTotalStr = ocrNumberRectangle(rectangles.getFortificationTotal());
         if (null != fortifyTotalStr && !fortifyTotalStr.isEmpty()) {
             try {
-                fortifyTotal = Integer.parseInt(cleanNumber(fortifyTotalStr));
+                fortifyTotal = Integer.parseInt(cleanPositiveNumber(fortifyTotalStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse fortifyTotal from: [" + fortifyTotalStr + "]");
             }
@@ -218,7 +218,7 @@ public class ImageApiV1 extends ImageApiBase {
         if (null != fortifyTriggerStr && !fortifyTriggerStr.isEmpty()) {
 
             try {
-                fortifyTrigger = Integer.parseInt(cleanNumber(fortifyTriggerStr));
+                fortifyTrigger = Integer.parseInt(cleanPositiveNumber(fortifyTriggerStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse fortifyTrigger from: [" + fortifyTriggerStr + "]");
             }
@@ -229,7 +229,7 @@ public class ImageApiV1 extends ImageApiBase {
         if (null != undermineTotalStr && !undermineTotalStr.isEmpty()) {
 
             try {
-                undermineTotal = Integer.parseInt(cleanNumber(undermineTotalStr));
+                undermineTotal = Integer.parseInt(cleanPositiveNumber(undermineTotalStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse undermineTotal from: [" + undermineTotalStr + "]");
             }
@@ -239,7 +239,7 @@ public class ImageApiV1 extends ImageApiBase {
         final String undermineTriggerStr = ocrNumberRectangle(rectangles.getUnderminingTrigger());
         if (null != undermineTriggerStr && !undermineTriggerStr.isEmpty()) {
             try {
-                undermineTrigger = Integer.parseInt(cleanNumber(undermineTriggerStr));
+                undermineTrigger = Integer.parseInt(cleanPositiveNumber(undermineTriggerStr));
             } catch (final NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 LOGGER.error("could not parse undermineTrigger from: [" + undermineTriggerStr + "]");
             }

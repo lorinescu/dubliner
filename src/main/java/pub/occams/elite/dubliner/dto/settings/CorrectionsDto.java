@@ -8,4 +8,7 @@ public class CorrectionsDto {
 
     @JsonProperty("systemName")
     public Map<String, String> systemName;
+
+    @JsonProperty("powerName")
+    public Map<String, String> powerName;
 }

@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 public abstract class ImageApiBase implements ImageApi {
@@ -83,7 +84,7 @@ public abstract class ImageApiBase implements ImageApi {
     }
 
 
-    protected String cleanNumber(final String str) {
+    protected String cleanPositiveNumber(final String str) {
         return str
                 .trim()
                 .replace("CC", "")
@@ -101,6 +102,20 @@ public abstract class ImageApiBase implements ImageApi {
         } else {
             return nameWithoutTurmoil;
         }
+    }
+
+    protected String cleanPowerName(final String str) {
+        final String upperTrimmed = str.trim().toUpperCase();
+
+        final Map<String, String> corrections = settings.corrections.powerName;
+
+        String correctedName = upperTrimmed;
+        for (final String incorrectPowerName : corrections.keySet()) {
+            final String correctPowerName = corrections.get(incorrectPowerName);
+            correctedName = upperTrimmed.replace(incorrectPowerName, correctPowerName);
+        }
+
+        return correctedName;
     }
 
     protected String ocrNumberRectangle(final BufferedImage image) {
