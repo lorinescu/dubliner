@@ -46,9 +46,9 @@ public class RectangleCoordinatesDto {
     @JsonProperty("fortificationTrigger")
     public RectangleDto fortificationTrigger;
 
-    @JsonProperty("underminingTotal")
+    @JsonProperty("undermineTotal")
     public RectangleDto underminingTotal;
 
-    @JsonProperty("underminingTrigger")
+    @JsonProperty("undermineTrigger")
     public RectangleDto underminingTrigger;
 }

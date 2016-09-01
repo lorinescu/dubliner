@@ -8,6 +8,7 @@ import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
 import pub.occams.elite.dubliner.domain.geometry.Range;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
+import pub.occams.elite.dubliner.dto.ocr.*;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -337,8 +338,8 @@ public class ImageApiV2 extends ImageApiBase {
     }
 
 
-    private Optional<ControlSystem> extractControl(final ClassifiedImage input,
-                                                   final DataRectangle<String> sysNameRect) {
+    private Optional<ControlDto> extractControl(final ClassifiedImage input,
+                                                final DataRectangle<String> sysNameRect) {
         final File file = input.getInputImage().getFile();
         final BufferedImage img = input.getInputImage().getImage();
 
@@ -404,13 +405,33 @@ public class ImageApiV2 extends ImageApiBase {
             return Optional.empty();
         }
 
+        //FIXME: all strings cleanup/extraction below are really meassy, npe, out of bounds etc
         final BufferedImage costsImg = maybeCostsImg.get();
         saveImageAtStage(costsImg, file, "extract-control-data-costs");
+
         final String str1 = ocrRectangle(costsImg);
         if (null == str1 || str1.isEmpty()) {
             return Optional.empty();
         }
-        LOGGER.info("Systems costs:[" + str1 + "]");
+        final String[] parts1 = str1.replace("\n\n", "\n").split("\n");
+        if (parts1.length < 5) {
+            return Optional.empty();
+        }
+
+        final Integer upkeepFromLastCycle, defaultUpkeepCost, costIfFortified, costIfUndermined, baseIncome;
+        try {
+            upkeepFromLastCycle = Integer.parseInt(cleanPositiveNumber(parts1[0]));
+            defaultUpkeepCost = Integer.parseInt(cleanPositiveNumber(parts1[1]));
+            costIfFortified = Integer.parseInt(cleanPositiveNumber(parts1[2]));
+            costIfUndermined = Integer.parseInt(cleanPositiveNumber(parts1[3]));
+            baseIncome = Integer.parseInt(cleanPositiveNumber(parts1[4]));
+        } catch (final NumberFormatException e) {
+            LOGGER.error(e);
+            return Optional.empty();
+        }
+        LOGGER.info("System costs, raw OCR:[" + str1 + "], corrected to:["
+                + upkeepFromLastCycle + "," + defaultUpkeepCost + "," + costIfFortified + "," + costIfUndermined
+                + "," + baseIncome + "]");
 
         final BufferedImage fortificationImg = maybeFortificationImg.get();
         saveImageAtStage(fortificationImg, file, "extract-control-data-fortif");
@@ -418,7 +439,25 @@ public class ImageApiV2 extends ImageApiBase {
         if (null == str2 || str2.isEmpty()) {
             return Optional.empty();
         }
-        LOGGER.info("Fortifications:[" + str2 + "]");
+
+        final String[] parts2 = str2.split("\n");
+        if (parts2.length < 4) {
+            return Optional.empty();
+        }
+        Integer fortifyTotal = null, fortifyTrigger = null;
+        for (final String part : parts2) {
+            try {
+                if (part.startsWith("TOTAL") || part.startsWith("T0TAL")) {
+                    fortifyTotal = Integer.parseInt(cleanPositiveNumber(part.split(" ")[1]));
+                } else if (part.startsWith("TRIGGER")) {
+                    fortifyTrigger = Integer.parseInt(cleanPositiveNumber(part.split(" ")[1]));
+                }
+            } catch (final NumberFormatException e) {
+                LOGGER.error(e);
+                return Optional.empty();
+            }
+        }
+        LOGGER.info("Fortifications, raw OCR:[" + str2 + "], corrected to: [" + fortifyTotal + "," + fortifyTrigger + "]");
 
         final BufferedImage underminingImg = maybeUnderminingImg.get();
         saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
@@ -426,27 +465,57 @@ public class ImageApiV2 extends ImageApiBase {
         if (null == str3 || str3.isEmpty()) {
             return Optional.empty();
         }
-        LOGGER.info("Undermining:[" + str3 + "]");
 
+        Integer undermineTotal = null, undermineTrigger = null;
+        final String[] parts3 = str3.replace("\n", " ").split(" ");
+        for (int i = 0; i < parts3.length; i++) {
+            try {
+                if (parts3[i].contains("TOTAL") || parts3[i].contains("T0TAL")) {
+                    undermineTotal = Integer.parseInt(cleanPositiveNumber(parts3[i + 1]));
+                } else if (parts3[i].contains("TRIGGER")) {
+                    undermineTrigger = Integer.parseInt(cleanPositiveNumber(parts3[i + 1]));
+                }
+            } catch (final NumberFormatException e) {
+                LOGGER.error(e);
+                return Optional.empty();
+            }
+        }
+        LOGGER.info("Undermining, raw OCR:[" + str3 + "], after corrections:[" + undermineTotal + "," + undermineTrigger + "]");
+
+
+        final DataRectangle<String> costsReal = new DataRectangle<>(
+                "costs", new Rectangle(
+                costsRectangle.x0 + x0, costsRectangle.y0 + y0,
+                costsRectangle.x1 + x0, costsRectangle.y1 + y0
+        )
+        );
+        final DataRectangle<String> undermineReal = new DataRectangle<>(
+                "undermine", new Rectangle(
+                underminingRectangle.x0 + x0, underminingRectangle.y0 + y0,
+                underminingRectangle.x1 + x0, underminingRectangle.y1 + y0
+        )
+        );
+        final DataRectangle<String> fortificationReal = new DataRectangle<>(
+                "fortification", new Rectangle(
+                fortificationRectangle.x0 + x0, fortificationRectangle.y0 + y0,
+                fortificationRectangle.x1 + x0, fortificationRectangle.y1 + y0
+        )
+        );
+
+        final ControlDto dto = new ControlDto();
+        dto.systemNameRectangle = sysNameRect;
+        dto.costsRectangle = costsReal;
+        dto.fortifyRectangle = fortificationReal;
+        dto.undermineRectangle = undermineReal;
+        dto.upkeepFromLastCycle = upkeepFromLastCycle;
+        dto.baseIncome = baseIncome;
+        dto.costIfFortified = costIfFortified;
+        dto.costIfUndermined = costIfUndermined;
+        dto.fortifyTotal = fortifyTotal;
+        dto.fortifyTrigger = fortifyTrigger;
+        dto.undermineTotal = undermineTotal;
+        dto.undermineTrigger = undermineTrigger;
         if (debug) {
-            final DataRectangle<String> costsReal = new DataRectangle<>(
-                    "costs", new Rectangle(
-                    costsRectangle.x0 + x0, costsRectangle.y0 + y0,
-                    costsRectangle.x1 + x0, costsRectangle.y1 + y0
-            )
-            );
-            final DataRectangle<String> undermineReal = new DataRectangle<>(
-                    "undermine", new Rectangle(
-                    underminingRectangle.x0 + x0, underminingRectangle.y0 + y0,
-                    underminingRectangle.x1 + x0, underminingRectangle.y1 + y0
-            )
-            );
-            final DataRectangle<String> fortificationReal = new DataRectangle<>(
-                    "fortification", new Rectangle(
-                    fortificationRectangle.x0 + x0, fortificationRectangle.y0 + y0,
-                    fortificationRectangle.x1 + x0, fortificationRectangle.y1 + y0
-            )
-            );
             saveImageAtStage(
                     ImageUtil.drawDataRectangles(img, input.getType(), input.getPower(), sysNameRect, costsReal,
                             undermineReal, fortificationReal),
@@ -454,7 +523,7 @@ public class ImageApiV2 extends ImageApiBase {
                     "extract-data-rects");
         }
 
-        return Optional.empty();
+        return Optional.of(dto);
     }
 
     @Override
@@ -479,7 +548,7 @@ public class ImageApiV2 extends ImageApiBase {
         return Optional.of(new ClassifiedImage(inputImage, maybeType.get(), maybePower.get()));
     }
 
-    public Optional<ControlSystem> extract(final ClassifiedImage input) {
+    public Optional<PowerPlayDto> extract(final ClassifiedImage input) {
 
         final BufferedImage img = input.getInputImage().getImage();
         final File file = input.getInputImage().getFile();
@@ -497,29 +566,33 @@ public class ImageApiV2 extends ImageApiBase {
                     "extract-data-rects");
         }
 
-        Optional<ControlSystem> maybeCs = Optional.empty();
         switch (input.getType().getData()) {
             case PP_CONTROL:
-                maybeCs = extractControl(input, sysNameRect);
-                break;
+                final Optional<ControlDto> dto = extractControl(input, sysNameRect);
+                if (dto.isPresent()) {
+                    dto.get().classifiedImage = input;
+                    return Optional.of(dto.get());
+                }
+                return Optional.empty();
             case PP_EXPANSION:
-                maybeCs = Optional.empty();
-                break;
+                return Optional.empty();
             case PP_PREPARATION:
-                maybeCs = Optional.empty();
-                break;
+                return Optional.empty();
             case PP_TURMOIL:
-                maybeCs = Optional.empty();
+                return Optional.empty();
+            default:
                 break;
         }
         LOGGER.info("Extraction end for file: " + file.getAbsolutePath());
 
-        return maybeCs;
+        return Optional.empty();
     }
 
     @Override
     public List<ControlSystem> extractDataFromImages(final List<File> files) {
 
+        final ReportDto reportDto = new ReportDto();
+        reportDto.powers = new HashMap<>();
         files
                 .stream()
                 .map(this::load)
@@ -528,7 +601,31 @@ public class ImageApiV2 extends ImageApiBase {
                 .filter(Optional::isPresent).map(Optional::get)
                 .map(this::extract)
                 .filter(Optional::isPresent).map(Optional::get)
-                .collect(Collectors.toList());
+                .forEach(
+                        ppDto -> {
+                            final Power power = ppDto.classifiedImage.getPower().getData();
+                            PowerReportDto powerReport = reportDto.powers.get(power);
+                            if (null == powerReport) {
+                                powerReport = new PowerReportDto();
+                            }
+                            if (ppDto instanceof ControlDto) {
+                                powerReport.control.add((ControlDto) ppDto);
+                            } else if (ppDto instanceof ExpansionDto) {
+                                powerReport.expansion.add((ExpansionDto) ppDto);
+                            } else if (ppDto instanceof PreparationDto) {
+                                powerReport.preparation.add((PreparationDto) ppDto);
+                            } else if (ppDto instanceof TurmoilDto) {
+                                powerReport.turmoil.add((TurmoilDto) ppDto);
+                            }
+                            reportDto.powers.put(power, powerReport);
+                        }
+                );
+
+        try {
+            App.JSON_MAPPER.writeValue(System.out, reportDto);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
            /*
 
         pipeline*:
@@ -574,15 +671,15 @@ public class ImageApiV2 extends ImageApiBase {
         try {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
-//                    new File("data/control_images/1920x1080/mahon/control/1.bmp"),
-                    new File("data/control_images/1920x1080/ald/control/1.bmp")
-//                    new File("data/control_images/1920x1200/ald/control/1.bmp"),
-//                    new File("data/control_images/1920x1200/mahon/control/1.bmp"),
-//                    new File("data/control_images/1920x1200/mahon/control/4.bmp"),
-//                    new File("data/control_images/1920x1200/mahon/expansion/1.bmp"),
-//                    new File("data/control_images/1920x1200/ald/expansion/1.bmp"),
-//                    new File("data/control_images/1920x1080/antal/preparation/1.bmp"),
-//                    new File("data/control_images/1920x1200/ald/preparation/1.bmp")
+                    new File("data/control_images/1920x1080/mahon/control/1.bmp"),
+                    new File("data/control_images/1920x1080/ald/control/1.bmp"),
+                    new File("data/control_images/1920x1200/ald/control/1.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/1.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/4.bmp"),
+                    new File("data/control_images/1920x1200/mahon/expansion/1.bmp"),
+                    new File("data/control_images/1920x1200/ald/expansion/1.bmp"),
+                    new File("data/control_images/1920x1080/antal/preparation/1.bmp"),
+                    new File("data/control_images/1920x1200/ald/preparation/1.bmp")
 
             );
             api.extractDataFromImages(images);

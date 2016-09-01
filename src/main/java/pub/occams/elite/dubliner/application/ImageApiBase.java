@@ -91,7 +91,9 @@ public abstract class ImageApiBase implements ImageApi {
                 .replace("O", "0")
                 .replace("'", "")
                 .replace(" ", "")
-                .replace("-", "");
+                .replace("-", "")
+                .replace("B", "8")
+                .replace("D", "0");
     }
 
 

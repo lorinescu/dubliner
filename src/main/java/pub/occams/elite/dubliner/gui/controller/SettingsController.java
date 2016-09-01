@@ -121,8 +121,8 @@ public class SettingsController extends Controller<Pane> {
                     rectanglesData.add(rectangleToModel("defaultUpkeepCost", c.defaultUpkeepCost));
                     rectanglesData.add(rectangleToModel("fortificationTotal", c.fortificationTotal));
                     rectanglesData.add(rectangleToModel("fortificationTrigger", c.fortificationTrigger));
-                    rectanglesData.add(rectangleToModel("underminingTotal", c.underminingTotal));
-                    rectanglesData.add(rectangleToModel("underminingTrigger", c.underminingTrigger));
+                    rectanglesData.add(rectangleToModel("undermineTotal", c.underminingTotal));
+                    rectanglesData.add(rectangleToModel("undermineTrigger", c.underminingTrigger));
                 }
         );
         rectanglesData.clear();

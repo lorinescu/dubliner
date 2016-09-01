@@ -30,11 +30,12 @@ public class App extends Application {
     public static final String NAME = "The Dubliner";
     public static final String VERSION = "0.0.1";
 
+    public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
     //FIXME: uncouple this
     public static final String LOGGER_NAME = "App";
 
     private static ImageApi imageApi;
-    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     private <T extends Controller> T loadFxml(final Class<?> klass, final String fxml) throws IOException {
         final FXMLLoader loader = new FXMLLoader(klass.getResource(fxml));
