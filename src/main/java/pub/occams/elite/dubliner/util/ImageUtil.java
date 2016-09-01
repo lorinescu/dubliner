@@ -5,6 +5,7 @@ import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import pub.occams.elite.dubliner.App;
+import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
@@ -117,6 +118,25 @@ public class ImageUtil {
             g2.drawLine(s.x0, s.y0, s.x1, s.y1);
             g2.drawString("L=" + i, s.x0, s.y0);
             i++;
+        }
+        g2.dispose();
+        return output;
+    }
+
+    public static BufferedImage drawDataRectangles(final BufferedImage image, final DataRectangle ... rects) {
+        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+        Graphics g = output.getGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        Graphics2D g2 = output.createGraphics();
+        for (final DataRectangle dr : rects) {
+            g2.setColor(Color.BLUE);
+            BasicStroke stroke = new BasicStroke(3);
+            g2.setStroke(stroke);
+            final Rectangle r = dr.getRectangle();
+            g2.drawRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+            g2.drawString(dr.getData().toString(), r.x0, r.y0);
         }
         g2.dispose();
         return output;

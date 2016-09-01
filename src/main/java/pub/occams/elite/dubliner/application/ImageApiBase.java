@@ -61,14 +61,14 @@ public abstract class ImageApiBase implements ImageApi {
 
         return Optional.of(new InputImage(file, maybeImg.get()));
     }
-    
+
     protected BufferedImage saveImageAtStage(final BufferedImage image, final File imageFile, final String stage) {
         if (!debug) {
             return image;
         }
 
         try {
-            final String imageName = imageFile.getCanonicalPath().replace(File.separator, "-").replace(":","-");
+            final String imageName = imageFile.getCanonicalPath().replace(File.separator, "-").replace(":", "-");
             final String path = "out" + File.separator + imageName;
             final File dir = new File(path);
             if (!dir.exists()) {
@@ -94,7 +94,7 @@ public abstract class ImageApiBase implements ImageApi {
     }
 
 
-    protected String cleanName(final String str) {
+    protected String cleanSystemName(final String str) {
         final String nameWithoutTurmoil = str.replaceAll("(\\(|\\[).*", "").trim();
         if (settings.corrections.systemName.containsKey(nameWithoutTurmoil)) {
             return settings.corrections.systemName.get(nameWithoutTurmoil);
@@ -115,7 +115,11 @@ public abstract class ImageApiBase implements ImageApi {
     protected String ocrRectangle(final BufferedImage image) {
         LOGGER.info("starting OCR");
         try {
-            return tessForNames.doOCR(image);
+            final String str = tessForNames.doOCR(image);
+            if (null == str) {
+                return "";
+            }
+            return str;
         } catch (Exception e) {
             LOGGER.error("Error when ocr-ing image.", e);
         }

@@ -2,6 +2,7 @@ package pub.occams.elite.dubliner.application;
 
 import org.apache.commons.io.FileUtils;
 import pub.occams.elite.dubliner.domain.*;
+import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
@@ -146,7 +147,7 @@ public class ImageApiV1 extends ImageApiBase {
         LOGGER.info("converting rectangles to text for image " + rectangles.getInput().getInputImage().getFile()
                 .getName());
         String name = ocrRectangle(rectangles.getSystemName()).trim();
-        name = cleanName(name);
+        name = cleanSystemName(name);
 
         int upkeepCost = -1;
         final String upkeepCostStr = ocrNumberRectangle(rectangles.getUpkeepFromLastCycle());
@@ -285,7 +286,7 @@ public class ImageApiV1 extends ImageApiBase {
             final boolean isControlTabSelected = "CONTROL".equals(tabTitle.trim().replace("0", "O"));
             LOGGER.info(("image " + input.getFile().getName() + " is a control tab screenshot: " + isControlTabSelected));
             if (isControlTabSelected) {
-                return Optional.of(new ClassifiedImage(input, ImageType.PP_CONTROL, null));
+                return Optional.of(new ClassifiedImage(input, new DataRectangle<>(ImageType.PP_CONTROL,null), null));
             }
         }
         return Optional.empty();
@@ -313,7 +314,7 @@ public class ImageApiV1 extends ImageApiBase {
                         .map(this::classify)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
-                        .filter(img -> img.getType() == ImageType.PP_CONTROL)
+                        .filter(img -> img.getType().getData() == ImageType.PP_CONTROL)
                         .map(this::extractRectangles)
                         .filter(Optional::isPresent)
                         .map(Optional::get)

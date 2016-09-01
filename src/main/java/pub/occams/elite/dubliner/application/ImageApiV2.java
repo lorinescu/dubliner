@@ -4,9 +4,10 @@ import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.opencv_core.*;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.*;
+import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
+import pub.occams.elite.dubliner.domain.geometry.Range;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
-import pub.occams.elite.dubliner.dto.settings.RectangleDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
-import static pub.occams.elite.dubliner.domain.ImageType.PP_CONTROL;
+import static pub.occams.elite.dubliner.domain.ImageType.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
@@ -96,135 +97,68 @@ public class ImageApiV2 extends ImageApiBase {
         return Optional.empty();
     }
 
-    @Override
-    public Optional<ClassifiedImage> classify(final InputImage inputImage) {
-
-        final File file = inputImage.getFile();
-        final BufferedImage originalImage = inputImage.getImage();
-        LOGGER.info("classification start: " + file.getAbsolutePath());
-
-        //crop aprox a band from the top of the image which should contain the power play tabs
-        final RectangleDto rect1 = new RectangleDto();
-        rect1.x = 0;
-        rect1.y = 0;
-        rect1.height = (int) (originalImage.getHeight() * 0.20);
-        rect1.width = originalImage.getWidth();
-        final Optional<BufferedImage> maybeImage2 = ImageUtil.crop(rect1, originalImage);
-        if (!maybeImage2.isPresent()) {
-            return Optional.empty();
-        }
-
-        final BufferedImage image2 = maybeImage2.get();
-        saveImageAtStage(image2, file, "classify-aprox-cropped");
-
-        //find the 2 horizontal lines that are above and on top of the tab menu
-        final int minLength1 = (int) (image2.getWidth() * 0.9);
-        final int maxLength1 = image2.getWidth();
-        final List<LineSegment> segments1 = detectHorizontalLines(image2, file, 5, 900, minLength1, 0, maxLength1);
-        if (segments1.size() < 2) {
-            return Optional.empty();
-        }
-
-        //do an exact cropping of the power play tabs
-        final RectangleDto rect2 = new RectangleDto();
-        rect2.x = segments1.get(0).x0;
-        rect2.y = segments1.get(0).y0;
-        //there are two lines very close to each other, sometimes they are detected separately
-        rect2.width = segments1.get(segments1.size() - 1).x1 - rect2.x;
-        rect2.height = segments1.get(segments1.size() - 1).y1 - rect2.y;
-        final Optional<BufferedImage> maybeImage3 = ImageUtil.crop(rect2, image2);
-        if (!maybeImage3.isPresent()) {
-            return Optional.empty();
-        }
-        final BufferedImage image3 = maybeImage3.get();
-        saveImageAtStage(image3, file, "classify-precise-cropped");
-
-        //find the horizontal lines that are above and below the selected tab (part of the rectangle)
-        final int minLength2 = rect2.width / 8; //aprox. width of a tab
-        final int maxLength2 = (int) (rect2.width * 0.7);
-        final List<LineSegment> segments2 = detectHorizontalLines(image3, file, 1, 200, minLength2, 2, maxLength2);
-        if (segments2.size() != 2) {
-            return Optional.empty();
-        }
-        final RectangleDto rect3 = new RectangleDto();
-        rect3.x = segments2.get(0).x0 + 5; //shaving the vertical band from the beggining of the tab rectangle
-        rect3.y = segments2.get(0).y0;
-        rect3.width = segments2.get(1).x1 - rect3.x;
-        rect3.height = segments2.get(1).y1 - rect3.y;
-
-        final Optional<BufferedImage> maybeImage4 = ImageUtil.crop(rect3, image3);
-        if (!maybeImage4.isPresent()) {
-            return Optional.empty();
-        }
-        final BufferedImage image4 = maybeImage4.get();
-        saveImageAtStage(image4, file, "classify-precise-tab-cropped");
-
-        final BufferedImage ocrInputImage = invert(scale(image4));
-
-        saveImageAtStage(ocrInputImage, file, "classify-ocr-tab-input");
-
-        final String str = ocrRectangle(ocrInputImage);
-        if (null == str || str.isEmpty()) {
-            return Optional.empty();
-        }
-
-        final String title = str.trim().replace("0", "O");
-        LOGGER.info("Ocr raw:[" + str + "], corrected:[" + title + "]");
-        final ImageType type;
-        if ("PREPARATION".equals(title)) {
-            type = ImageType.PP_PREPARATION;
-        } else if ("EXPANSION".equals(title)) {
-            type = ImageType.PP_EXPANSION;
-        } else if ("CONTROL".equals(title)) {
-            type = PP_CONTROL;
-        } else if ("TURMOIL".equals(title)) {
-            type = ImageType.PP_TURMOIL;
-        } else {
-            type = ImageType.UNKNOWN;
-        }
-
-        //crop aprox a band from the top of the image which should contain the power play tabs
-        final RectangleDto rect4 = new RectangleDto();
-        rect4.x = 0;
-        rect4.y = segments1.get(segments1.size() - 1).y0;
-        rect4.height = 100;
-        rect4.width = originalImage.getWidth();
-        final Optional<BufferedImage> maybeImage5 = ImageUtil.crop(rect4, originalImage);
-        if (!maybeImage5.isPresent()) {
-            return Optional.empty();
-        }
-        final BufferedImage image5 = maybeImage5.get();
-        saveImageAtStage(image5, file, "classify-power-name");
-
-        LOGGER.info("classification end:" + file.getAbsolutePath() + ", type is: " + type);
-
-        return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
-    }
-
+    //TODO: merge Horiz/Vert methods can be ... merged
     private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file,
                                                       final List<LineSegment> segments, final int threshold) {
-        final Set<LineSegment> out = new HashSet<>();
-        boolean mergeOccurred = false;
-        for (int i = 1; i < segments.size(); i++) {
-            final LineSegment prev = segments.get(i - 1);
-            final LineSegment curr = segments.get(i);
-            int delta = curr.y0 - prev.y0;
-            if (delta < threshold) {
-                out.add(prev);
-                mergeOccurred = true;
+
+        final Map<Range, LineSegment> clusters = new HashMap<>();
+
+        for (final LineSegment s : segments) {
+            Range foundRange = null;
+            for (final Range range : clusters.keySet()) {
+                if (s.y0 >= range.low && s.y0 <= range.high) {
+                    foundRange = range;
+                    break;
+                }
+            }
+            final int low = s.y0 - threshold;
+            final int high = s.y0 + threshold;
+            if (null != foundRange) {
+                final int newLow = low < foundRange.low ? low : foundRange.low;
+                final int newHigh = high > foundRange.high ? high : foundRange.high;
+                final Range newRange = new Range(newLow, newHigh);
+                clusters.put(newRange, clusters.remove(foundRange));
             } else {
-                out.add(curr);
+                clusters.put(new Range(low, high), s);
             }
         }
-        final List<LineSegment> lst = new ArrayList<>(out);
-        saveImageAtStage(ImageUtil.drawSegments(img, lst), file, "classify2-merged-progress");
-        if (mergeOccurred) {
-            return mergeHorizontalSegments(img, file, lst, threshold);
-        }
-        return lst;
+        final List<LineSegment> out = new ArrayList<>(clusters.values());
+        out.sort((o1, o2) -> o1.y0 - o2.y0);
+        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "classify-merge-horizontal-progress");
+        return out;
     }
 
-    private Optional<ImageType> detectSelectedTab(final InputImage inputImage) {
+    private List<LineSegment> mergeVerticalSegments(final BufferedImage img, final File file,
+                                                    final List<LineSegment> segments, final int threshold) {
+
+        final Map<Range, LineSegment> clusters = new HashMap<>();
+
+        for (final LineSegment s : segments) {
+            Range foundRange = null;
+            for (final Range range : clusters.keySet()) {
+                if (s.x0 >= range.low && s.x0 <= range.high) {
+                    foundRange = range;
+                    break;
+                }
+            }
+            final int low = s.x0 - threshold;
+            final int high = s.x0 + threshold;
+            if (null != foundRange) {
+                final int newLow = low < foundRange.low ? low : foundRange.low;
+                final int newHigh = high > foundRange.high ? high : foundRange.high;
+                final Range newRange = new Range(newLow, newHigh);
+                clusters.put(newRange, clusters.remove(foundRange));
+            } else {
+                clusters.put(new Range(low, high), s);
+            }
+        }
+        final List<LineSegment> out = new ArrayList<>(clusters.values());
+        out.sort((o1, o2) -> o1.x0 - o2.x0);
+        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "classify-merge-vertical-progress");
+        return out;
+    }
+
+    private Optional<DataRectangle<ImageType>> detectSelectedTab(final InputImage inputImage) {
 
         final File file = inputImage.getFile();
         final BufferedImage originalImage = inputImage.getImage();
@@ -266,78 +200,177 @@ public class ImageApiV2 extends ImageApiBase {
         }
 
         final String title = str.trim().replace("0", "O");
-        LOGGER.info("Ocr raw:[" + str + "], corrected:[" + title + "]");
+        LOGGER.info("Selected tab, raw OCR:[" + str + "], corrected:[" + title + "]");
         final ImageType type;
         if ("PREPARATION".equals(title)) {
-            type = ImageType.PP_PREPARATION;
+            type = PP_PREPARATION;
         } else if ("EXPANSION".equals(title)) {
-            type = ImageType.PP_EXPANSION;
+            type = PP_EXPANSION;
         } else if ("CONTROL".equals(title)) {
             type = PP_CONTROL;
         } else if ("TURMOIL".equals(title)) {
-            type = ImageType.PP_TURMOIL;
+            type = PP_TURMOIL;
         } else {
             return Optional.empty();
         }
-        return Optional.of(type);
+        return Optional.of(new DataRectangle<>(type, tab));
     }
 
-    private Optional<Power> detectSelectedPower(final InputImage inputImage) {
+    private Optional<DataRectangle<Power>> detectSelectedPower(final InputImage inputImage) {
         final File file = inputImage.getFile();
         final BufferedImage img = inputImage.getImage();
 
         final double longSeparatorLinesLengthFactor = 0.8;
-        final int maxLength = inputImage.getImage().getWidth();
-        final int minLength = (int) (inputImage.getImage().getWidth() * longSeparatorLinesLengthFactor);
+        final int maxLength = img.getWidth();
+        final int minLength = (int) (img.getWidth() * longSeparatorLinesLengthFactor);
         final List<LineSegment> segments = detectHorizontalLines(img, file, 1, 80, 10, minLength, maxLength);
         final List<LineSegment> merged = mergeHorizontalSegments(img, file, segments, 3);
         if (debug) {
-            saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "classify2-long-separators");
+            saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "detect-selected-power");
         }
 
-        return Optional.empty();
+        if (merged.size() != 3) {
+            return Optional.empty();
+        }
+
+        final Rectangle powerNameSlice = new Rectangle(
+                merged.get(1).x0, merged.get(1).y0,
+                merged.get(2).x1, merged.get(2).y1
+        );
+
+        final Optional<BufferedImage> maybePowerImage = ImageUtil.crop(powerNameSlice, img);
+        if (!maybePowerImage.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage powerImage = maybePowerImage.get();
+        saveImageAtStage(powerImage, file, "detect-selected-power");
+
+        final BufferedImage ocrInputImage = invert(scale(powerImage));
+
+        saveImageAtStage(ocrInputImage, file, "detect-selected-power-ocr-input");
+
+        final String str = ocrRectangle(ocrInputImage);
+        if (null == str || str.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Power power = null;
+        for (final Power p : Power.values()) {
+            final String str1 = str.trim().toUpperCase();
+            final String str2 = p.getName();
+            if (str1.contains(str2)) {
+                power = p;
+                break;
+            }
+        }
+        LOGGER.info("Selected power, raw OCR:[" + str + "], found:[" + (null == power ? "nothing" : power.getName()) + "]");
+        if (null == power) {
+            return Optional.empty();
+        }
+        return Optional.of(new DataRectangle<>(power, powerNameSlice));
     }
 
-    public Optional<ClassifiedImage> classify2(final InputImage inputImage) {
+    @Override
+    public Optional<ClassifiedImage> classify(final InputImage inputImage) {
         final File file = inputImage.getFile();
-//        final BufferedImage originalImage = inputImage.getImage();
         LOGGER.info("classification start: " + file.getAbsolutePath());
 
-//        final BufferedImage img = filterRedAndBinarize(originalImage, 85);
-//        final BufferedImage img = originalImage;
-//        saveImageAtStage(img, file, "classify2-filterRedAndBinarize");
-
-        final Optional<ImageType> maybeType = detectSelectedTab(inputImage);
+        final Optional<DataRectangle<ImageType>> maybeType = detectSelectedTab(inputImage);
         if (!maybeType.isPresent()) {
             return Optional.empty();
         }
-        final ImageType imageType = maybeType.get();
+        final ImageType type = maybeType.get().getData();
 
-        final Optional<Power> maybePower = detectSelectedPower(inputImage);
+        final Optional<DataRectangle<Power>> maybePower = detectSelectedPower(inputImage);
         if (!maybePower.isPresent()) {
             return Optional.empty();
         }
-        final Power power = maybePower.get();
+        final Power power = maybePower.get().getData();
 
-        LOGGER.info("classification end: " + power + "/" + imageType + ", for file: " + file.getAbsolutePath());
+        LOGGER.info("classification end: " + power + "/" + type + ", for file: " + file.getAbsolutePath());
 
-        return Optional.empty();
-//        return Optional.of(new ClassifiedImage(inputImage, type, segments1.get(segments1.size() - 1)));
+        return Optional.of(new ClassifiedImage(inputImage, maybeType.get(), maybePower.get()));
     }
 
-
     public Optional<ControlSystem> extract(final ClassifiedImage input) {
-        switch (input.getType()) {
-            case PP_CONTROL:
-                return extractControl(input);
-            case PP_EXPANSION:
-                return Optional.empty();
-            case PP_PREPARATION:
-                return Optional.empty();
-            case PP_TURMOIL:
-                return Optional.empty();
+
+        final File file = input.getInputImage().getFile();
+        final BufferedImage img = input.getInputImage().getImage();
+
+        LOGGER.info("Extraction start for file: " + file.getAbsolutePath());
+
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawDataRectangles(img, input.getType(), input.getPower()), file,
+                    "extract-data-previous-rects");
         }
-        return Optional.empty();
+
+        final Rectangle reference = input.getPower().getRectangle();
+        final int x0 = reference.x0;
+        final int y0 = reference.y1 + 10; //a few extra pictures to remove the line below the power name
+        final int x1 = reference.x1;
+        final int y1 = img.getHeight();
+        final Rectangle skipTabsAndPower = new Rectangle(x0, y0, x1, y1);
+        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
+        if (!maybeImg2.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage img2 = maybeImg2.get();
+        saveImageAtStage(img2, file, "extract-data-details-area");
+
+        final double horizontalLineBelowSystemNameLengthFactor = 0.3;
+        final int minLength = (int) (img2.getWidth() * horizontalLineBelowSystemNameLengthFactor);
+        final int maxLength = img2.getWidth();
+        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, 80, 1, minLength, maxLength);
+        final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "extract-data");
+        }
+
+        if (merged.size() < 1) {
+            return Optional.empty();
+        }
+
+        final LineSegment sysNameLine = merged.get(0);
+        final Rectangle sysNameRect = new Rectangle(
+                sysNameLine.x0, 0, sysNameLine.x1, sysNameLine.y1
+        );
+        final Optional<BufferedImage> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
+        if (!maybeImg3.isPresent()) {
+            return Optional.empty();
+        }
+        final BufferedImage img3 = maybeImg3.get();
+        saveImageAtStage(img3, file, "extract-data-system-name");
+
+        final BufferedImage ocrInputImage = invert(scale(img3));
+
+        saveImageAtStage(ocrInputImage, file, "extract-data-system-name-ocr-input");
+
+        final String str = ocrRectangle(ocrInputImage);
+        if (null == str || str.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final String sysName = cleanSystemName(str);
+        LOGGER.info("Selected system, raw OCR:[" + str + "], corrected:[" + sysName + "]");
+
+        Optional<ControlSystem> maybeCs = Optional.empty();
+        switch (input.getType().getData()) {
+            case PP_CONTROL:
+                maybeCs = extractControl(input);
+                break;
+            case PP_EXPANSION:
+                maybeCs = Optional.empty();
+                break;
+            case PP_PREPARATION:
+                maybeCs = Optional.empty();
+                break;
+            case PP_TURMOIL:
+                maybeCs = Optional.empty();
+                break;
+        }
+        LOGGER.info("Extraction end for file: " + file.getAbsolutePath());
+
+        return maybeCs;
     }
 
     @Override
@@ -346,20 +379,12 @@ public class ImageApiV2 extends ImageApiBase {
         files
                 .stream()
                 .map(this::load)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-//                .map(this::classify)
-                .map(this::classify2)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(img -> ImageType.UNKNOWN != img.getType())
+                .filter(Optional::isPresent).map(Optional::get)
+                .map(this::classify)
+                .filter(Optional::isPresent).map(Optional::get)
+                .map(this::extract)
+                .filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toList());
-//        files
-//                .stream()
-//                .map(this::prepareAndClassifyImage)
-//                .filter(img -> ImageType.UNKNOWN != img.getType())
-//                .map(this::detectLines)
-//                .collect(Collectors.toList());
            /*
 
         pipeline*:
@@ -369,10 +394,10 @@ public class ImageApiV2 extends ImageApiBase {
         3. find the coordinates** of the selected tab
         5. crop the tab area, ocr the segment and apply corrections
         6. if the selected tab is not Preparation | Control | Expansion goto 1.
-        ^^DONE^^
         7. find the coordinates of the power name
         8. crop the power name, ocr the segment and apply corrections
         9. if the power name is not Edmund | Winters | ..... goto 1.
+        ^^DONE^^
         10. find the coordinates for:
             - system name
             - preparation tab:
@@ -405,15 +430,15 @@ public class ImageApiV2 extends ImageApiBase {
         try {
             final ImageApiV2 api = new ImageApiV2(App.loadSettingsV2(), true);
             final List<File> images = Arrays.asList(
-                    new File("data/control_images/1920x1080/mahon/control/1.bmp"),
-                    new File("data/control_images/1920x1080/ald/control/1.bmp"),
-                    new File("data/control_images/1920x1200/ald/control/1.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/1.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/4.bmp"),
-                    new File("data/control_images/1920x1200/mahon/expansion/1.bmp"),
-                    new File("data/control_images/1920x1200/ald/expansion/1.bmp"),
-                    new File("data/control_images/1920x1080/antal/preparation/1.bmp"),
-                    new File("data/control_images/1920x1200/ald/preparation/1.bmp")
+                    new File("data/control_images/1920x1080/mahon/control/1.bmp")
+//                    new File("data/control_images/1920x1080/ald/control/1.bmp"),
+//                    new File("data/control_images/1920x1200/ald/control/1.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/1.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/4.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/expansion/1.bmp"),
+//                    new File("data/control_images/1920x1200/ald/expansion/1.bmp"),
+//                    new File("data/control_images/1920x1080/antal/preparation/1.bmp"),
+//                    new File("data/control_images/1920x1200/ald/preparation/1.bmp")
 
             );
             api.extractDataFromImages(images);
