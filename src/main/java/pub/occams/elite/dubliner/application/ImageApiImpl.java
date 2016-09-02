@@ -595,9 +595,9 @@ public class ImageApiImpl extends ImageApiBase {
                 );
 
         try {
-            App.JSON_MAPPER.writeValue(System.out, reportDto);
+            LOGGER.info("Data extracted:" + App.JSON_MAPPER.writeValueAsString(reportDto));
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         return reportDto;
     }
