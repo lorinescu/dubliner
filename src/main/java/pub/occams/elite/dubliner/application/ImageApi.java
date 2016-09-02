@@ -1,8 +1,8 @@
 package pub.occams.elite.dubliner.application;
 
 import pub.occams.elite.dubliner.domain.ClassifiedImage;
-import pub.occams.elite.dubliner.domain.ControlSystem;
 import pub.occams.elite.dubliner.domain.InputImage;
+import pub.occams.elite.dubliner.dto.ocr.ReportDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import java.io.File;
@@ -14,9 +14,9 @@ public interface ImageApi {
     SettingsDto getSettings();
 
     Optional<InputImage> load(final File file);
-    
+
     Optional<ClassifiedImage> classify(final InputImage file);
 
-    List<ControlSystem> extractDataFromImages(final List<File> files);
+    ReportDto extractDataFromImages(final List<File> files);
 
 }

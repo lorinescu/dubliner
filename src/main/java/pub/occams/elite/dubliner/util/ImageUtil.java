@@ -8,9 +8,6 @@ import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
-import pub.occams.elite.dubliner.dto.settings.RectangleCoordinatesDto;
-import pub.occams.elite.dubliner.dto.settings.RectangleDto;
-import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -41,23 +38,6 @@ public class ImageUtil {
             return Optional.of(ImageIO.read(file));
         } catch (IOException e) {
             LOGGER.error("Could not read image from file: " + file.getName(), e);
-        }
-        return Optional.empty();
-    }
-
-    public static Optional<RectangleCoordinatesDto> getCoordinatesForImage(final BufferedImage image,
-                                                                           final SettingsDto settings) {
-        return settings.rectangleCoordinates
-                .stream()
-                .filter(coord -> coord.screenWidth.equals(image.getWidth()) && coord.screenHeight.equals(image.getHeight()))
-                .findFirst();
-    }
-
-    public static Optional<BufferedImage> crop(final RectangleDto coord, final BufferedImage image) {
-        try {
-            return Optional.of(image.getSubimage(coord.x, coord.y, coord.width, coord.height));
-        } catch (RasterFormatException e) {
-            LOGGER.error("Failed to crop image, incorrect bounds");
         }
         return Optional.empty();
     }

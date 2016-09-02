@@ -13,7 +13,7 @@ public class PowerReportDto {
     @JsonProperty("expansion")
     public List<ExpansionDto> expansion = new ArrayList<>();
 
-    @JsonProperty("reparation")
+    @JsonProperty("preparation")
     public List<PreparationDto> preparation = new ArrayList<>();
 
     @JsonProperty("turmoil")

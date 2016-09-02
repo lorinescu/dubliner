@@ -3,9 +3,8 @@ package pub.occams.elite.dubliner.domain;
 public enum ImageType {
     PP_PREPARATION("preparation"),
     PP_EXPANSION("expansion"),
-    PP_CONTROL("control"),
-    PP_TURMOIL("turmoil");
-    
+    PP_CONTROL("control");
+
     private final String name;
 
     ImageType(final String name) {

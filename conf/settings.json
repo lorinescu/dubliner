@@ -28,6 +28,9 @@
     }
   },
   "corrections": {
+    "powerName": {
+      "EDMUND MAH0N": "EDMUND MAHON"
+    },
     "systemName": {
       "0UAN GURUS": "QUAN GURUS",
       "0LWAIN": "OLWAIN",
@@ -101,16 +104,6 @@
       "WOI.F 412": "WOLF 412",
       "WOL0NIUG0": "WOLONIUGO",
       "Z0SI": "ZOSI"
-    }
-  },
-  "screens": {
-    "CONTROL": {
-      "coord": {
-      },
-      "resolution": {
-        "width": "1920",
-        "height": "1200"
-      }
     }
   }
 }

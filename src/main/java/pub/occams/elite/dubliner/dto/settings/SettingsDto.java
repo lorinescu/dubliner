@@ -3,8 +3,6 @@ package pub.occams.elite.dubliner.dto.settings;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SettingsDto {
 
@@ -14,8 +12,5 @@ public class SettingsDto {
 
     @JsonProperty("corrections")
     public CorrectionsDto corrections;
-
-    @JsonProperty("rectangleCoordinates")
-    public List<RectangleCoordinatesDto> rectangleCoordinates;
 
 }

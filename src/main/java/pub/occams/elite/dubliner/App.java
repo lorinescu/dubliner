@@ -10,25 +10,22 @@ import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import pub.occams.elite.dubliner.application.ImageApi;
-import pub.occams.elite.dubliner.application.ImageApiV1;
-import pub.occams.elite.dubliner.domain.ControlSystem;
+import pub.occams.elite.dubliner.application.ImageApiImpl;
+import pub.occams.elite.dubliner.dto.ocr.ReportDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.gui.controller.MasterController;
-import pub.occams.elite.dubliner.gui.controller.SettingsController;
-import pub.occams.elite.dubliner.gui.controller.module.AreasController;
 import pub.occams.elite.dubliner.gui.controller.module.HelpController;
 import pub.occams.elite.dubliner.gui.controller.module.ScanController;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
 public class App extends Application {
 
     public static final String NAME = "The Dubliner";
-    public static final String VERSION = "0.0.1";
+    public static final String VERSION = "0.0.2";
 
     public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -46,19 +43,13 @@ public class App extends Application {
     @Override
     public void start(final Stage primaryStage) throws Exception {
 
-        final SettingsController settingsController = loadFxml(SettingsController.class, "Settings.fxml");
-        settingsController.postConstruct(imageApi);
-
         final ScanController scanController = loadFxml(ScanController.class, "Scan.fxml");
         scanController.postConstruct(imageApi);
-
-        final AreasController areasController = loadFxml(AreasController.class, "Areas.fxml");
-        areasController.postContruct(imageApi);
 
         final HelpController helpController = loadFxml(HelpController.class, "Help.fxml");
 
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
-        masterController.postConstruct(imageApi, settingsController, scanController, areasController, helpController);
+        masterController.postConstruct(imageApi, scanController, helpController);
 
         final Scene scene = new Scene(masterController.getView());
         scene.getStylesheets().add(App.class.getResource("gui/style/custom.css").toExternalForm());
@@ -71,17 +62,10 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    public static SettingsDto loadSettingsV1() throws IOException {
+    public static SettingsDto loadSettings() throws IOException {
         JSON_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
 
-        final File configFile = new File("conf/settings_v1.json");
-        return JSON_MAPPER.readValue(configFile, SettingsDto.class);
-    }
-
-    public static SettingsDto loadSettingsV2() throws IOException {
-        JSON_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-
-        final File configFile = new File("conf/settings_v2.json");
+        final File configFile = new File("conf/settings.json");
         return JSON_MAPPER.readValue(configFile, SettingsDto.class);
     }
 
@@ -109,20 +93,18 @@ public class App extends Application {
         }
 
         try {
-            imageApi = new ImageApiV1(loadSettingsV1(), debug);
+            imageApi = new ImageApiImpl(loadSettings(), debug);
         } catch (IOException e) {
             Logger.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }
 
         if (cliMode && null != imageFile) {
             if (!imageFile.exists()) {
-                System.out.println("File: "+imageFile.getName()+" does not exist");
+                System.out.println("File: " + imageFile.getName() + " does not exist");
                 System.exit(1);
             }
-            final List<ControlSystem> cs = imageApi.extractDataFromImages(Collections.singletonList(imageFile));
-            if (null != cs && cs.size() == 1) {
-                System.out.println(cs);
-            }
+            final ReportDto dto = imageApi.extractDataFromImages(Collections.singletonList(imageFile));
+            App.JSON_MAPPER.writeValue(System.out, dto);
         } else {
             launch(args);
         }

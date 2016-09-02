@@ -4,6 +4,7 @@ import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.apache.log4j.Logger;
 import pub.occams.elite.dubliner.App;
+import pub.occams.elite.dubliner.correct.Corrector;
 import pub.occams.elite.dubliner.domain.InputImage;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
@@ -12,7 +13,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 public abstract class ImageApiBase implements ImageApi {
@@ -24,11 +24,13 @@ public abstract class ImageApiBase implements ImageApi {
     protected int cnt = 0;
 
     protected final SettingsDto settings;
+    protected final Corrector corrector;
     protected final Tesseract tessForNumbers = new Tesseract();
     protected final Tesseract tessForNames = new Tesseract();
 
     public ImageApiBase(final SettingsDto settings, final boolean debug) {
         this.settings = settings;
+        this.corrector = new Corrector(settings.corrections);
         this.debug = debug;
 
         tessForNumbers.setDatapath(settings.ocr.tesseractForNumbers.dataPath);
@@ -84,43 +86,8 @@ public abstract class ImageApiBase implements ImageApi {
     }
 
 
-    protected String cleanPositiveNumber(final String str) {
-        return str
-                .trim()
-                .replace("CC", "")
-                .replace("O", "0")
-                .replace("'", "")
-                .replace(" ", "")
-                .replace("-", "")
-                .replace("B", "8")
-                .replace("D", "0");
-    }
-
-
-    protected String cleanSystemName(final String str) {
-        final String nameWithoutTurmoil = str.replaceAll("(\\(|\\[).*", "").trim();
-        if (settings.corrections.systemName.containsKey(nameWithoutTurmoil)) {
-            return settings.corrections.systemName.get(nameWithoutTurmoil);
-        } else {
-            return nameWithoutTurmoil;
-        }
-    }
-
-    protected String cleanPowerName(final String str) {
-        final String upperTrimmed = str.trim().toUpperCase();
-
-        final Map<String, String> corrections = settings.corrections.powerName;
-
-        String correctedName = upperTrimmed;
-        for (final String incorrectPowerName : corrections.keySet()) {
-            final String correctPowerName = corrections.get(incorrectPowerName);
-            correctedName = upperTrimmed.replace(incorrectPowerName, correctPowerName);
-        }
-
-        return correctedName;
-    }
-
     protected String ocrNumberRectangle(final BufferedImage image) {
+        LOGGER.info("starting number OCR");
         try {
             return tessForNumbers.doOCR(image);
         } catch (TesseractException e) {
