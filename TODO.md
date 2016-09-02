@@ -6,7 +6,6 @@ TODO:
 * use SuperCSV or similar for generating CSV files instead of joining strings with commas
 * have a (user) configurable worker pool for processing images in parallel
 * to keep the game's screenshot directory clean, move interesting images to a spool directory and process them there
-* use relative instead of absolute segment coordinates depending on esolution if Elite scales UI elements based on some formula
 * installer, see [NSIS](http://nsis.sourceforge.net/Java_Launcher_with_automatic_JRE_installation)
 
 META TODO:
