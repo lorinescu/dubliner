@@ -18,8 +18,6 @@ public class MasterController extends Controller<AnchorPane> {
     @FXML
     private Tab helpTab;
 
-    private ImageApi imageApi;
-
     @FXML
     private void close(ActionEvent actionEvent) {
         System.exit(0);
@@ -33,9 +31,8 @@ public class MasterController extends Controller<AnchorPane> {
         alert.showAndWait();
     }
 
-    public void postConstruct(final ImageApi imageApi, final ScanController scanController,
+    public void postConstruct(final ScanController scanController,
                               final HelpController helpController) {
-        this.imageApi = imageApi;
         this.scanTab.setContent(scanController.getView());
         this.helpTab.setContent(helpController.getView());
     }

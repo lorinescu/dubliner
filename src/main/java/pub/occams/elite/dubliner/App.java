@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import pub.occams.elite.dubliner.application.ImageApi;
@@ -21,7 +22,7 @@ import pub.occams.elite.dubliner.gui.controller.module.ScanController;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 public class App extends Application {
@@ -51,7 +52,7 @@ public class App extends Application {
         final HelpController helpController = loadFxml(HelpController.class, "Help.fxml");
 
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
-        masterController.postConstruct(imageApi, scanController, helpController);
+        masterController.postConstruct(scanController, helpController);
 
         final Scene scene = new Scene(masterController.getView());
         scene.getStylesheets().add(App.class.getResource("gui/style/custom.css").toExternalForm());
@@ -107,14 +108,14 @@ public class App extends Application {
             }
             final List<File> input = new ArrayList<>();
             if (imageFileOrDir.isDirectory()) {
-                final File[] files = imageFileOrDir.listFiles(
-                        (dir, filename) -> filename.endsWith(".bmp")
-                );
-                if (null == files || files.length < 1) {
+                final String[] extensions = new String[1];
+                extensions[0] = "bmp";
+                final Collection<File> files = FileUtils.listFiles(imageFileOrDir, extensions, true);
+                if (files.size() < 1) {
                     System.out.println("No bmp files found");
                     System.exit(1);
                 }
-                Collections.addAll(input, files);
+                input.addAll(files);
             } else {
                 input.add(imageFileOrDir);
             }

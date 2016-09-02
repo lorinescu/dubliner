@@ -16,6 +16,4 @@ public class PowerReportDto {
     @JsonProperty("preparation")
     public List<PreparationDto> preparation = new ArrayList<>();
 
-    @JsonProperty("turmoil")
-    public List<TurmoilDto> turmoil = new ArrayList<>();
 }

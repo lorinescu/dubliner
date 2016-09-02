@@ -680,8 +680,6 @@ public class ImageApiImpl implements ImageApi {
                                 powerReport.expansion.add((ExpansionDto) ppDto);
                             } else if (ppDto instanceof PreparationDto) {
                                 powerReport.preparation.add((PreparationDto) ppDto);
-                            } else if (ppDto instanceof TurmoilDto) {
-                                powerReport.turmoil.add((TurmoilDto) ppDto);
                             }
                             reportDto.powers.put(power, powerReport);
                         }

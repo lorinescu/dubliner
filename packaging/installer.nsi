@@ -5,7 +5,7 @@ Name "Dubliner"
 OutFile "Dubliner-0.0.2.exe"
 
 ; The default installation directory
-InstallDir $PROGRAMFILES\Dubliner
+InstallDir $DESKTOP\Dubliner
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)

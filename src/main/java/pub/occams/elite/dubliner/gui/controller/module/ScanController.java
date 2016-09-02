@@ -2,15 +2,10 @@ package pub.occams.elite.dubliner.gui.controller.module;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -20,9 +15,11 @@ import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.log4j.Logger;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.application.ImageApi;
-import pub.occams.elite.dubliner.dto.ocr.ControlDto;
+import pub.occams.elite.dubliner.domain.Power;
 import pub.occams.elite.dubliner.dto.ocr.ReportDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
+import pub.occams.elite.dubliner.gui.model.ControlModel;
+import pub.occams.elite.dubliner.gui.model.ReportModel;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -31,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 import static javafx.embed.swing.SwingFXUtils.toFXImage;
 
@@ -46,8 +44,11 @@ public class ScanController extends Controller<AnchorPane> {
     private TextField screenshotDirectoryField;
     @FXML
     private ProgressIndicator progressIndicator;
+
     @FXML
-    private ListView<ControlDto> controlSystemList;
+    private ComboBox<Power> powersCombo;
+    @FXML
+    private ListView<ControlModel> controlSystemList;
     @FXML
     private TextField nameText;
     @FXML
@@ -85,7 +86,7 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private ImageView undermineTriggerImage;
 
-    private final ObservableList<ControlDto> controlSystems = FXCollections.observableArrayList();
+    private final ObjectProperty<ReportModel> report = new SimpleObjectProperty<>();
 
     private final ObjectProperty<File> imageDir = new SimpleObjectProperty<>(null);
     private ImageApi imageApi;
@@ -105,7 +106,21 @@ public class ScanController extends Controller<AnchorPane> {
         );
         imageDir.setValue(new File(prefs.get(LAST_DIR, "./")));
 
-        controlSystemList.setItems(controlSystems);
+        report.addListener(
+                (observable, oldValue, newValue) -> {
+                    powersCombo.getItems().setAll(newValue.powers.keySet().stream().collect(Collectors.toList()));
+                }
+        );
+
+        powersCombo.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    if (null == newValue) {
+                        return;
+                    }
+                    controlSystemList.setItems(report.get().powers.get(newValue).control);
+                }
+        );
+
         controlSystemList.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, controlSystem) -> {
                     if (null == controlSystem) {
@@ -141,7 +156,14 @@ public class ScanController extends Controller<AnchorPane> {
         }
 
         resetDetails();
-        controlSystems.clear();
+        if (null != report.get()) {
+            report.set(null);
+        }
+
+        powersCombo.getItems().clear();
+
+        controlSystemList.getItems().clear();
+
         progressIndicator.setVisible(true);
 
         startScan();
@@ -153,18 +175,18 @@ public class ScanController extends Controller<AnchorPane> {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name,UpkeepFromLastCycle,CostIfFortified,CostIfUndermined,BaseIncome,FortifyTotal,FortifyTrigger," +
                 "UndermineTotal,UndermineTrigger\n");
-        controlSystems.forEach(
-                cs -> sb
-                        .append("\"").append(cs.systemName).append("\",")
-                        .append("\"").append(cs.upkeepFromLastCycle).append("\",")
-                        .append("\"").append(cs.costIfFortified).append("\",")
-                        .append("\"").append(cs.costIfUndermined).append("\",")
-                        .append("\"").append(cs.baseIncome).append("\",")
-                        .append("\"").append(cs.fortifyTotal).append("\",")
-                        .append("\"").append(cs.fortifyTrigger).append("\",")
-                        .append("\"").append(cs.undermineTotal).append("\",")
-                        .append("\"").append(cs.undermineTrigger).append("\"\n")
-        );
+//        controlSystems.forEach(
+//                cs -> sb
+//                        .append("\"").append(cs.systemName).append("\",")
+//                        .append("\"").append(cs.upkeepFromLastCycle).append("\",")
+//                        .append("\"").append(cs.costIfFortified).append("\",")
+//                        .append("\"").append(cs.costIfUndermined).append("\",")
+//                        .append("\"").append(cs.baseIncome).append("\",")
+//                        .append("\"").append(cs.fortifyTotal).append("\",")
+//                        .append("\"").append(cs.fortifyTrigger).append("\",")
+//                        .append("\"").append(cs.undermineTotal).append("\",")
+//                        .append("\"").append(cs.undermineTrigger).append("\"\n")
+//        );
         final ClipboardContent content = new ClipboardContent();
         content.putString(sb.toString());
         Clipboard.getSystemClipboard().setContent(content);
@@ -177,7 +199,7 @@ public class ScanController extends Controller<AnchorPane> {
 
     @FXML
     private void showOriginalImage(ActionEvent actionEvent) {
-        final ControlDto system = controlSystemList.getSelectionModel().getSelectedItem();
+        final ControlModel system = controlSystemList.getSelectionModel().getSelectedItem();
         if (null == system) {
             return;
         }
@@ -204,11 +226,9 @@ public class ScanController extends Controller<AnchorPane> {
         };
         ocrTask.setOnSucceeded(
                 event -> {
-//                    controlSystems.setAll(this.ocrTask.getValue().powers.f);
-//                    FXCollections.sort(
-//                            controlSystems,
-//                            (o1, o2) -> o1.getSystemName().compareTo(o2.getSystemName())
-//                    );
+                    final ReportDto dto = ocrTask.getValue();
+                    final ReportModel report = ReportModel.fromDto(dto);
+                    this.report.set(report);
                     progressIndicator.setVisible(false);
                 }
         );
@@ -228,36 +248,37 @@ public class ScanController extends Controller<AnchorPane> {
         new Thread(this.ocrTask).start();
     }
 
-    private void setDetails(final ControlDto d) {
-        nameText.setText(d.systemName);
-//        nameImage.setImage(toFXImage(d.getControlSystemRectangles().getSystemName(), null));
+    private void setDetails(final ControlModel m) {
+        nameText.setText(m.systemName.getValue());
+//        nameImage.setImage(toFXImage(m.getControlSystemRectangles().getSystemName(), null));
 
-        upkeepFromLastCycleText.setText(String.valueOf(d.upkeepFromLastCycle));
-//        upkeepFromLastCycleImage.setImage(toFXImage(d.getControlSystemRectangles().getUpkeepFromLastCycle(), null));
+        upkeepFromLastCycleText.setText(String.valueOf(m.upkeepFromLastCycle));
+//        upkeepFromLastCycleImage.setImage(toFXImage(m.getControlSystemRectangles().getUpkeepFromLastCycle(), null));
 
-        fortifiedCostText.setText(String.valueOf(d.costIfFortified));
-//        fortifiedCostImage.setImage(toFXImage(d.getControlSystemRectangles().getCostIfFortified(), null));
+        fortifiedCostText.setText(String.valueOf(m.costIfFortified));
+//        fortifiedCostImage.setImage(toFXImage(m.getControlSystemRectangles().getCostIfFortified(), null));
 
-        underminedCostText.setText(String.valueOf(d.costIfUndermined));
-//        underminedCostImage.setImage(toFXImage(d.getControlSystemRectangles().getCostIfUndermined(), null));
+        underminedCostText.setText(String.valueOf(m.costIfUndermined));
+//        underminedCostImage.setImage(toFXImage(m.getControlSystemRectangles().getCostIfUndermined(), null));
 
-        baseIncomeText.setText(String.valueOf(d.baseIncome));
-//        baseIncomeImage.setImage(toFXImage(d.getControlSystemRectangles().getBaseIncome(), null));
+        baseIncomeText.setText(String.valueOf(m.baseIncome));
+//        baseIncomeImage.setImage(toFXImage(m.getControlSystemRectangles().getBaseIncome(), null));
 
-        fortifyTotalText.setText(String.valueOf(d.fortifyTotal));
-//        fortifyTotalImage.setImage(toFXImage(d.getControlSystemRectangles().getFortificationTotal(), null));
+        fortifyTotalText.setText(String.valueOf(m.fortifyTotal));
+//        fortifyTotalImage.setImage(toFXImage(m.getControlSystemRectangles().getFortificationTotal(), null));
 
-        fortifyTriggerText.setText(String.valueOf(d.fortifyTrigger));
-//        fortifyTriggerImage.setImage(toFXImage(d.getControlSystemRectangles().getFortificationTrigger(), null));
+        fortifyTriggerText.setText(String.valueOf(m.fortifyTrigger));
+//        fortifyTriggerImage.setImage(toFXImage(m.getControlSystemRectangles().getFortificationTrigger(), null));
 
-        undermineTotalText.setText(String.valueOf(d.undermineTotal));
-//        undermineTotalImage.setImage(toFXImage(d.getControlSystemRectangles().getUnderminingTotal(), null));
+        undermineTotalText.setText(String.valueOf(m.undermineTotal));
+//        undermineTotalImage.setImage(toFXImage(m.getControlSystemRectangles().getUnderminingTotal(), null));
 
-        undermineTriggerText.setText(String.valueOf(d.undermineTrigger));
-//        undermineTriggerImage.setImage(toFXImage(d.getControlSystemRectangles().getUnderminingTrigger(), null));
+        undermineTriggerText.setText(String.valueOf(m.undermineTrigger));
+//        undermineTriggerImage.setImage(toFXImage(m.getControlSystemRectangles().getUnderminingTrigger(), null));
     }
 
     private void resetDetails() {
+
         nameText.setText(null);
         nameImage.setImage(null);
 
