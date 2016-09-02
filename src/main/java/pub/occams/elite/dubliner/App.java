@@ -20,7 +20,9 @@ import pub.occams.elite.dubliner.gui.controller.module.ScanController;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class App extends Application {
 
@@ -76,18 +78,18 @@ public class App extends Application {
 
         boolean debug = false;
         boolean cliMode = false;
-        File imageFile = null;
+        File imageFileOrDir = null;
         if (args.length != 0) {
             for (final String arg : args) {
                 if ("-help".equals(arg)) {
-                    System.out.println("Usage: java -jar dubliner.jar [-help] [-debug] [-cli <path/to/image>]");
+                    System.out.println("Usage: java -jar dubliner.jar [-help] [-debug] [-cli <path/to/image or dir>]");
                     System.exit(0);
                 } else if ("-debug".equals(arg)) {
                     debug = true;
                 } else if ("-cli".equals(arg)) {
                     cliMode = true;
                 } else {
-                    imageFile = new File(arg);
+                    imageFileOrDir = new File(arg);
                 }
             }
         }
@@ -98,12 +100,25 @@ public class App extends Application {
             Logger.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }
 
-        if (cliMode && null != imageFile) {
-            if (!imageFile.exists()) {
-                System.out.println("File: " + imageFile.getName() + " does not exist");
+        if (cliMode && null != imageFileOrDir) {
+            if (!imageFileOrDir.exists()) {
+                System.out.println(imageFileOrDir.getName() + " does not exist");
                 System.exit(1);
             }
-            final ReportDto dto = imageApi.extractDataFromImages(Collections.singletonList(imageFile));
+            final List<File> input = new ArrayList<>();
+            if (imageFileOrDir.isDirectory()) {
+                final File[] files = imageFileOrDir.listFiles(
+                        (dir, filename) -> filename.endsWith(".bmp")
+                );
+                if (null == files || files.length < 1) {
+                    System.out.println("No bmp files found");
+                    System.exit(1);
+                }
+                Collections.addAll(input, files);
+            } else {
+                input.add(imageFileOrDir);
+            }
+            final ReportDto dto = imageApi.extractDataFromImages(input);
             App.JSON_MAPPER.writeValue(System.out, dto);
         } else {
             launch(args);
