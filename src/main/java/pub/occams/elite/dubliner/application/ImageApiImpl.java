@@ -139,7 +139,7 @@ public class ImageApiImpl implements ImageApi {
         final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
-        cvCanny(img, dst, 100, 800, 3);
+        cvCanny(img, dst, 500, 800, 3);
         saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
 
         final CvMemStorage storage = cvCreateMemStorage(0);
