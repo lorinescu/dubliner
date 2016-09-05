@@ -166,19 +166,19 @@ public class ScanController extends Controller<AnchorPane> {
         sb.append("Name,UpkeepFromLastCycle,DefaultUpkeepCost, CostIfFortified,CostIfUndermined,BaseIncome," +
                 "FortifyTotal,FortifyTrigger," +
                 "UndermineTotal,UndermineTrigger\n");
-//        controlSystems.forEach(
-//                cs -> sb
-//                        .append("\"").append(cs.systemName).append("\",")
-//                        .append("\"").append(cs.upkeepFromLastCycle).append("\",")
-//                        .append("\"").append(cs.defaultUpkeepCost).append("\",")
-//                        .append("\"").append(cs.costIfFortified).append("\",")
-//                        .append("\"").append(cs.costIfUndermined).append("\",")
-//                        .append("\"").append(cs.baseIncome).append("\",")
-//                        .append("\"").append(cs.fortifyTotal).append("\",")
-//                        .append("\"").append(cs.fortifyTrigger).append("\",")
-//                        .append("\"").append(cs.undermineTotal).append("\",")
-//                        .append("\"").append(cs.undermineTrigger).append("\"\n")
-//        );
+        controlData.forEach(
+                cs -> sb
+                        .append("\"").append(cs.systemName).append("\",")
+                        .append("\"").append(cs.upkeepFromLastCycle).append("\",")
+                        .append("\"").append(cs.defaultUpkeepCost).append("\",")
+                        .append("\"").append(cs.costIfFortified).append("\",")
+                        .append("\"").append(cs.costIfUndermined).append("\",")
+                        .append("\"").append(cs.baseIncome).append("\",")
+                        .append("\"").append(cs.fortifyTotal).append("\",")
+                        .append("\"").append(cs.fortifyTrigger).append("\",")
+                        .append("\"").append(cs.undermineTotal).append("\",")
+                        .append("\"").append(cs.undermineTrigger).append("\"\n")
+        );
         final ClipboardContent content = new ClipboardContent();
         content.putString(sb.toString());
         Clipboard.getSystemClipboard().setContent(content);

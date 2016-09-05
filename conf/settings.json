@@ -14,7 +14,8 @@
         "load_punc_dawg": "F",
         "load_number_dawg": "F",
         "load_fixed_length_dawgs": "F",
-        "load_bigram_dawg": "F"
+        "load_bigram_dawg": "F",
+        "tosp_min_sane_kn_sp" : "5"
       }
     },
     "tesseractForSystemNames": {
@@ -30,7 +31,8 @@
   "corrections": {
     "powerName": {
       "EDMUND MAH0N": "EDMUND MAHON",
-      "LI Y0NG-RUI": "LI YONG-RUI"
+      "LI Y0NG-RUI": "LI YONG-RUI",
+      "ARCH0N DELAINE" : "ARCHON DELAINE"
     },
     "systemName": {
       "0LKER": "OLKER",

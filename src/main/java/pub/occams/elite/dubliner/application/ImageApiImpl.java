@@ -139,7 +139,7 @@ public class ImageApiImpl implements ImageApi {
         final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
-        cvCanny(img, dst, 499, 500, 3);
+        cvCanny(img, dst, 100, 800, 3);
         saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
 
         final CvMemStorage storage = cvCreateMemStorage(0);
@@ -318,7 +318,6 @@ public class ImageApiImpl implements ImageApi {
             return Optional.empty();
         }
 
-
         Optional<Power> maybePower = corrector.powerFromString(str);
         if (!maybePower.isPresent()) {
             return Optional.empty();
@@ -336,7 +335,7 @@ public class ImageApiImpl implements ImageApi {
 
         final Rectangle reference = input.getPower().getRectangle();
         final int x0 = reference.x0;
-        final int y0Offset = 10;//a few extra pictures to remove the line below the power name
+        final int y0Offset = 20;//a few extra pixels to remove the line below the power name
         final int y0 = reference.y1 + y0Offset;
         final int x1 = reference.x1;
         final int y1 = img.getHeight();
@@ -482,7 +481,7 @@ public class ImageApiImpl implements ImageApi {
         final BufferedImage fortificationImg = maybeFortificationImg.get();
         final BufferedImage underminingImg = maybeUnderminingImg.get();
 
-        final BufferedImage costsInputForOcr = filterRedAndBinarize(costsImg, settings.ocr.filterRedChannelMin);
+        final BufferedImage costsInputForOcr = scale(filterRedAndBinarize(costsImg, settings.ocr.filterRedChannelMin));
 
         saveImageAtStage(costsInputForOcr, file, "extract-control-data-costs-ocr-input");
 
@@ -531,8 +530,7 @@ public class ImageApiImpl implements ImageApi {
         LOGGER.info("Fortifications, corrected to: [" + fortifyTotal + "," + fortifyTrigger + "]");
 
         saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
-        final BufferedImage underminingOcrInput = filterRedAndBinarize(underminingImg, settings.ocr
-                .filterRedChannelMin);
+        final BufferedImage underminingOcrInput = filterRedAndBinarize(underminingImg, settings.ocr.filterRedChannelMin);
         saveImageAtStage(underminingOcrInput, file, "extract-control-data-undermine-ocr-input");
 
         final String underminingStr = ocrNumberRectangle(underminingOcrInput);
@@ -702,12 +700,13 @@ public class ImageApiImpl implements ImageApi {
         try {
             final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
             final List<File> images = Arrays.asList(
-                    new File("data/control_images/1920x1200/mahon/control/not-undermined-not-fortified.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/undermined.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/undermined-fortified.bmp"),
-                    new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp"),
-                    new File("data/control_images/1920x1200/ald/control/fortified.bmp"),
-                    new File("data/control_images/1920x1080/winters/control/undermined-fortified.bmp")
+//                    new File("data/control_images/1920x1200/mahon/control/not-undermined-not-fortified.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/undermined.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/undermined-fortified.bmp"),
+//                    new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp"),
+//                    new File("data/control_images/1920x1200/ald/control/fortified.bmp"),
+                    new File("data/control_images/1920x1080/ad/control/not-undermined-fortified.bmp"),
+                    new File("data/control_images/1920x1200/winters/control/default.bmp")
             );
             api.extractDataFromImages(images);
         } catch (IOException e) {

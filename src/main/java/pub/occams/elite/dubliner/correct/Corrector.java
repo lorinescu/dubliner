@@ -32,18 +32,21 @@ public class Corrector {
     }
 
     public Optional<Power> powerFromString(final String str) {
-        final String upperTrimmed = str.trim().toUpperCase();
+
+        final String powerString = str.trim().toUpperCase();
 
         final Map<String, String> corr = corrections.powerName;
 
-        String correctedString = upperTrimmed;
-        for (final String incorrectPowerName : corr.keySet()) {
-            final String correctPowerName = corr.get(incorrectPowerName);
-            correctedString = upperTrimmed.replace(incorrectPowerName, correctPowerName);
+        String correctedPowerString = powerString;
+        for (final String badName : corr.keySet()) {
+            if (powerString.contains(badName)) {
+                correctedPowerString = corr.get(badName);
+                break;
+            }
         }
 
         for (final Power p : Power.values()) {
-            if (correctedString.contains(p.getName())) {
+            if (correctedPowerString.contains(p.getName())) {
                 return Optional.of(p);
             }
         }
