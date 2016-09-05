@@ -46,7 +46,8 @@ public class ImageUtil {
         try {
             return Optional.of(image.getSubimage(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0));
         } catch (RasterFormatException e) {
-            LOGGER.error("Failed to crop image, incorrect bounds");
+            LOGGER.error("Failed to crop image" + image.getWidth() + "x" + image.getHeight() +
+                    ", incorrect bounds for rectangle:" + r.toString());
         }
         return Optional.empty();
     }
@@ -103,7 +104,7 @@ public class ImageUtil {
         return output;
     }
 
-    public static BufferedImage drawDataRectangles(final BufferedImage image, final DataRectangle ... rects) {
+    public static BufferedImage drawDataRectangles(final BufferedImage image, final DataRectangle... rects) {
         final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
         Graphics g = output.getGraphics();
         g.drawImage(image, 0, 0, null);
@@ -117,7 +118,7 @@ public class ImageUtil {
             g2.setFont(new Font("Serif", Font.BOLD, 14));
             final Rectangle r = dr.getRectangle();
             g2.drawRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
-            g2.drawString(dr.getData().toString(), r.x0+10, r.y0+10);
+            g2.drawString(dr.getData().toString(), r.x0 + 10, r.y0 + 10);
         }
         g2.dispose();
         return output;

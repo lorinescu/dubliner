@@ -16,6 +16,9 @@ public class ControlDto extends PowerPlayDto {
     @JsonProperty("upkeepFromLastCycle")
     public Integer upkeepFromLastCycle;
 
+    @JsonProperty("defaultUpkeepCost")
+    public Integer defaultUpkeepCost;
+
     @JsonProperty("costIfFortified")
     public Integer costIfFortified;
 

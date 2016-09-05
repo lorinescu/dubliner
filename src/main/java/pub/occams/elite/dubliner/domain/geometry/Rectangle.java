@@ -12,4 +12,9 @@ public class Rectangle {
         this.x1 = x1;
         this.y1 = y1;
     }
+
+    @Override
+    public String toString() {
+        return "x0=" + x0 + ", y0=" + y0 + ", x1=" + x1 + ", y1=" + y1;
+    }
 }

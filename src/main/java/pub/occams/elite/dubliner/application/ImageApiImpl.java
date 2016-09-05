@@ -108,7 +108,11 @@ public class ImageApiImpl implements ImageApi {
     protected String ocrNumberRectangle(final BufferedImage image) {
         LOGGER.info("starting number OCR");
         try {
-            return tessForNumbers.doOCR(image);
+            final String str = tessForNumbers.doOCR(image);
+            if (null == str) {
+                return "";
+            }
+            return str;
         } catch (TesseractException e) {
             LOGGER.error("Error when ocr-ing image.", e);
         }
@@ -135,7 +139,7 @@ public class ImageApiImpl implements ImageApi {
         final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
-        cvCanny(img, dst, 400, 500, 3);
+        cvCanny(img, dst, 499, 500, 3);
         saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
 
         final CvMemStorage storage = cvCreateMemStorage(0);
@@ -309,15 +313,17 @@ public class ImageApiImpl implements ImageApi {
         saveImageAtStage(ocrInputImage, file, "detect-selected-power-ocr-input");
 
         final String str = ocrRectangle(ocrInputImage);
+        LOGGER.info("Selected power, raw OCR:[" + str + "]");
         if (null == str || str.isEmpty()) {
             return Optional.empty();
         }
+
 
         Optional<Power> maybePower = corrector.powerFromString(str);
         if (!maybePower.isPresent()) {
             return Optional.empty();
         }
-        LOGGER.info("Selected power, raw OCR:[" + str + "], found:[" + maybePower.get().getName() + "]");
+        LOGGER.info("Selected power, corrected to:[" + maybePower.get().getName() + "]");
         return Optional.of(new DataRectangle<>(maybePower.get(), powerNameSlice));
     }
 
@@ -371,13 +377,13 @@ public class ImageApiImpl implements ImageApi {
         saveImageAtStage(ocrInputImage, file, "extract-name-ocr-input");
 
         final String str = ocrRectangle(ocrInputImage);
+        LOGGER.info("Selected system, raw OCR:[" + str + "]");
         if (null == str || str.isEmpty()) {
             return Optional.empty();
         }
 
         final String sysName = corrector.cleanSystemName(str);
-        LOGGER.info("Selected system, raw OCR:[" + str + "], corrected:[" + sysName + "]");
-
+        LOGGER.info("Selected system, corrected to:[" + sysName + "]");
 
         final Rectangle realRect = new Rectangle(
                 sysNameRect.x0 + x0, sysNameRect.y0 + y0,
@@ -420,14 +426,18 @@ public class ImageApiImpl implements ImageApi {
         }
 
         /*
-        Find highest , leftmost line (either the "Task" lines or the fortification top line). If two lines are colinear
-        by 5 pixels or less then we pick the leftmost line.
+        Find highest , leftmost 2 lines (fortification 2nd from the top and bottom line). If two lines
+        are colinear by 5 pixels or less then we pick the leftmost line.
 
-        Considering the right left end of the line (x1,y1) as the origin of a coordinate system the right upper
+        Considering the right left end of the top line (x1,y1) as the origin of a coordinate system the right upper
         quadrant will be system costs, lower left quadrant fortifications and lower right undermining
+
+        lowest segment should be the bottom line in either fortification or undermining, we use it to remove
+        the redundant parts below it's y value
         */
-        final Optional<LineSegment> maybeHighestLeftMostSegment = merged
+        final List<LineSegment> sortedFilteredSegments = merged
                 .stream()
+                .filter(s -> (s.x1 + 10) - img2.getWidth() <= 0)
                 .sorted(
                         (s1, s2) -> {
                             final int res = s1.y0 - s2.y0;
@@ -436,41 +446,32 @@ public class ImageApiImpl implements ImageApi {
                             }
                             return res;
                         }
-                ).findFirst();
-        if (!maybeHighestLeftMostSegment.isPresent()) {
+                )
+                .collect(Collectors.toList());
+
+        if (sortedFilteredSegments.size() < 2) {
             return Optional.empty();
         }
 
-        /* lowest segment should be the bottom line in either fortification or undermining, we use it to remove
-        the redundant parts below it's y value
-         */
-        final LineSegment highestLeftMostSegment = maybeHighestLeftMostSegment.get();
-        final Optional<LineSegment> maybeLowestSegment = merged
-                .stream()
-                .sorted((s1, s2) -> s2.y0 - s1.y0)
-                .findFirst();
-        if (!maybeLowestSegment.isPresent()) {
-            return Optional.empty();
-        }
-        final LineSegment lowestSegment = maybeLowestSegment.get();
+        final LineSegment topFortificationSegment = sortedFilteredSegments.get(sortedFilteredSegments.size() - 2);
+        final LineSegment bottomFortificationSegment = sortedFilteredSegments.get(sortedFilteredSegments.size() - 1);
 
         final Rectangle costsRectangle = new Rectangle(
-                highestLeftMostSegment.x1, 0,
-                img2.getWidth(), highestLeftMostSegment.y1
+                bottomFortificationSegment.x1, 0,
+                img2.getWidth(), topFortificationSegment.y1
         );
         final Rectangle fortificationRectangle = new Rectangle(
-                0, highestLeftMostSegment.y0,
-                highestLeftMostSegment.x1, lowestSegment.y0
+                0, topFortificationSegment.y0,
+                bottomFortificationSegment.x1, bottomFortificationSegment.y0
         );
         final Rectangle underminingRectangle = new Rectangle(
-                highestLeftMostSegment.x1, highestLeftMostSegment.y0,
-                img2.getWidth(), lowestSegment.y0
+                bottomFortificationSegment.x1, topFortificationSegment.y0,
+                img2.getWidth(), bottomFortificationSegment.y0
         );
 
         final Optional<BufferedImage> maybeCostsImg = ImageUtil.crop(costsRectangle, img2);
         final Optional<BufferedImage> maybeFortificationImg = ImageUtil.crop(fortificationRectangle, img2);
         final Optional<BufferedImage> maybeUnderminingImg = ImageUtil.crop(underminingRectangle, img2);
-
 
         if (!(maybeCostsImg.isPresent() && maybeFortificationImg.isPresent() && maybeUnderminingImg.isPresent())) {
             return Optional.empty();
@@ -485,7 +486,8 @@ public class ImageApiImpl implements ImageApi {
 
         saveImageAtStage(costsInputForOcr, file, "extract-control-data-costs-ocr-input");
 
-        final String costsStr = ocrRectangle(costsInputForOcr);
+        final String costsStr = ocrNumberRectangle(costsInputForOcr);
+        LOGGER.info("System costs, raw OCR:[" + costsStr + "]");
         if (null == costsStr || costsStr.isEmpty()) {
             return Optional.empty();
         }
@@ -500,7 +502,7 @@ public class ImageApiImpl implements ImageApi {
         final Integer costIfUndermined = corrector.cleanPositiveInteger(parts1[3]);
         final Integer baseIncome = corrector.cleanPositiveInteger(parts1[4]);
 
-        LOGGER.info("System costs, raw OCR:[" + costsStr + "], corrected to:["
+        LOGGER.info("System costs, corrected to:["
                 + upkeepFromLastCycle + "," + defaultUpkeepCost + "," + costIfFortified + "," + costIfUndermined
                 + "," + baseIncome + "]");
 
@@ -509,7 +511,8 @@ public class ImageApiImpl implements ImageApi {
 
         saveImageAtStage(fortificationOcrInput, file, "extract-control-data-fortif-ocr-input");
 
-        final String fortificationStr = ocrRectangle(fortificationOcrInput);
+        final String fortificationStr = ocrNumberRectangle(fortificationOcrInput);
+        LOGGER.info("Fortifications, raw OCR:[" + fortificationStr + "]");
         if (null == fortificationStr || fortificationStr.isEmpty()) {
             return Optional.empty();
         }
@@ -525,14 +528,15 @@ public class ImageApiImpl implements ImageApi {
             }
             previous = part;
         }
-        LOGGER.info("Fortifications, raw OCR:[" + fortificationStr + "], corrected to: [" + fortifyTotal + "," + fortifyTrigger + "]");
+        LOGGER.info("Fortifications, corrected to: [" + fortifyTotal + "," + fortifyTrigger + "]");
 
         saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
         final BufferedImage underminingOcrInput = filterRedAndBinarize(underminingImg, settings.ocr
                 .filterRedChannelMin);
         saveImageAtStage(underminingOcrInput, file, "extract-control-data-undermine-ocr-input");
 
-        final String underminingStr = ocrRectangle(underminingOcrInput);
+        final String underminingStr = ocrNumberRectangle(underminingOcrInput);
+        LOGGER.info("Undermining, raw OCR:[" + underminingStr + "]");
         if (null == underminingStr || underminingStr.isEmpty()) {
             return Optional.empty();
         }
@@ -548,7 +552,7 @@ public class ImageApiImpl implements ImageApi {
             }
             previouss = part;
         }
-        LOGGER.info("Undermining, raw OCR:[" + underminingStr + "], after corrections:[" + undermineTotal + "," + undermineTrigger + "]");
+        LOGGER.info("Undermining, after corrections:[" + undermineTotal + "," + undermineTrigger + "]");
 
         final DataRectangle<String> costsReal = new DataRectangle<>(
                 "costs", new Rectangle(
@@ -576,6 +580,7 @@ public class ImageApiImpl implements ImageApi {
         dto.fortifyRectangle = fortificationReal;
         dto.undermineRectangle = undermineReal;
         dto.upkeepFromLastCycle = upkeepFromLastCycle;
+        dto.defaultUpkeepCost = defaultUpkeepCost;
         dto.baseIncome = baseIncome;
         dto.costIfFortified = costIfFortified;
         dto.costIfUndermined = costIfUndermined;
@@ -701,7 +706,8 @@ public class ImageApiImpl implements ImageApi {
                     new File("data/control_images/1920x1200/mahon/control/undermined.bmp"),
                     new File("data/control_images/1920x1200/mahon/control/undermined-fortified.bmp"),
                     new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp"),
-                    new File("data/control_images/1920x1200/ald/control/fortified.bmp")
+                    new File("data/control_images/1920x1200/ald/control/fortified.bmp"),
+                    new File("data/control_images/1920x1080/winters/control/undermined-fortified.bmp")
             );
             api.extractDataFromImages(images);
         } catch (IOException e) {

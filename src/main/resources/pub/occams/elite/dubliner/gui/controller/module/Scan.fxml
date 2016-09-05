@@ -19,7 +19,7 @@
 
 <AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
     <children>
-        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" nodeOrientation="LEFT_TO_RIGHT" spacing="20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" nodeOrientation="LEFT_TO_RIGHT" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
                   <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Select a screenshot directory which will be scanned for images. Supported resolutions:  1920x1200, 1920x1080" wrapText="true" />
                 <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
@@ -30,7 +30,7 @@
                   <ProgressIndicator fx:id="progressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="20.0" />
                     </children>
                 </HBox>
-            <ComboBox fx:id="powersCombo" prefHeight="35.0" prefWidth="168.0"/>
+            <ComboBox fx:id="powersCombo" prefHeight="35.0" prefWidth="168.0" />
             <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
               <tabs>
                 <Tab closable="false" disable="true" text="Preparation" />
@@ -74,22 +74,25 @@
                                             </columnConstraints>
                                             <rowConstraints>
                                               <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                                <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                               <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                               <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                                 <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                              <children>
                                                 <Label text="Upkeep cost from last cycle" />
-                                                <Label text="Cost if fortified" GridPane.rowIndex="1" />
-                                                <Label text="Cost if undermined" GridPane.rowIndex="2" />
-                                                <Label text="Base income" GridPane.rowIndex="3" />
+                                                <Label text="Cost if fortified" GridPane.rowIndex="2" />
+                                                <Label text="Cost if undermined" GridPane.rowIndex="3" />
+                                                <Label text="Base income" GridPane.rowIndex="4" />
                                                 <TextField fx:id="upkeepFromLastCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                <TextField fx:id="fortifiedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                <TextField fx:id="underminedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                <TextField fx:id="baseIncomeText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                <TextField fx:id="fortifiedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <TextField fx:id="underminedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                <TextField fx:id="baseIncomeText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                <Label layoutX="10.0" layoutY="20.0" text="Default upkeep cost" GridPane.rowIndex="1" />
+                                                <TextField fx:id="defaultUpkeepCost" editable="false" layoutX="220.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                              </children>
                                           </GridPane>
-                                          <ImageView fx:id="costsImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                          <ImageView fx:id="costsImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                                        </children>
                                     </HBox>
                                     <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">

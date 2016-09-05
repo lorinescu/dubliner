@@ -2,7 +2,6 @@ package pub.occams.elite.dubliner.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import pub.occams.elite.dubliner.App;
@@ -38,12 +37,12 @@ public class ImageApiImplTest {
         final File referenceJson = new File(DATA_CONTROL_IMAGES + "reference.json");
         assertNotNull(referenceJson);
 
-        final ReportDto referenceData = JSON_MAPPER.readValue(referenceJson, ReportDto.class);
+        final String referenceData = JSON_MAPPER.writeValueAsString(JSON_MAPPER.readValue(referenceJson, ReportDto
+                .class));
 
-        final ReportDto dto = imageApi.extractDataFromImages(new ArrayList<>(referenceFiles));
+        final String extractedData = JSON_MAPPER.writeValueAsString(imageApi.extractDataFromImages(new ArrayList<>
+                (referenceFiles)));
 
-        //TODO: deep Equals
-        Assert.fail();
-        assertEquals(referenceData, dto);
+        assertEquals(referenceData, extractedData);
     }
 }

@@ -13,7 +13,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.application.ImageApi;
@@ -25,7 +25,6 @@ import pub.occams.elite.dubliner.util.ImageUtil;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileFilter;
 import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
@@ -39,7 +38,6 @@ public class ScanController extends Controller<AnchorPane> {
     //FIXME: on windows the app has to run as admin for this key to be created
     private static final Preferences prefs = Preferences.userRoot().node("pub/occams/elite/dubliner/prefs");
     private static final String LAST_DIR = "LAST_DIR";
-
     @FXML
     private TextField screenshotDirectoryField;
     @FXML
@@ -56,6 +54,8 @@ public class ScanController extends Controller<AnchorPane> {
 
     @FXML
     private TextField upkeepFromLastCycleText;
+    @FXML
+    private TextField defaultUpkeepCost;
     @FXML
     private TextField fortifiedCostText;
     @FXML
@@ -163,12 +163,14 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private void copyCSV(final ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Name,UpkeepFromLastCycle,CostIfFortified,CostIfUndermined,BaseIncome,FortifyTotal,FortifyTrigger," +
+        sb.append("Name,UpkeepFromLastCycle,DefaultUpkeepCost, CostIfFortified,CostIfUndermined,BaseIncome," +
+                "FortifyTotal,FortifyTrigger," +
                 "UndermineTotal,UndermineTrigger\n");
 //        controlSystems.forEach(
 //                cs -> sb
 //                        .append("\"").append(cs.systemName).append("\",")
 //                        .append("\"").append(cs.upkeepFromLastCycle).append("\",")
+//                        .append("\"").append(cs.defaultUpkeepCost).append("\",")
 //                        .append("\"").append(cs.costIfFortified).append("\",")
 //                        .append("\"").append(cs.costIfUndermined).append("\",")
 //                        .append("\"").append(cs.baseIncome).append("\",")
@@ -255,6 +257,7 @@ public class ScanController extends Controller<AnchorPane> {
                 .getInputImage().getImage()).get(), null));
 
         upkeepFromLastCycleText.setText(String.valueOf(m.upkeepFromLastCycle));
+        defaultUpkeepCost.setText(String.valueOf(m.defaultUpkeepCost));
         fortifiedCostText.setText(String.valueOf(m.costIfFortified));
         underminedCostText.setText(String.valueOf(m.costIfUndermined));
         baseIncomeText.setText(String.valueOf(m.baseIncome));
@@ -278,6 +281,7 @@ public class ScanController extends Controller<AnchorPane> {
         nameImage.setImage(null);
 
         upkeepFromLastCycleText.setText(null);
+        defaultUpkeepCost.setText(null);
         baseIncomeText.setText(null);
         fortifiedCostText.setText(null);
         underminedCostText.setText(null);
@@ -295,10 +299,10 @@ public class ScanController extends Controller<AnchorPane> {
     private List<File> getUnprocessedFilesFromDir(final File dataDir) {
 
         if (null != dataDir && dataDir.isDirectory()) {
-            final File[] files = dataDir.listFiles((FileFilter) new SuffixFileFilter("bmp"));
-            if (null != files) {
-                return Arrays.asList(files);
-            }
+            final String[] extensions = new String[1];
+            extensions[0] = "bmp";
+            final Collection<File> files = FileUtils.listFiles(dataDir, extensions, true);
+            return new ArrayList<>(files);
         }
 
         return new ArrayList<>();
