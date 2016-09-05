@@ -2,6 +2,8 @@ package pub.occams.elite.dubliner.gui.controller.module;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,14 +21,12 @@ import pub.occams.elite.dubliner.domain.Power;
 import pub.occams.elite.dubliner.dto.ocr.ReportDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.gui.model.ControlModel;
-import pub.occams.elite.dubliner.gui.model.ReportModel;
+import pub.occams.elite.dubliner.util.ImageUtil;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
@@ -52,6 +52,9 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private TextField nameText;
     @FXML
+    private ImageView nameImage;
+
+    @FXML
     private TextField upkeepFromLastCycleText;
     @FXML
     private TextField fortifiedCostText;
@@ -60,33 +63,26 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private TextField baseIncomeText;
     @FXML
+    private ImageView costsImage;
+
+    @FXML
     private TextField fortifyTotalText;
     @FXML
     private TextField fortifyTriggerText;
+    @FXML
+    private ImageView fortifyImage;
+
     @FXML
     private TextField undermineTotalText;
     @FXML
     private TextField undermineTriggerText;
     @FXML
-    private ImageView nameImage;
-    @FXML
-    private ImageView upkeepFromLastCycleImage;
-    @FXML
-    private ImageView fortifiedCostImage;
-    @FXML
-    private ImageView underminedCostImage;
-    @FXML
-    private ImageView baseIncomeImage;
-    @FXML
-    private ImageView fortifyTotalImage;
-    @FXML
-    private ImageView fortifyTriggerImage;
-    @FXML
-    private ImageView undermineTotalImage;
-    @FXML
-    private ImageView undermineTriggerImage;
+    private ImageView undermineImage;
 
-    private final ObjectProperty<ReportModel> report = new SimpleObjectProperty<>();
+    private final Map<Power, List<ControlModel>> report = new HashMap<>();
+
+    private final ObservableList<Power> powerData = FXCollections.observableArrayList();
+    private final ObservableList<ControlModel> controlData = FXCollections.observableArrayList();
 
     private final ObjectProperty<File> imageDir = new SimpleObjectProperty<>(null);
     private ImageApi imageApi;
@@ -106,21 +102,17 @@ public class ScanController extends Controller<AnchorPane> {
         );
         imageDir.setValue(new File(prefs.get(LAST_DIR, "./")));
 
-        report.addListener(
-                (observable, oldValue, newValue) -> {
-                    powersCombo.getItems().setAll(newValue.powers.keySet().stream().collect(Collectors.toList()));
-                }
-        );
-
+        powersCombo.setItems(powerData);
         powersCombo.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     if (null == newValue) {
                         return;
                     }
-                    controlSystemList.setItems(report.get().powers.get(newValue).control);
+                    controlData.setAll(report.get(newValue));
                 }
         );
 
+        controlSystemList.setItems(controlData);
         controlSystemList.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, controlSystem) -> {
                     if (null == controlSystem) {
@@ -156,13 +148,11 @@ public class ScanController extends Controller<AnchorPane> {
         }
 
         resetDetails();
-        if (null != report.get()) {
-            report.set(null);
-        }
 
-        powersCombo.getItems().clear();
-
-        controlSystemList.getItems().clear();
+        report.clear();
+        powerData.clear();
+        powersCombo.setPromptText(null);
+        controlData.clear();
 
         progressIndicator.setVisible(true);
 
@@ -227,8 +217,19 @@ public class ScanController extends Controller<AnchorPane> {
         ocrTask.setOnSucceeded(
                 event -> {
                     final ReportDto dto = ocrTask.getValue();
-                    final ReportModel report = ReportModel.fromDto(dto);
-                    this.report.set(report);
+                    dto.powers.forEach(
+                            (power, powerReportDto) -> {
+                                report.put(
+                                        power,
+                                        powerReportDto.control
+                                                .stream()
+                                                .map(x -> ControlModel.fromDto(power, x))
+                                                .collect(Collectors.toList())
+                                );
+                                powerData.add(power);
+                            }
+                    );
+                    powersCombo.setPromptText("Powers found");
                     progressIndicator.setVisible(false);
                 }
         );
@@ -249,32 +250,26 @@ public class ScanController extends Controller<AnchorPane> {
     }
 
     private void setDetails(final ControlModel m) {
-        nameText.setText(m.systemName.getValue());
-//        nameImage.setImage(toFXImage(m.getControlSystemRectangles().getSystemName(), null));
+        nameText.setText(m.systemName);
+        nameImage.setImage(toFXImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
+                .getInputImage().getImage()).get(), null));
 
         upkeepFromLastCycleText.setText(String.valueOf(m.upkeepFromLastCycle));
-//        upkeepFromLastCycleImage.setImage(toFXImage(m.getControlSystemRectangles().getUpkeepFromLastCycle(), null));
-
         fortifiedCostText.setText(String.valueOf(m.costIfFortified));
-//        fortifiedCostImage.setImage(toFXImage(m.getControlSystemRectangles().getCostIfFortified(), null));
-
         underminedCostText.setText(String.valueOf(m.costIfUndermined));
-//        underminedCostImage.setImage(toFXImage(m.getControlSystemRectangles().getCostIfUndermined(), null));
-
         baseIncomeText.setText(String.valueOf(m.baseIncome));
-//        baseIncomeImage.setImage(toFXImage(m.getControlSystemRectangles().getBaseIncome(), null));
+        costsImage.setImage(toFXImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
+                .getInputImage().getImage()).get(), null));
 
         fortifyTotalText.setText(String.valueOf(m.fortifyTotal));
-//        fortifyTotalImage.setImage(toFXImage(m.getControlSystemRectangles().getFortificationTotal(), null));
-
         fortifyTriggerText.setText(String.valueOf(m.fortifyTrigger));
-//        fortifyTriggerImage.setImage(toFXImage(m.getControlSystemRectangles().getFortificationTrigger(), null));
+        fortifyImage.setImage(toFXImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
+                .getInputImage().getImage()).get(), null));
 
         undermineTotalText.setText(String.valueOf(m.undermineTotal));
-//        undermineTotalImage.setImage(toFXImage(m.getControlSystemRectangles().getUnderminingTotal(), null));
-
         undermineTriggerText.setText(String.valueOf(m.undermineTrigger));
-//        undermineTriggerImage.setImage(toFXImage(m.getControlSystemRectangles().getUnderminingTrigger(), null));
+        undermineImage.setImage(toFXImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
+                .getInputImage().getImage()).get(), null));
     }
 
     private void resetDetails() {
@@ -283,28 +278,18 @@ public class ScanController extends Controller<AnchorPane> {
         nameImage.setImage(null);
 
         upkeepFromLastCycleText.setText(null);
-        upkeepFromLastCycleImage.setImage(null);
-
         baseIncomeText.setText(null);
-        baseIncomeImage.setImage(null);
-
         fortifiedCostText.setText(null);
-        fortifiedCostImage.setImage(null);
-
         underminedCostText.setText(null);
-        underminedCostImage.setImage(null);
+        costsImage.setImage(null);
 
         fortifyTotalText.setText(null);
-        fortifyTotalImage.setImage(null);
-
         fortifyTriggerText.setText(null);
-        fortifyTriggerImage.setImage(null);
+        fortifyImage.setImage(null);
 
         undermineTotalText.setText(null);
-        undermineTotalImage.setImage(null);
-
         undermineTriggerText.setText(null);
-        undermineTriggerImage.setImage(null);
+        undermineImage.setImage(null);
     }
 
     private List<File> getUnprocessedFilesFromDir(final File dataDir) {
