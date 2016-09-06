@@ -15,6 +15,9 @@ public class Corrector {
     public final static String TOTAL = "TOTAL";
     public final static String TRIGGER = "TRIGGER";
     public final static String REACHED = "REACHED";
+    public static final String PREPARATION = "PREPARATION";
+    public static final String EXPANSION = "EXPANSION";
+    public static final String CONTROL = "CONTROL";
 
     private final CorrectionsDto corrections;
 

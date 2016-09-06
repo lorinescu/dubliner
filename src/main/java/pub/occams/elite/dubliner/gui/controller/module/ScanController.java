@@ -165,7 +165,7 @@ public class ScanController extends Controller<AnchorPane> {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name,UpkeepFromLastCycle,DefaultUpkeepCost, CostIfFortified,CostIfUndermined,BaseIncome," +
                 "FortifyTotal,FortifyTrigger," +
-                "UndermineTotal,UndermineTrigger\n");
+                "UndermineTotal,UndermineTrigger,InputFile\n");
         controlData.forEach(
                 cs -> sb
                         .append("\"").append(cs.systemName).append("\",")
@@ -178,15 +178,12 @@ public class ScanController extends Controller<AnchorPane> {
                         .append("\"").append(cs.fortifyTrigger).append("\",")
                         .append("\"").append(cs.undermineTotal).append("\",")
                         .append("\"").append(cs.undermineTrigger).append("\"\n")
+                        .append("\"").append(cs.classifiedImage.getInputImage().getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
         content.putString(sb.toString());
         Clipboard.getSystemClipboard().setContent(content);
 
-    }
-
-    @FXML
-    private void copyJSON(ActionEvent actionEvent) {
     }
 
     @FXML

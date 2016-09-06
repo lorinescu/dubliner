@@ -13,4 +13,11 @@ public class PowerPlayDto {
 
     @JsonProperty("systemName")
     public String systemName;
+
+    public PowerPlayDto(final ClassifiedImage classifiedImage, final DataRectangle<String> systemNameRectangle,
+                        final String systemName) {
+        this.classifiedImage = classifiedImage;
+        this.systemNameRectangle = systemNameRectangle;
+        this.systemName = systemName;
+    }
 }

@@ -66,7 +66,8 @@ public class ControlModel extends PowerPlayModel {
                 "," + fortifyTotal +
                 "," + fortifyTrigger +
                 "," + undermineTotal +
-                "," + undermineTrigger;
+                "," + undermineTrigger +
+                "," + classifiedImage.getInputImage().getFile().getAbsolutePath();
     }
 
     public static ControlModel fromDto(final Power power, final ControlDto dto) {

@@ -69,19 +69,19 @@ public class ImageApiImpl implements ImageApi {
     }
 
     @Override
-    public Optional<InputImage> load(final File file) {
+    public InputImage load(final File file) {
         LOGGER.info("loading image:" + file.getAbsolutePath());
 
         final Optional<BufferedImage> maybeImg = ImageUtil.readImageFromFile(file);
         if (!maybeImg.isPresent()) {
-            return Optional.empty();
+            return new InputImage(file, null);
         }
 
         final BufferedImage img = maybeImg.get();
 
         saveImageAtStage(img, file, "loading");
 
-        return Optional.of(new InputImage(file, maybeImg.get()));
+        return new InputImage(file, img);
     }
 
     protected BufferedImage saveImageAtStage(final BufferedImage image, final File imageFile, final String stage) {
@@ -136,15 +136,20 @@ public class ImageApiImpl implements ImageApi {
     private List<LineSegment> detectLines(final BufferedImage image, final File file, final int pixelResolution,
                                           final int threshold, final int maxGap,
                                           final int minLength, final int maxLength) {
+
+//        should pick between canny and otsu binarization
+//        final IplImage img = ImageUtil.bufferedImageToIplImage(OtsuBinarize.binarizeImage(image));
         final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
-        cvCanny(img, dst, 500, 800, 3);
+        cvCanny(img, dst, 80, 500, 3);
+
         saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
 
         final CvMemStorage storage = cvCreateMemStorage(0);
 
         final double angleResolution = CV_PI / 2;
+
         final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
                 threshold, minLength, maxGap, 0, CV_PI);
 
@@ -174,6 +179,7 @@ public class ImageApiImpl implements ImageApi {
             }
             saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), file, "line-detection-end");
         }
+
         return segments;
     }
 
@@ -184,6 +190,16 @@ public class ImageApiImpl implements ImageApi {
                 .stream()
                 .filter(s -> s.y0 == s.y1)
                 .sorted((s1, s2) -> s1.y0 - s2.y0)
+                .collect(Collectors.toList());
+    }
+
+    private List<LineSegment> detectVerticalLines(final BufferedImage image, final File file,
+                                                  final int pixelResolution, final int threshold, final int maxGap,
+                                                  final int minLength, final int maxLength) {
+        return detectLines(image, file, pixelResolution, threshold, maxGap, minLength, maxLength)
+                .stream()
+                .filter(s -> s.x0 == s.x1)
+                .sorted((s1, s2) -> s1.x0 - s2.x0)
                 .collect(Collectors.toList());
     }
 
@@ -220,6 +236,41 @@ public class ImageApiImpl implements ImageApi {
         final List<LineSegment> out = new ArrayList<>(clusters.values());
         out.sort((o1, o2) -> o1.y0 - o2.y0);
         saveImageAtStage(ImageUtil.drawSegments(img, out), file, "merge-horizontal-progress");
+        return out;
+    }
+
+    private List<LineSegment> mergeVerticalSegments(final BufferedImage img, final File file,
+                                                    final List<LineSegment> segments, final int threshold) {
+
+        final Map<Range, LineSegment> clusters = new HashMap<>();
+
+        for (final LineSegment s : segments) {
+            Range foundRange = null;
+            for (final Range range : clusters.keySet()) {
+                if (s.x0 >= range.low && s.x0 <= range.high) {
+                    //don't merge if the segments are colinear-ish by a few pixels
+                    final LineSegment rangeSegment = clusters.get(range);
+                    if (rangeSegment.y1 + 10 < s.y0 || rangeSegment.y0 - 10 > s.y1) {
+                        continue;
+                    }
+                    foundRange = range;
+                    break;
+                }
+            }
+            final int low = s.x0 - threshold;
+            final int high = s.x0 + threshold;
+            if (null != foundRange) {
+                final int newLow = low < foundRange.low ? low : foundRange.low;
+                final int newHigh = high > foundRange.high ? high : foundRange.high;
+                final Range newRange = new Range(newLow, newHigh);
+                clusters.put(newRange, clusters.remove(foundRange));
+            } else {
+                clusters.put(new Range(low, high), s);
+            }
+        }
+        final List<LineSegment> out = new ArrayList<>(clusters.values());
+        out.sort((o1, o2) -> o1.x0 - o2.x0);
+        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "merge-vertical-progress");
         return out;
     }
 
@@ -267,11 +318,11 @@ public class ImageApiImpl implements ImageApi {
         final String title = str.trim().replace("0", "O");
         LOGGER.info("Selected tab, raw OCR:[" + str + "], corrected:[" + title + "]");
         final ImageType type;
-        if ("PREPARATION".equals(title)) {
+        if (Corrector.PREPARATION.equals(title)) {
             type = PP_PREPARATION;
-        } else if ("EXPANSION".equals(title)) {
+        } else if (Corrector.EXPANSION.equals(title)) {
             type = PP_EXPANSION;
-        } else if ("CONTROL".equals(title)) {
+        } else if (Corrector.CONTROL.equals(title)) {
             type = PP_CONTROL;
         } else {
             return Optional.empty();
@@ -391,8 +442,15 @@ public class ImageApiImpl implements ImageApi {
         return Optional.of(new DataRectangle<>(sysName, realRect));
     }
 
-    private Optional<ControlDto> extractControl(final ClassifiedImage input,
-                                                final DataRectangle<String> sysNameRect) {
+    private ControlDto extractControl(final ClassifiedImage input,
+                                      final DataRectangle<String> sysNameRect) {
+
+        if (null == input.getInputImage() || null == input.getType() || null == input.getPower() || null ==
+                sysNameRect) {
+            return new ControlDto(input, sysNameRect, null, null, null, null, null, null, null, null, null, null,
+                    null, null, null);
+        }
+
         final File file = input.getInputImage().getFile();
         final BufferedImage img = input.getInputImage().getImage();
 
@@ -400,7 +458,7 @@ public class ImageApiImpl implements ImageApi {
 
         final Rectangle reference = sysNameRect.getRectangle();
         final int x0 = reference.x0;
-        final int y0Offset = 10;//a few extra pictures to remove the line below the system name
+        final int y0Offset = 10;//a few extra px remove the line below the system name
         final int y0 = reference.y1 + y0Offset;
         final int x1 = reference.x1;
         final int y1 = img.getHeight();
@@ -409,8 +467,10 @@ public class ImageApiImpl implements ImageApi {
                 img
         );
         if (!maybeImg2.isPresent()) {
-            return Optional.empty();
+            return new ControlDto(input, sysNameRect, null, null, null, null, null, null, null, null, null, null,
+                    null, null, null);
         }
+
         final BufferedImage img2 = maybeImg2.get();
 
         saveImageAtStage(img2, file, "extract-control-data-details-area");
@@ -418,10 +478,14 @@ public class ImageApiImpl implements ImageApi {
         final double horizontalLinesOnTopAndBottomOfCountersRectangles = 0.25;
         final int minLength = (int) (img2.getWidth() * horizontalLinesOnTopAndBottomOfCountersRectangles);
         final int maxLength = img2.getWidth();
-        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, 30, 5, minLength, maxLength);
+        final int threshold = minLength;
+        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, threshold, 0, minLength, maxLength);
         final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
+//        final List<LineSegment> segmentsV = detectVerticalLines(img2, file, 1, 100, 0, 100, img2.getHeight());
+//        final List<LineSegment> mergedV = mergeVerticalSegments(img2, file, segmentsV, 3);
         if (debug) {
-            saveImageAtStage(ImageUtil.drawSegments(img2, merged), file, "extract-control-data-lines");
+            saveImageAtStage(ImageUtil.drawSegments(img2, merged), file, "extract-control-data-horizontal-lines");
+//            saveImageAtStage(ImageUtil.drawSegments(img2, mergedV), file, "extract-control-data-vertical-lines");
         }
 
         /*
@@ -449,7 +513,8 @@ public class ImageApiImpl implements ImageApi {
                 .collect(Collectors.toList());
 
         if (sortedFilteredSegments.size() < 2) {
-            return Optional.empty();
+            return new ControlDto(input, sysNameRect, null, null, null, null, null, null, null, null, null, null,
+                    null, null, null);
         }
 
         final LineSegment topFortificationSegment = sortedFilteredSegments.get(sortedFilteredSegments.size() - 2);
@@ -468,124 +533,111 @@ public class ImageApiImpl implements ImageApi {
                 img2.getWidth(), bottomFortificationSegment.y0
         );
 
+        Integer upkeepFromLastCycle = -1;
+        Integer defaultUpkeepCost = -1;
+        Integer costIfFortified = -1;
+        Integer costIfUndermined = -1;
+        Integer baseIncome = -1;
         final Optional<BufferedImage> maybeCostsImg = ImageUtil.crop(costsRectangle, img2);
+        if (maybeCostsImg.isPresent()) {
+
+            final BufferedImage costsImg = maybeCostsImg.get();
+
+            final BufferedImage costsInputForOcr = scale(filterRedAndBinarize(costsImg, settings.ocr.filterRedChannelMin));
+
+            saveImageAtStage(costsInputForOcr, file, "extract-control-data-costs-ocr-input");
+
+            final String costsStr = ocrNumberRectangle(costsInputForOcr);
+
+            LOGGER.info("System costs, raw OCR:[" + costsStr + "]");
+
+            final String[] parts = corrector.correctGlobalOcrErrors(costsStr).split("\n");
+            if (parts.length >= 5) {
+                upkeepFromLastCycle = corrector.cleanPositiveInteger(parts[0]);
+                defaultUpkeepCost = corrector.cleanPositiveInteger(parts[1]);
+                costIfFortified = corrector.cleanPositiveInteger(parts[2]);
+                costIfUndermined = corrector.cleanPositiveInteger(parts[3]);
+                baseIncome = corrector.cleanPositiveInteger(parts[4]);
+            }
+            LOGGER.info("System costs, corrected to:["
+                    + upkeepFromLastCycle + "," + defaultUpkeepCost + "," + costIfFortified + "," + costIfUndermined
+                    + "," + baseIncome + "]");
+        }
+
+        Integer fortifyTotal = -1;
+        Integer fortifyTrigger = -1;
         final Optional<BufferedImage> maybeFortificationImg = ImageUtil.crop(fortificationRectangle, img2);
+        if (maybeFortificationImg.isPresent()) {
+
+            final BufferedImage fortificationImg = maybeFortificationImg.get();
+
+            final BufferedImage fortificationOcrInput = filterRedAndBinarize(fortificationImg, settings.ocr.filterRedChannelMin);
+
+            saveImageAtStage(fortificationOcrInput, file, "extract-control-data-fortif-ocr-input");
+
+            final String fortificationStr = ocrNumberRectangle(fortificationOcrInput);
+            LOGGER.info("Fortifications, raw OCR:[" + fortificationStr + "]");
+
+            final String[] parts = corrector.correctGlobalOcrErrors(fortificationStr).split("\n| ");
+            String previous = "";
+            for (final String part : parts) {
+                if (previous.startsWith(TOTAL)) {
+                    fortifyTotal = corrector.cleanPositiveInteger(part);
+                } else if (previous.startsWith(TRIGGER)) {
+                    fortifyTrigger = corrector.cleanPositiveInteger(part);
+                }
+                previous = part;
+            }
+            LOGGER.info("Fortifications, corrected to: [" + fortifyTotal + "," + fortifyTrigger + "]");
+        }
+
+
+        Integer undermineTotal = -1;
+        Integer undermineTrigger = -1;
         final Optional<BufferedImage> maybeUnderminingImg = ImageUtil.crop(underminingRectangle, img2);
+        if (maybeUnderminingImg.isPresent()) {
 
-        if (!(maybeCostsImg.isPresent() && maybeFortificationImg.isPresent() && maybeUnderminingImg.isPresent())) {
-            return Optional.empty();
-        }
+            final BufferedImage underminingImg = maybeUnderminingImg.get();
 
-        //FIXME: all strings cleanup/extraction below are really meassy, npe, out of bounds etc
-        final BufferedImage costsImg = maybeCostsImg.get();
-        final BufferedImage fortificationImg = maybeFortificationImg.get();
-        final BufferedImage underminingImg = maybeUnderminingImg.get();
+            saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
 
-        final BufferedImage costsInputForOcr = scale(filterRedAndBinarize(costsImg, settings.ocr.filterRedChannelMin));
+            final BufferedImage underminingOcrInput = filterRedAndBinarize(underminingImg, settings.ocr.filterRedChannelMin);
 
-        saveImageAtStage(costsInputForOcr, file, "extract-control-data-costs-ocr-input");
+            saveImageAtStage(underminingOcrInput, file, "extract-control-data-undermine-ocr-input");
 
-        final String costsStr = ocrNumberRectangle(costsInputForOcr);
-        LOGGER.info("System costs, raw OCR:[" + costsStr + "]");
-        if (null == costsStr || costsStr.isEmpty()) {
-            return Optional.empty();
-        }
-        final String[] parts1 = corrector.correctGlobalOcrErrors(costsStr).split("\n");
-        if (parts1.length < 5) {
-            return Optional.empty();
-        }
+            final String underminingStr = ocrNumberRectangle(underminingOcrInput);
+            LOGGER.info("Undermining, raw OCR:[" + underminingStr + "]");
 
-        final Integer upkeepFromLastCycle = corrector.cleanPositiveInteger(parts1[0]);
-        final Integer defaultUpkeepCost = corrector.cleanPositiveInteger(parts1[1]);
-        final Integer costIfFortified = corrector.cleanPositiveInteger(parts1[2]);
-        final Integer costIfUndermined = corrector.cleanPositiveInteger(parts1[3]);
-        final Integer baseIncome = corrector.cleanPositiveInteger(parts1[4]);
-
-        LOGGER.info("System costs, corrected to:["
-                + upkeepFromLastCycle + "," + defaultUpkeepCost + "," + costIfFortified + "," + costIfUndermined
-                + "," + baseIncome + "]");
-
-
-        final BufferedImage fortificationOcrInput = filterRedAndBinarize(fortificationImg, settings.ocr.filterRedChannelMin);
-
-        saveImageAtStage(fortificationOcrInput, file, "extract-control-data-fortif-ocr-input");
-
-        final String fortificationStr = ocrNumberRectangle(fortificationOcrInput);
-        LOGGER.info("Fortifications, raw OCR:[" + fortificationStr + "]");
-        if (null == fortificationStr || fortificationStr.isEmpty()) {
-            return Optional.empty();
-        }
-
-        final String[] fortificationParts = corrector.correctGlobalOcrErrors(fortificationStr).split("\n| ");
-        Integer fortifyTotal = null, fortifyTrigger = null;
-        String previous = "";
-        for (final String part : fortificationParts) {
-            if (previous.startsWith(TOTAL)) {
-                fortifyTotal = corrector.cleanPositiveInteger(part);
-            } else if (previous.startsWith(TRIGGER)) {
-                fortifyTrigger = corrector.cleanPositiveInteger(part);
+            final String[] parts = corrector.correctGlobalOcrErrors(underminingStr).split("\n| ");
+            String previous = "";
+            for (final String part : parts) {
+                if (previous.contains(TOTAL)) {
+                    undermineTotal = corrector.cleanPositiveInteger(part);
+                } else if (previous.contains(TRIGGER) && !part.contains(REACHED)) {
+                    undermineTrigger = corrector.cleanPositiveInteger(part);
+                }
+                previous = part;
             }
-            previous = part;
-        }
-        LOGGER.info("Fortifications, corrected to: [" + fortifyTotal + "," + fortifyTrigger + "]");
-
-        saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
-        final BufferedImage underminingOcrInput = filterRedAndBinarize(underminingImg, settings.ocr.filterRedChannelMin);
-        saveImageAtStage(underminingOcrInput, file, "extract-control-data-undermine-ocr-input");
-
-        final String underminingStr = ocrNumberRectangle(underminingOcrInput);
-        LOGGER.info("Undermining, raw OCR:[" + underminingStr + "]");
-        if (null == underminingStr || underminingStr.isEmpty()) {
-            return Optional.empty();
+            LOGGER.info("Undermining, after corrections:[" + undermineTotal + "," + undermineTrigger + "]");
         }
 
-        Integer undermineTotal = null, undermineTrigger = null;
-        final String[] underminingParts = corrector.correctGlobalOcrErrors(underminingStr).split("\n| ");
-        String previouss = "";
-        for (final String part : underminingParts) {
-            if (previouss.contains(TOTAL)) {
-                undermineTotal = corrector.cleanPositiveInteger(part);
-            } else if (previouss.contains(TRIGGER) && !part.contains(REACHED)) {
-                undermineTrigger = corrector.cleanPositiveInteger(part);
-            }
-            previouss = part;
-        }
-        LOGGER.info("Undermining, after corrections:[" + undermineTotal + "," + undermineTrigger + "]");
 
         final DataRectangle<String> costsReal = new DataRectangle<>(
                 "costs", new Rectangle(
                 costsRectangle.x0 + x0, costsRectangle.y0 + y0,
-                costsRectangle.x1 + x0, costsRectangle.y1 + y0
-        )
+                costsRectangle.x1 + x0, costsRectangle.y1 + y0)
         );
         final DataRectangle<String> undermineReal = new DataRectangle<>(
                 "undermine", new Rectangle(
                 underminingRectangle.x0 + x0, underminingRectangle.y0 + y0,
-                underminingRectangle.x1 + x0, underminingRectangle.y1 + y0
-        )
+                underminingRectangle.x1 + x0, underminingRectangle.y1 + y0)
         );
         final DataRectangle<String> fortificationReal = new DataRectangle<>(
                 "fortification", new Rectangle(
                 fortificationRectangle.x0 + x0, fortificationRectangle.y0 + y0,
-                fortificationRectangle.x1 + x0, fortificationRectangle.y1 + y0
-        )
+                fortificationRectangle.x1 + x0, fortificationRectangle.y1 + y0)
         );
 
-        final ControlDto dto = new ControlDto();
-        dto.systemNameRectangle = sysNameRect;
-        dto.systemName = sysNameRect.getData();
-        dto.costsRectangle = costsReal;
-        dto.fortifyRectangle = fortificationReal;
-        dto.undermineRectangle = undermineReal;
-        dto.upkeepFromLastCycle = upkeepFromLastCycle;
-        dto.defaultUpkeepCost = defaultUpkeepCost;
-        dto.baseIncome = baseIncome;
-        dto.costIfFortified = costIfFortified;
-        dto.costIfUndermined = costIfUndermined;
-        dto.fortifyTotal = fortifyTotal;
-        dto.fortifyTrigger = fortifyTrigger;
-        dto.undermineTotal = undermineTotal;
-        dto.undermineTrigger = undermineTrigger;
         if (debug) {
             saveImageAtStage(
                     ImageUtil.drawDataRectangles(img, input.getType(), input.getPower(), sysNameRect, costsReal,
@@ -594,32 +646,45 @@ public class ImageApiImpl implements ImageApi {
                     "extract-data-rects");
         }
 
-        return Optional.of(dto);
+        return new ControlDto(
+                input, sysNameRect, sysNameRect.getData(), costsReal, fortificationReal, undermineReal,
+                upkeepFromLastCycle, defaultUpkeepCost, baseIncome, costIfFortified, costIfUndermined, fortifyTotal,
+                fortifyTrigger, undermineTotal, undermineTrigger
+        );
     }
 
     @Override
-    public Optional<ClassifiedImage> classify(final InputImage inputImage) {
+    public ClassifiedImage classify(final InputImage inputImage) {
         final File file = inputImage.getFile();
         LOGGER.info("classification start: " + file.getAbsolutePath());
 
+        if (null == inputImage.getImage()) {
+            return new ClassifiedImage(inputImage, null, null);
+        }
+
         final Optional<DataRectangle<ImageType>> maybeType = detectSelectedTab(inputImage);
         if (!maybeType.isPresent()) {
-            return Optional.empty();
+            return new ClassifiedImage(inputImage, null, null);
         }
-        final ImageType type = maybeType.get().getData();
+        final DataRectangle<ImageType> type = maybeType.get();
 
         final Optional<DataRectangle<Power>> maybePower = detectSelectedPower(inputImage);
         if (!maybePower.isPresent()) {
-            return Optional.empty();
+            return new ClassifiedImage(inputImage, type, null);
         }
-        final Power power = maybePower.get().getData();
+        final DataRectangle<Power> power = maybePower.get();
 
-        LOGGER.info("classification end: " + power + "/" + type + ", for file: " + file.getAbsolutePath());
+        LOGGER.info("classification end: " + power.getData() + "/" + type.getData() + ", for file: " + file.getAbsolutePath());
 
-        return Optional.of(new ClassifiedImage(inputImage, maybeType.get(), maybePower.get()));
+        return new ClassifiedImage(inputImage, type, power);
     }
 
-    public Optional<PowerPlayDto> extract(final ClassifiedImage input) {
+    @Override
+    public PowerPlayDto extract(final ClassifiedImage input) {
+
+        if (null == input.getInputImage().getImage() || null == input.getType() || null == input.getPower()) {
+            return new PowerPlayDto(input, null, null);
+        }
 
         final BufferedImage img = input.getInputImage().getImage();
         final File file = input.getInputImage().getFile();
@@ -628,7 +693,7 @@ public class ImageApiImpl implements ImageApi {
 
         final Optional<DataRectangle<String>> maybeSysName = extractSystemName(input);
         if (!maybeSysName.isPresent()) {
-            return Optional.empty();
+            return new PowerPlayDto(input, null, null);
         }
         final DataRectangle<String> sysNameRect = maybeSysName.get();
 
@@ -639,22 +704,17 @@ public class ImageApiImpl implements ImageApi {
 
         switch (input.getType().getData()) {
             case PP_CONTROL:
-                final Optional<ControlDto> dto = extractControl(input, sysNameRect);
-                if (dto.isPresent()) {
-                    dto.get().classifiedImage = input;
-                    return Optional.of(dto.get());
-                }
-                return Optional.empty();
+                return extractControl(input, sysNameRect);
             case PP_EXPANSION:
-                return Optional.empty();
+                return new ExpansionDto(input, sysNameRect, null);
             case PP_PREPARATION:
-                return Optional.empty();
+                return new PreparationDto(input, sysNameRect, null);
             default:
                 break;
         }
         LOGGER.info("Extraction end for file: " + file.getAbsolutePath());
 
-        return Optional.empty();
+        return new PowerPlayDto(input, sysNameRect, null);
     }
 
     @Override
@@ -665,11 +725,8 @@ public class ImageApiImpl implements ImageApi {
         files
                 .stream()
                 .map(this::load)
-                .filter(Optional::isPresent).map(Optional::get)
                 .map(this::classify)
-                .filter(Optional::isPresent).map(Optional::get)
                 .map(this::extract)
-                .filter(Optional::isPresent).map(Optional::get)
                 .forEach(
                         ppDto -> {
                             final Power power = ppDto.classifiedImage.getPower().getData();
