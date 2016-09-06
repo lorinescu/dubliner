@@ -228,7 +228,9 @@ public class ScanController extends Controller<AnchorPane> {
                                 powerData.add(power);
                             }
                     );
-                    powersCombo.setPromptText("Powers found");
+                    if (dto.powers.size() > 0) {
+                        powersCombo.setPromptText("Powers found");
+                    }
                     progressIndicator.setVisible(false);
                 }
         );
@@ -250,26 +252,35 @@ public class ScanController extends Controller<AnchorPane> {
 
     private void setDetails(final ControlModel m) {
         nameText.setText(m.systemName);
-        nameImage.setImage(toFXImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
-                .getInputImage().getImage()).get(), null));
-
+        if (null != m.systemNameRectangle) {
+            nameImage.setImage(toFXImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get(), null));
+        }
         upkeepFromLastCycleText.setText(String.valueOf(m.upkeepFromLastCycle));
         defaultUpkeepCost.setText(String.valueOf(m.defaultUpkeepCost));
         fortifiedCostText.setText(String.valueOf(m.costIfFortified));
         underminedCostText.setText(String.valueOf(m.costIfUndermined));
         baseIncomeText.setText(String.valueOf(m.baseIncome));
-        costsImage.setImage(toFXImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
-                .getInputImage().getImage()).get(), null));
+
+        if (null != m.costsRectangle) {
+            costsImage.setImage(toFXImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get(), null));
+        }
 
         fortifyTotalText.setText(String.valueOf(m.fortifyTotal));
         fortifyTriggerText.setText(String.valueOf(m.fortifyTrigger));
-        fortifyImage.setImage(toFXImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
-                .getInputImage().getImage()).get(), null));
+
+        if (null != m.fortifyRectangle) {
+            fortifyImage.setImage(toFXImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get(), null));
+        }
 
         undermineTotalText.setText(String.valueOf(m.undermineTotal));
         undermineTriggerText.setText(String.valueOf(m.undermineTrigger));
-        undermineImage.setImage(toFXImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
-                .getInputImage().getImage()).get(), null));
+        if (null != m.undermineRectangle) {
+            undermineImage.setImage(toFXImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get(), null));
+        }
     }
 
     private void resetDetails() {

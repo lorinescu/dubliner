@@ -274,7 +274,7 @@ public class ImageApiImpl implements ImageApi {
         return out;
     }
 
-    private Optional<DataRectangle<ImageType>> detectSelectedTab(final InputImage inputImage) {
+    private DataRectangle<ImageType> detectSelectedTab(final InputImage inputImage) {
 
         final File file = inputImage.getFile();
         final BufferedImage originalImage = inputImage.getImage();
@@ -290,7 +290,7 @@ public class ImageApiImpl implements ImageApi {
 
         final int twoLineSegmentsOnTopAndBottomOfTheTabButton = 2;
         if (segments.size() < twoLineSegmentsOnTopAndBottomOfTheTabButton) {
-            return Optional.empty();
+            return new DataRectangle<>(UNKNOWN, null);
         }
 
         final double scaleDownFactor = 0.8;
@@ -301,7 +301,7 @@ public class ImageApiImpl implements ImageApi {
 
         final Optional<BufferedImage> maybeTabImage = ImageUtil.crop(tab, originalImage);
         if (!maybeTabImage.isPresent()) {
-            return Optional.empty();
+            return new DataRectangle<>(UNKNOWN, tab);
         }
         final BufferedImage tabImage = maybeTabImage.get();
         saveImageAtStage(tabImage, file, "detect-selected-tab-selection");
@@ -311,9 +311,6 @@ public class ImageApiImpl implements ImageApi {
         saveImageAtStage(ocrInputImage, file, "detect-selected-tab-ocr-input");
 
         final String str = ocrRectangle(ocrInputImage);
-        if (null == str || str.isEmpty()) {
-            return Optional.empty();
-        }
 
         final String title = str.trim().replace("0", "O");
         LOGGER.info("Selected tab, raw OCR:[" + str + "], corrected:[" + title + "]");
@@ -325,12 +322,12 @@ public class ImageApiImpl implements ImageApi {
         } else if (Corrector.CONTROL.equals(title)) {
             type = PP_CONTROL;
         } else {
-            return Optional.empty();
+            type = UNKNOWN;
         }
-        return Optional.of(new DataRectangle<>(type, tab));
+        return new DataRectangle<>(type, tab);
     }
 
-    private Optional<DataRectangle<Power>> detectSelectedPower(final InputImage inputImage) {
+    private DataRectangle<Power> detectSelectedPower(final InputImage inputImage) {
         final File file = inputImage.getFile();
         final BufferedImage img = inputImage.getImage();
 
@@ -344,17 +341,17 @@ public class ImageApiImpl implements ImageApi {
         }
 
         if (merged.size() != 3) {
-            return Optional.empty();
+            return new DataRectangle<>(Power.UNKNOWN, null);
         }
 
-        final Rectangle powerNameSlice = new Rectangle(
+        final Rectangle powerNameRectangle = new Rectangle(
                 merged.get(1).x0, merged.get(1).y0,
                 merged.get(2).x1, merged.get(2).y1
         );
 
-        final Optional<BufferedImage> maybePowerImage = ImageUtil.crop(powerNameSlice, img);
+        final Optional<BufferedImage> maybePowerImage = ImageUtil.crop(powerNameRectangle, img);
         if (!maybePowerImage.isPresent()) {
-            return Optional.empty();
+            return new DataRectangle<>(Power.UNKNOWN, powerNameRectangle);
         }
         final BufferedImage powerImage = maybePowerImage.get();
         saveImageAtStage(powerImage, file, "detect-selected-power");
@@ -365,19 +362,17 @@ public class ImageApiImpl implements ImageApi {
 
         final String str = ocrRectangle(ocrInputImage);
         LOGGER.info("Selected power, raw OCR:[" + str + "]");
-        if (null == str || str.isEmpty()) {
-            return Optional.empty();
-        }
 
         Optional<Power> maybePower = corrector.powerFromString(str);
         if (!maybePower.isPresent()) {
-            return Optional.empty();
+            return new DataRectangle<>(Power.UNKNOWN, powerNameRectangle);
         }
+
         LOGGER.info("Selected power, corrected to:[" + maybePower.get().getName() + "]");
-        return Optional.of(new DataRectangle<>(maybePower.get(), powerNameSlice));
+        return new DataRectangle<>(maybePower.get(), powerNameRectangle);
     }
 
-    private Optional<DataRectangle<String>> extractSystemName(final ClassifiedImage input) {
+    private DataRectangle<String> extractSystemName(final ClassifiedImage input) {
 
         final File file = input.getInputImage().getFile();
         final BufferedImage img = input.getInputImage().getImage();
@@ -393,7 +388,7 @@ public class ImageApiImpl implements ImageApi {
         final Rectangle skipTabsAndPower = new Rectangle(x0, y0, x1, y1);
         final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
         if (!maybeImg2.isPresent()) {
-            return Optional.empty();
+            return new DataRectangle<>(Corrector.UNKNOWN_SYSTEM, null);
         }
         final BufferedImage img2 = maybeImg2.get();
         saveImageAtStage(img2, file, "extract-name-data-details-area");
@@ -408,17 +403,24 @@ public class ImageApiImpl implements ImageApi {
         }
 
         if (merged.size() < 1) {
-            return Optional.empty();
+            return new DataRectangle<>(Corrector.UNKNOWN_SYSTEM, null);
         }
 
         final LineSegment sysNameLine = merged.get(0);
+
         final Rectangle sysNameRect = new Rectangle(
                 sysNameLine.x0, 0, sysNameLine.x1, sysNameLine.y1
         );
+        final Rectangle sysNameRectReal = new Rectangle(
+                sysNameRect.x0 + x0, sysNameRect.y0 + y0,
+                sysNameRect.x1 + x0, sysNameRect.y1 + y0
+        );
+
         final Optional<BufferedImage> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
         if (!maybeImg3.isPresent()) {
-            return Optional.empty();
+            return new DataRectangle<>(UNKNOWN_SYSTEM, sysNameRectReal);
         }
+
         final BufferedImage img3 = maybeImg3.get();
         saveImageAtStage(img3, file, "extract-name-data");
 
@@ -428,27 +430,20 @@ public class ImageApiImpl implements ImageApi {
 
         final String str = ocrRectangle(ocrInputImage);
         LOGGER.info("Selected system, raw OCR:[" + str + "]");
-        if (null == str || str.isEmpty()) {
-            return Optional.empty();
-        }
 
         final String sysName = corrector.cleanSystemName(str);
         LOGGER.info("Selected system, corrected to:[" + sysName + "]");
 
-        final Rectangle realRect = new Rectangle(
-                sysNameRect.x0 + x0, sysNameRect.y0 + y0,
-                sysNameRect.x1 + x0, sysNameRect.y1 + y0
-        );
-        return Optional.of(new DataRectangle<>(sysName, realRect));
+        return new DataRectangle<>(sysName, sysNameRectReal);
     }
 
     private ControlDto extractControl(final ClassifiedImage input,
                                       final DataRectangle<String> sysNameRect) {
 
-        if (null == input.getInputImage() || null == input.getType() || null == input.getPower() || null ==
-                sysNameRect) {
-            return new ControlDto(input, sysNameRect, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null);
+        if (null == input.getInputImage() || ImageType.UNKNOWN == input.getType().getData()
+                || Power.UNKNOWN == input.getPower().getData() || Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
+            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, null, null, null, null, null,
+                    null, null, null, null);
         }
 
         final File file = input.getInputImage().getFile();
@@ -467,8 +462,8 @@ public class ImageApiImpl implements ImageApi {
                 img
         );
         if (!maybeImg2.isPresent()) {
-            return new ControlDto(input, sysNameRect, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null);
+            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1,-1,-1,-1,-1,-1,
+                    -1,-1);
         }
 
         final BufferedImage img2 = maybeImg2.get();
@@ -513,8 +508,8 @@ public class ImageApiImpl implements ImageApi {
                 .collect(Collectors.toList());
 
         if (sortedFilteredSegments.size() < 2) {
-            return new ControlDto(input, sysNameRect, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null);
+            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1,-1,-1,-1,-1,-1,
+                    -1,-1);
         }
 
         final LineSegment topFortificationSegment = sortedFilteredSegments.get(sortedFilteredSegments.size() - 2);
@@ -662,17 +657,15 @@ public class ImageApiImpl implements ImageApi {
             return new ClassifiedImage(inputImage, null, null);
         }
 
-        final Optional<DataRectangle<ImageType>> maybeType = detectSelectedTab(inputImage);
-        if (!maybeType.isPresent()) {
-            return new ClassifiedImage(inputImage, null, null);
-        }
-        final DataRectangle<ImageType> type = maybeType.get();
-
-        final Optional<DataRectangle<Power>> maybePower = detectSelectedPower(inputImage);
-        if (!maybePower.isPresent()) {
+        final DataRectangle<ImageType> type = detectSelectedTab(inputImage);
+        if (ImageType.UNKNOWN == type.getData()) {
             return new ClassifiedImage(inputImage, type, null);
         }
-        final DataRectangle<Power> power = maybePower.get();
+
+        final DataRectangle<Power> power = detectSelectedPower(inputImage);
+        if (Power.UNKNOWN == power.getData()) {
+            return new ClassifiedImage(inputImage, type, power);
+        }
 
         LOGGER.info("classification end: " + power.getData() + "/" + type.getData() + ", for file: " + file.getAbsolutePath());
 
@@ -682,7 +675,8 @@ public class ImageApiImpl implements ImageApi {
     @Override
     public PowerPlayDto extract(final ClassifiedImage input) {
 
-        if (null == input.getInputImage().getImage() || null == input.getType() || null == input.getPower()) {
+        if (null == input.getInputImage().getImage() || ImageType.UNKNOWN == input.getType().getData()
+                || Power.UNKNOWN == input.getPower().getData()) {
             return new PowerPlayDto(input, null, null);
         }
 
@@ -691,11 +685,10 @@ public class ImageApiImpl implements ImageApi {
 
         LOGGER.info("Extraction start for file: " + file.getAbsolutePath());
 
-        final Optional<DataRectangle<String>> maybeSysName = extractSystemName(input);
-        if (!maybeSysName.isPresent()) {
-            return new PowerPlayDto(input, null, null);
+        final DataRectangle<String> sysNameRect = extractSystemName(input);
+        if (Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
+            return new PowerPlayDto(input, sysNameRect, UNKNOWN_SYSTEM);
         }
-        final DataRectangle<String> sysNameRect = maybeSysName.get();
 
         if (debug) {
             saveImageAtStage(ImageUtil.drawDataRectangles(img, input.getType(), input.getPower(), sysNameRect), file,

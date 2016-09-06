@@ -18,6 +18,7 @@ public class Corrector {
     public static final String PREPARATION = "PREPARATION";
     public static final String EXPANSION = "EXPANSION";
     public static final String CONTROL = "CONTROL";
+    public static final String UNKNOWN_SYSTEM = "UNKNOWN_SYSTEM";
 
     private final CorrectionsDto corrections;
 

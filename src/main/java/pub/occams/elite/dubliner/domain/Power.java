@@ -10,7 +10,8 @@ public enum Power {
     LI_YONG_RUI("LI YONG-RUI"),
     PRANAV_ANTAL("PRANAV ANTAL"),
     ZACHARY_HUDSON("ZACHARY HUDSON"),
-    ZEMINA_TORVAL("ZEMINA TORVAL");
+    ZEMINA_TORVAL("ZEMINA TORVAL"),
+    UNKNOWN("unknown");
 
     private final String name;
 
