@@ -87,9 +87,9 @@ public class ImageApiImpl implements ImageApi {
 
     private void saveImage(final String path, final Object image) throws IOException {
         if (image instanceof IplImage) {
-            imwrite(path + ".jpg", cvarrToMat((IplImage)image));
+            imwrite(path + ".jpg", cvarrToMat((IplImage) image));
         } else if (image instanceof BufferedImage) {
-            ImageIO.write((BufferedImage)image, "png", new File(path + ".png"));
+            ImageIO.write((BufferedImage) image, "png", new File(path + ".png"));
         }
     }
 
@@ -443,7 +443,7 @@ public class ImageApiImpl implements ImageApi {
         final double horizontalLinesOnTopAndBottomOfCountersRectangles = 0.4;
         final int minLength = (int) (img2.getWidth() * horizontalLinesOnTopAndBottomOfCountersRectangles);
         final int maxLength = (int) (img2.getWidth() * 0.6);
-        final int threshold = 100;
+        final int threshold = 200;
         final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, threshold, 0, minLength, maxLength);
         final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
         if (debug) {
@@ -726,20 +726,22 @@ public class ImageApiImpl implements ImageApi {
         try {
             final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
 
-            final List<File> images = Arrays.asList(
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0050.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0058.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0080.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0013.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0000.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0024.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0059.bmp"),
-                    new File("data/control_images/1920x1080/winters/control/undermined-fortified.bmp"),
-                    new File("data/control_images/1920x1080/delaine/control/fortified-undermined.bmp"),
-                    new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp")
+            api.extractDataFromImages(
+                    Arrays.asList(
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0050.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0058.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0080.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0013.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0000.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0024.bmp"),
+                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0059.bmp"),
+                            new File("data/control_images/1920x1080/winters/control/undermined-fortified.bmp"),
+                            new File("data/control_images/1920x1080/delaine/control/fortified-undermined.bmp"),
+                            new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp"),
+                            new File("data/control_images/1920x1080/patreus/control/fortified-undermined.bmp")
+                    )
             );
-            api.extractDataFromImages(images);
         } catch (IOException e) {
             e.printStackTrace();
         }
