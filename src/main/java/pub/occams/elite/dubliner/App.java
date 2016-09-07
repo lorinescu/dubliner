@@ -31,7 +31,10 @@ public class App extends Application {
 
     public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
-    //FIXME: uncouple this
+    static {
+        System.setProperty("logback.configurationFile", "conf/logback.xml");
+    }
+
     public static final String LOGGER_NAME = "App";
 
     private static ImageApi imageApi;
