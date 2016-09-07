@@ -8,8 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.application.ImageApi;
 import pub.occams.elite.dubliner.application.ImageApiImpl;
 import pub.occams.elite.dubliner.dto.ocr.ReportDto;
@@ -74,8 +73,7 @@ public class App extends Application {
 
     public static void main(String[] args) throws IOException {
 
-        PropertyConfigurator.configure("conf/log4j.properties");
-        Logger.getLogger(LOGGER_NAME).info("Starting " + NAME + "-" + VERSION);
+        LoggerFactory.getLogger(LOGGER_NAME).info("Starting " + NAME + "-" + VERSION);
 
         boolean debug = false;
         boolean cliMode = false;
@@ -98,7 +96,7 @@ public class App extends Application {
         try {
             imageApi = new ImageApiImpl(loadSettings(), debug);
         } catch (IOException e) {
-            Logger.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
+            LoggerFactory.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }
 
         if (cliMode && null != imageFileOrDir) {
@@ -120,7 +118,7 @@ public class App extends Application {
                 input.add(imageFileOrDir);
             }
             final ReportDto dto = imageApi.extractDataFromImages(input);
-            App.JSON_MAPPER.writeValue(System.out, dto);
+            App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(System.out, dto);
         } else {
             launch(args);
         }

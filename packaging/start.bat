@@ -1,3 +1,3 @@
 @echo off
 set LC_ALL=C
-java -jar dubliner.jar %*
+java -Xmx1500m -jar dubliner.jar %*

@@ -18,8 +18,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-
-<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
+<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
     <children>
       <ScrollPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <content>
@@ -37,7 +36,6 @@
                   <ComboBox fx:id="powersCombo" prefHeight="35.0" prefWidth="168.0" />
                   <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
                     <tabs>
-                      <Tab closable="false" disable="true" text="Preparation" />
                       <Tab closable="false" text="Control">
                            <content>
                               <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
@@ -150,7 +148,6 @@
                               </HBox>
                            </content>
                         </Tab>
-                        <Tab closable="false" disable="true" text="Expansion" />
                     </tabs>
                   </TabPane>
                   </children>

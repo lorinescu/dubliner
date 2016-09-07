@@ -1,6 +1,7 @@
 package pub.occams.elite.dubliner.correct;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.Power;
 import pub.occams.elite.dubliner.dto.settings.CorrectionsDto;
@@ -10,7 +11,7 @@ import java.util.Optional;
 
 public class Corrector {
 
-    private static final Logger LOGGER = Logger.getLogger(App.LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(App.LOGGER_NAME);
 
     public final static String TOTAL = "TOTAL";
     public final static String TRIGGER = "TRIGGER";
@@ -70,6 +71,8 @@ public class Corrector {
                             .replace("-", "")
                             .replace("B", "8")
                             .replace("D", "0")
+                            .replace("S", "9")
+                            .replace("EI", "8")
             );
         } catch (final NumberFormatException | NullPointerException ignored) {
             LOGGER.error("could not parse positive integer from: [" + str + "]");

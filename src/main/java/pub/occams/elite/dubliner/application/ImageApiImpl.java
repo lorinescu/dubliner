@@ -2,9 +2,10 @@ package pub.occams.elite.dubliner.application;
 
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
-import org.apache.log4j.Logger;
 import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.opencv_core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.correct.Corrector;
 import pub.occams.elite.dubliner.domain.ClassifiedImage;
@@ -27,7 +28,6 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static org.bytedeco.javacpp.helper.opencv_core.CV_RGB;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.correct.Corrector.*;
@@ -37,7 +37,7 @@ import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
 public class ImageApiImpl implements ImageApi {
 
-    private static final Logger LOGGER = Logger.getLogger(App.LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(App.LOGGER_NAME);
 
     private final boolean debug;
     private int cnt = 0;
@@ -142,7 +142,12 @@ public class ImageApiImpl implements ImageApi {
         final IplImage img = ImageUtil.bufferedImageToIplImage(image);
         final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
 
-        cvCanny(img, dst, 80, 500, 3);
+        cvCanny(img, dst, 400, 500, 3);
+
+        saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin-before-kern");
+
+        final IplConvKernel linesOnlyKern = IplConvKernel.create(20, 1, 9, 0, CV_SHAPE_RECT, null);
+        cvErode(dst, dst, linesOnlyKern, 1);
 
         saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
 
@@ -164,20 +169,11 @@ public class ImageApiImpl implements ImageApi {
             if (distanceBetweenPoints(pt1.x(), pt1.y(), pt2.x(), pt2.y()) > maxLength) {
                 continue;
             }
-            segments.add(new LineSegment(pt1.x(), pt1.y(), pt2.x(), pt2.y()));
+            segments.add(new LineSegment("L" + i, pt1.x(), pt1.y(), pt2.x(), pt2.y()));
         }
 
         if (debug) {
-            CvFont font = new CvFont();
-            cvInitFont(font, CV_FONT_HERSHEY_PLAIN, 2, 2);
-            for (int i = 0; i < segments.size(); i++) {
-                final LineSegment s = segments.get(i);
-                final CvPoint pt1 = new CvPoint(s.x0, s.y0);
-                final CvPoint pt2 = new CvPoint(s.x1, s.y1);
-                cvLine(img, pt1, pt2, CV_RGB(0, 0, 255), 2, CV_AA, 0);
-                cvPutText(img, "L=" + i, pt1, font, CvScalar.BLUE);
-            }
-            saveImageAtStage(ImageUtil.iplImageToBufferedImage(img), file, "line-detection-end");
+            saveImageAtStage(ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), segments), file, "line-detection-end");
         }
 
         return segments;
@@ -408,8 +404,9 @@ public class ImageApiImpl implements ImageApi {
 
         final LineSegment sysNameLine = merged.get(0);
 
+        final int x0Offset = -20; //horiz lines detection kernel will chop the first few pixels (TODO: make constant)
         final Rectangle sysNameRect = new Rectangle(
-                sysNameLine.x0, 0, sysNameLine.x1, sysNameLine.y1
+                sysNameLine.x0 + x0Offset, 0, sysNameLine.x1, sysNameLine.y1
         );
         final Rectangle sysNameRectReal = new Rectangle(
                 sysNameRect.x0 + x0, sysNameRect.y0 + y0,
@@ -462,6 +459,8 @@ public class ImageApiImpl implements ImageApi {
                 img
         );
         if (!maybeImg2.isPresent()) {
+            LOGGER.info("Error cropping control details rectangle: " + skipTabsPowerAndSystemName.toString() +
+                    " for file: " + file.getAbsolutePath());
             return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
                     -1, -1);
         }
@@ -470,10 +469,10 @@ public class ImageApiImpl implements ImageApi {
 
         saveImageAtStage(img2, file, "extract-control-data-details-area");
 
-        final double horizontalLinesOnTopAndBottomOfCountersRectangles = 0.25;
+        final double horizontalLinesOnTopAndBottomOfCountersRectangles = 0.2;
         final int minLength = (int) (img2.getWidth() * horizontalLinesOnTopAndBottomOfCountersRectangles);
-        final int maxLength = img2.getWidth();
-        final int threshold = minLength;
+        final int maxLength = (int) (img2.getWidth() * 0.6);
+        final int threshold = 100;
         final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, threshold, 0, minLength, maxLength);
         final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
 //        final List<LineSegment> segmentsV = detectVerticalLines(img2, file, 1, 100, 0, 100, img2.getHeight());
@@ -508,6 +507,8 @@ public class ImageApiImpl implements ImageApi {
                 .collect(Collectors.toList());
 
         if (sortedFilteredSegments.size() < 2) {
+            LOGGER.info("Not enough left side segments to determine control details rectangles for file: " +
+                    file.getAbsolutePath());
             return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
                     -1, -1);
         }
@@ -713,6 +714,8 @@ public class ImageApiImpl implements ImageApi {
     @Override
     public ReportDto extractDataFromImages(final List<File> files) {
 
+        final long startMillis = System.currentTimeMillis();
+
         final ReportDto reportDto = new ReportDto();
         reportDto.powers = new HashMap<>();
         files
@@ -739,24 +742,30 @@ public class ImageApiImpl implements ImageApi {
                 );
 
         try {
-            LOGGER.info("Data extracted:" + App.JSON_MAPPER.writeValueAsString(reportDto));
+            LOGGER.info("Data extracted:" + App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(reportDto));
         } catch (IOException e) {
-            LOGGER.error(e);
+            LOGGER.error("Error in json conversion of extraction results", e);
         }
+
+        final long endMillis = System.currentTimeMillis();
+
+        LOGGER.info("Finished, duration:" + (endMillis - startMillis) + "ms");
+
         return reportDto;
     }
 
     public static void main(String[] args) {
         try {
             final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
+
             final List<File> images = Arrays.asList(
-//                    new File("data/control_images/1920x1200/mahon/control/not-undermined-not-fortified.bmp"),
-//                    new File("data/control_images/1920x1200/mahon/control/undermined.bmp"),
-//                    new File("data/control_images/1920x1200/mahon/control/undermined-fortified.bmp"),
-//                    new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp"),
-//                    new File("data/control_images/1920x1200/ald/control/fortified.bmp"),
-                    new File("data/control_images/1920x1080/ad/control/not-undermined-fortified.bmp"),
-                    new File("data/control_images/1920x1200/winters/control/default.bmp")
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0050.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0058.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0080.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0013.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0000.bmp"),
+                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0024.bmp")
             );
             api.extractDataFromImages(images);
         } catch (IOException e) {

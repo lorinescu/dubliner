@@ -1,9 +1,10 @@
 package pub.occams.elite.dubliner.util;
 
-import org.apache.log4j.Logger;
 import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
@@ -19,7 +20,7 @@ import java.util.Optional;
 
 public class ImageUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(App.LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(App.LOGGER_NAME);
 
     private static final OpenCVFrameConverter.ToIplImage CONVERTER1 = new OpenCVFrameConverter.ToIplImage();
     private static final Java2DFrameConverter CONVERTER2 = new Java2DFrameConverter();
@@ -85,20 +86,20 @@ public class ImageUtil {
     }
 
     public static BufferedImage drawSegments(final BufferedImage image, final List<LineSegment> segments) {
-        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics g = output.getGraphics();
         g.drawImage(image, 0, 0, null);
         g.dispose();
 
         Graphics2D g2 = output.createGraphics();
-        int i = 0;
         for (final LineSegment s : segments) {
             g2.setColor(Color.BLUE);
             BasicStroke stroke = new BasicStroke(3);
             g2.setStroke(stroke);
             g2.drawLine(s.x0, s.y0, s.x1, s.y1);
-            g2.drawString("L=" + i, s.x0, s.y0);
-            i++;
+            if (null != s.name && !s.name.isEmpty()) {
+                g2.drawString(s.name, s.x0, s.y0);
+            }
         }
         g2.dispose();
         return output;

@@ -14,7 +14,8 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.application.ImageApi;
 import pub.occams.elite.dubliner.domain.Power;
@@ -33,7 +34,7 @@ import static javafx.embed.swing.SwingFXUtils.toFXImage;
 
 public class ScanController extends Controller<AnchorPane> {
 
-    private static final Logger LOGGER = Logger.getLogger(App.LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(App.LOGGER_NAME);
 
     //FIXME: on windows the app has to run as admin for this key to be created
     private static final Preferences prefs = Preferences.userRoot().node("pub/occams/elite/dubliner/prefs");
@@ -177,7 +178,7 @@ public class ScanController extends Controller<AnchorPane> {
                         .append("\"").append(cs.fortifyTotal).append("\",")
                         .append("\"").append(cs.fortifyTrigger).append("\",")
                         .append("\"").append(cs.undermineTotal).append("\",")
-                        .append("\"").append(cs.undermineTrigger).append("\"\n")
+                        .append("\"").append(cs.undermineTrigger).append(",")
                         .append("\"").append(cs.classifiedImage.getInputImage().getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
@@ -255,6 +256,8 @@ public class ScanController extends Controller<AnchorPane> {
         if (null != m.systemNameRectangle) {
             nameImage.setImage(toFXImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
                     .getInputImage().getImage()).get(), null));
+        } else {
+            nameImage.setImage(null);
         }
         upkeepFromLastCycleText.setText(String.valueOf(m.upkeepFromLastCycle));
         defaultUpkeepCost.setText(String.valueOf(m.defaultUpkeepCost));
@@ -265,6 +268,8 @@ public class ScanController extends Controller<AnchorPane> {
         if (null != m.costsRectangle) {
             costsImage.setImage(toFXImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
                     .getInputImage().getImage()).get(), null));
+        } else {
+            costsImage.setImage(null);
         }
 
         fortifyTotalText.setText(String.valueOf(m.fortifyTotal));
@@ -273,6 +278,8 @@ public class ScanController extends Controller<AnchorPane> {
         if (null != m.fortifyRectangle) {
             fortifyImage.setImage(toFXImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
                     .getInputImage().getImage()).get(), null));
+        } else {
+            fortifyImage.setImage(null);
         }
 
         undermineTotalText.setText(String.valueOf(m.undermineTotal));
@@ -280,6 +287,8 @@ public class ScanController extends Controller<AnchorPane> {
         if (null != m.undermineRectangle) {
             undermineImage.setImage(toFXImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
                     .getInputImage().getImage()).get(), null));
+        } else {
+            undermineImage.setImage(null);
         }
     }
 
