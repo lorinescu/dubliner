@@ -3,6 +3,7 @@ package pub.occams.elite.dubliner.application;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.javacpp.opencv_core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,6 +143,47 @@ public class ImageApiImpl implements ImageApi {
             LOGGER.error("Error when ocr-ing image.", e);
         }
         return "";
+    }
+
+    //using Line Segment Detector
+    private List<LineSegment> detectLines2(final BufferedImage image, final File file, final int pixelResolution,
+                                           final int threshold, final int maxGap,
+                                           final int minLength, final int maxLength) {
+
+        final IplImage img = ImageUtil.bufferedImageToIplImage(image);
+        final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
+
+        cvCanny(img, dst, 500, 500);
+
+        final IplConvKernel linesOnlyKern = IplConvKernel.create(20, 1, 0, 0, CV_SHAPE_RECT, null);
+
+        cvErode(dst, dst, linesOnlyKern, 1);
+        cvDilate(dst, dst, linesOnlyKern, 1);
+
+//        imwrite("out/moo.png", cvarrToMat(dst));
+
+        final LineSegmentDetector lsd = createLineSegmentDetector();
+        final Mat img_in = cvarrToMat(dst);
+        Mat lines = new Mat();
+        lsd.detect(img_in, lines);
+
+//        final Mat linesImage = imread("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp");
+//        lsd.drawSegments(linesImage, lines);
+
+        final FloatRawIndexer indexer = lines.createIndexer();
+        final long size = lines.total();
+        final List<LineSegment> segments = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            segments.add(
+                    new LineSegment((int) indexer.get(0, i, 0), (int) indexer.get(0, i, 1),
+                            (int) indexer.get(0, i, 2), (int) indexer.get(0, i, 3))
+            );
+        }
+//        imwrite("out/moo-lsd.png", linesImage);
+//        final BufferedImage bi = ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), segments);
+//        imwrite("out/moo-segments-lsd.png", cvarrToMat(ImageUtil.bufferedImageToIplImage(bi)));
+
+        return null;
     }
 
     private List<LineSegment> detectLines(final BufferedImage image, final File file, final int pixelResolution,
