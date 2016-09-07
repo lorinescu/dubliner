@@ -159,21 +159,26 @@ public class ImageApiImpl implements ImageApi {
                 threshold, minLength, maxGap, 0, CV_PI);
 
         final List<LineSegment> segments = new ArrayList<>();
+        final List<LineSegment> allSegments = new ArrayList<>();
         for (int i = 0; i < lines.total(); i++) {
             final Pointer line = new CvPoint2D32f(cvGetSeqElem(lines, i));
 
             final CvPoint pt1 = new CvPoint(line.position(0));
             final CvPoint pt2 = new CvPoint(line.position(1));
 
-
+            final LineSegment s = new LineSegment("L" + i, pt1.x(), pt1.y(), pt2.x(), pt2.y());
+            allSegments.add(s);
             if (distanceBetweenPoints(pt1.x(), pt1.y(), pt2.x(), pt2.y()) > maxLength) {
                 continue;
             }
-            segments.add(new LineSegment("L" + i, pt1.x(), pt1.y(), pt2.x(), pt2.y()));
+            segments.add(s);
         }
 
         if (debug) {
-            saveImageAtStage(ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), segments), file, "line-detection-end");
+            saveImageAtStage(ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), allSegments), file,
+                    "line-detection-end-all-lines");
+            saveImageAtStage(ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), segments), file,
+                    "line-detection-end-maxLength");
         }
 
         return segments;
@@ -189,17 +194,6 @@ public class ImageApiImpl implements ImageApi {
                 .collect(Collectors.toList());
     }
 
-    private List<LineSegment> detectVerticalLines(final BufferedImage image, final File file,
-                                                  final int pixelResolution, final int threshold, final int maxGap,
-                                                  final int minLength, final int maxLength) {
-        return detectLines(image, file, pixelResolution, threshold, maxGap, minLength, maxLength)
-                .stream()
-                .filter(s -> s.x0 == s.x1)
-                .sorted((s1, s2) -> s1.x0 - s2.x0)
-                .collect(Collectors.toList());
-    }
-
-    //TODO: merge Horiz/Vert methods can be ... merged
     private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file,
                                                       final List<LineSegment> segments, final int threshold) {
 
@@ -232,41 +226,6 @@ public class ImageApiImpl implements ImageApi {
         final List<LineSegment> out = new ArrayList<>(clusters.values());
         out.sort((o1, o2) -> o1.y0 - o2.y0);
         saveImageAtStage(ImageUtil.drawSegments(img, out), file, "merge-horizontal-progress");
-        return out;
-    }
-
-    private List<LineSegment> mergeVerticalSegments(final BufferedImage img, final File file,
-                                                    final List<LineSegment> segments, final int threshold) {
-
-        final Map<Range, LineSegment> clusters = new HashMap<>();
-
-        for (final LineSegment s : segments) {
-            Range foundRange = null;
-            for (final Range range : clusters.keySet()) {
-                if (s.x0 >= range.low && s.x0 <= range.high) {
-                    //don't merge if the segments are colinear-ish by a few pixels
-                    final LineSegment rangeSegment = clusters.get(range);
-                    if (rangeSegment.y1 + 10 < s.y0 || rangeSegment.y0 - 10 > s.y1) {
-                        continue;
-                    }
-                    foundRange = range;
-                    break;
-                }
-            }
-            final int low = s.x0 - threshold;
-            final int high = s.x0 + threshold;
-            if (null != foundRange) {
-                final int newLow = low < foundRange.low ? low : foundRange.low;
-                final int newHigh = high > foundRange.high ? high : foundRange.high;
-                final Range newRange = new Range(newLow, newHigh);
-                clusters.put(newRange, clusters.remove(foundRange));
-            } else {
-                clusters.put(new Range(low, high), s);
-            }
-        }
-        final List<LineSegment> out = new ArrayList<>(clusters.values());
-        out.sort((o1, o2) -> o1.x0 - o2.x0);
-        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "merge-vertical-progress");
         return out;
     }
 
@@ -759,13 +718,16 @@ public class ImageApiImpl implements ImageApi {
             final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
 
             final List<File> images = Arrays.asList(
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0050.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0058.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0080.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0013.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0000.bmp"),
-                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0024.bmp")
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0050.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0058.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0080.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0013.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0000.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0024.bmp"),
+//                    new File("data/control_images/1920x1200/mahon/control/Screenshot_0059.bmp"),
+                    new File("data/control_images/1920x1080/winters/control/undermined-fortified.bmp"),
+                    new File("data/control_images/1920x1080/delaine/control/fortified-undermined.bmp")
             );
             api.extractDataFromImages(images);
         } catch (IOException e) {
