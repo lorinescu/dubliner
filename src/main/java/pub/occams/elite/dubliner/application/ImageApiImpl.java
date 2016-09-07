@@ -442,8 +442,8 @@ public class ImageApiImpl implements ImageApi {
 
         if (null == input.getInputImage() || ImageType.UNKNOWN == input.getType().getData()
                 || Power.UNKNOWN == input.getPower().getData() || Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
-            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, null, null, null, null, null,
-                    null, null, null, null);
+            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
+                    -1, -1);
         }
 
         final File file = input.getInputImage().getFile();
@@ -462,8 +462,8 @@ public class ImageApiImpl implements ImageApi {
                 img
         );
         if (!maybeImg2.isPresent()) {
-            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1,-1,-1,-1,-1,-1,
-                    -1,-1);
+            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
+                    -1, -1);
         }
 
         final BufferedImage img2 = maybeImg2.get();
@@ -508,8 +508,8 @@ public class ImageApiImpl implements ImageApi {
                 .collect(Collectors.toList());
 
         if (sortedFilteredSegments.size() < 2) {
-            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1,-1,-1,-1,-1,-1,
-                    -1,-1);
+            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
+                    -1, -1);
         }
 
         final LineSegment topFortificationSegment = sortedFilteredSegments.get(sortedFilteredSegments.size() - 2);
