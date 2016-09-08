@@ -1,7 +1,10 @@
 package pub.occams.elite.dubliner.util;
 
 import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_core.*;
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Rect;
+import org.bytedeco.javacpp.opencv_core.Scalar;
+import org.bytedeco.javacpp.opencv_core.Size;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.slf4j.Logger;
@@ -11,13 +14,13 @@ import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 
-import java.awt.*;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import static org.bytedeco.javacpp.opencv_core.*;
+import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_SIMPLEX;
+import static org.bytedeco.javacpp.opencv_core.bitwise_not;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
@@ -44,16 +47,6 @@ public class ImageUtil {
         final Mat img = imread(file.getAbsolutePath());
         if (null != img.data()) {
             return Optional.of(img);
-        }
-        return Optional.empty();
-    }
-
-    public static Optional<BufferedImage> crop(final Rectangle r, final BufferedImage image) {
-        try {
-            return Optional.of(image.getSubimage(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0));
-        } catch (RasterFormatException e) {
-            LOGGER.error("Failed to crop image" + image.getWidth() + "x" + image.getHeight() +
-                    ", incorrect bounds for rectangle:" + r.toString());
         }
         return Optional.empty();
     }
@@ -106,26 +99,6 @@ public class ImageUtil {
         return image;
     }
 
-    public static BufferedImage drawSegments(final BufferedImage image, final List<LineSegment> segments) {
-        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
-        Graphics g = output.getGraphics();
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-
-        Graphics2D g2 = output.createGraphics();
-        for (final LineSegment s : segments) {
-            g2.setColor(Color.BLUE);
-            BasicStroke stroke = new BasicStroke(1);
-            g2.setStroke(stroke);
-            g2.drawLine(s.x0, s.y0, s.x1, s.y1);
-            if (null != s.name && !s.name.isEmpty()) {
-                g2.drawString(s.name, s.x0, s.y0);
-            }
-        }
-        g2.dispose();
-        return output;
-    }
-
     public static Mat drawSegments(final Mat in, final List<LineSegment> segments) {
 
         if (null == in || null == in.data()) {
@@ -143,26 +116,6 @@ public class ImageUtil {
             }
         }
         return out;
-    }
-
-    public static BufferedImage drawDataRectangles(final BufferedImage image, final DataRectangle... rects) {
-        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-        Graphics g = output.getGraphics();
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-
-        Graphics2D g2 = output.createGraphics();
-        for (final DataRectangle dr : rects) {
-            g2.setColor(Color.BLUE);
-            BasicStroke stroke = new BasicStroke(3);
-            g2.setStroke(stroke);
-            g2.setFont(new Font("Serif", Font.BOLD, 14));
-            final Rectangle r = dr.getRectangle();
-            g2.drawRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
-            g2.drawString(dr.getData().toString(), r.x0 + 10, r.y0 + 10);
-        }
-        g2.dispose();
-        return output;
     }
 
     public static Mat drawDataRectangles(final Mat in, final DataRectangle... rects) {
@@ -184,14 +137,6 @@ public class ImageUtil {
         return out;
     }
 
-    public static BufferedImage invert(final BufferedImage image) {
-        final int w = image.getWidth();
-        final int h = image.getHeight();
-        final BufferedImage dst = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-        final BufferedImageOp invertOp = new LookupOp(new ShortLookupTable(0, invertTable), null);
-        return invertOp.filter(image, dst);
-    }
-
     public static Mat invert(final Mat in) {
         final int w = in.cols();
         final int h = in.rows();
@@ -201,20 +146,6 @@ public class ImageUtil {
         bitwise_not(in, out);
 
         return out;
-    }
-
-
-    public static BufferedImage scale(final BufferedImage image) {
-        int newW = image.getWidth() * 4;
-        int newH = image.getHeight() * 4;
-        final BufferedImage scaledImage = new BufferedImage(newW, newH, image.getType());
-        final Graphics2D g = scaledImage.createGraphics();
-
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-//        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.drawImage(image, 0, 0, newW, newH, null);
-
-        return scaledImage;
     }
 
     public static Mat scale(final Mat in) {
@@ -228,14 +159,6 @@ public class ImageUtil {
         resize(in, out, size, 0, 0, INTER_CUBIC);
 
         return out;
-    }
-
-    public static BufferedImage iplImageToBufferedImage(final IplImage image) {
-        return CONVERTER3.getBufferedImage(CONVERTER1.convert(image));
-    }
-
-    public static IplImage bufferedImageToIplImage(final BufferedImage image) {
-        return CONVERTER1.convert(CONVERTER3.convert(image));
     }
 
     public static BufferedImage matToBufferedImage(Mat m) {
