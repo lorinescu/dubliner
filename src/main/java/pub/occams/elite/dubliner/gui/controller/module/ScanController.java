@@ -31,6 +31,7 @@ import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 import static javafx.embed.swing.SwingFXUtils.toFXImage;
+import static pub.occams.elite.dubliner.util.ImageUtil.matToBufferedImage;
 
 public class ScanController extends Controller<AnchorPane> {
 
@@ -194,7 +195,7 @@ public class ScanController extends Controller<AnchorPane> {
             return;
         }
 
-        final BufferedImage originalImage = system.classifiedImage.getInputImage().getImage();
+        final BufferedImage originalImage = matToBufferedImage(system.classifiedImage.getInputImage().getImage());
         if (null == originalImage) {
             return;
         }
@@ -254,8 +255,8 @@ public class ScanController extends Controller<AnchorPane> {
     private void setDetails(final ControlModel m) {
         nameText.setText(m.systemName);
         if (null != m.systemNameRectangle) {
-            nameImage.setImage(toFXImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
-                    .getInputImage().getImage()).get(), null));
+            nameImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get()), null));
         } else {
             nameImage.setImage(null);
         }
@@ -266,8 +267,8 @@ public class ScanController extends Controller<AnchorPane> {
         baseIncomeText.setText(String.valueOf(m.baseIncome));
 
         if (null != m.costsRectangle) {
-            costsImage.setImage(toFXImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
-                    .getInputImage().getImage()).get(), null));
+            costsImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get()), null));
         } else {
             costsImage.setImage(null);
         }
@@ -276,8 +277,8 @@ public class ScanController extends Controller<AnchorPane> {
         fortifyTriggerText.setText(String.valueOf(m.fortifyTrigger));
 
         if (null != m.fortifyRectangle) {
-            fortifyImage.setImage(toFXImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
-                    .getInputImage().getImage()).get(), null));
+            fortifyImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get()), null));
         } else {
             fortifyImage.setImage(null);
         }
@@ -285,8 +286,8 @@ public class ScanController extends Controller<AnchorPane> {
         undermineTotalText.setText(String.valueOf(m.undermineTotal));
         undermineTriggerText.setText(String.valueOf(m.undermineTrigger));
         if (null != m.undermineRectangle) {
-            undermineImage.setImage(toFXImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
-                    .getInputImage().getImage()).get(), null));
+            undermineImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
+                    .getInputImage().getImage()).get()), null));
         } else {
             undermineImage.setImage(null);
         }

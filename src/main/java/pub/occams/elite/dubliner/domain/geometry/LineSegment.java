@@ -1,5 +1,7 @@
 package pub.occams.elite.dubliner.domain.geometry;
 
+import static pub.occams.elite.dubliner.util.ImageUtil.distanceBetweenPoints;
+
 public class LineSegment {
 
     public final String name;
@@ -22,6 +24,10 @@ public class LineSegment {
         this.y0 = y0;
         this.x1 = x1;
         this.y1 = y1;
+    }
+
+    public int length() {
+        return distanceBetweenPoints(x0,y0,x1,y1);
     }
 
     @Override

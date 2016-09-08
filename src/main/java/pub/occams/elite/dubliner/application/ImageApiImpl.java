@@ -2,9 +2,9 @@ package pub.occams.elite.dubliner.application;
 
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
-import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
-import org.bytedeco.javacpp.opencv_core.*;
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
@@ -26,16 +26,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imwrite;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.correct.Corrector.*;
 import static pub.occams.elite.dubliner.domain.ImageType.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
-import static pub.occams.elite.dubliner.util.ImageUtil.invert;
 
 public class ImageApiImpl implements ImageApi {
 
@@ -43,6 +40,14 @@ public class ImageApiImpl implements ImageApi {
 
     private final boolean debug;
     private int cnt = 0;
+
+    private final int HORIZONTAL_KERNEL_SIZE = 20;
+    //    private final IplConvKernel ERODE_HLINES_K = IplConvKernel.create(HORIZONTAL_KERNEL_SIZE, 1, 0, 0,
+//            CV_SHAPE_RECT, null);
+//    private final IplConvKernel DILATE_HLINES_K = IplConvKernel.create(HORIZONTAL_KERNEL_SIZE, 2, 0, 0,
+//            CV_SHAPE_RECT, null);
+    private final Mat ERODE_HLINES_K = getStructuringElement(MORPH_RECT, new Size(HORIZONTAL_KERNEL_SIZE, 1));
+    private final Mat DILATE_HLINES_K = getStructuringElement(MORPH_RECT, new Size(HORIZONTAL_KERNEL_SIZE, 2));
 
     private final SettingsDto settings;
     private final Corrector corrector;
@@ -64,37 +69,15 @@ public class ImageApiImpl implements ImageApi {
         settings.ocr.tesseractForSystemNames.variables.forEach(tessForNames::setTessVariable);
     }
 
-
-    @Override
-    public SettingsDto getSettings() {
-        return this.settings;
-    }
-
-    @Override
-    public InputImage load(final File file) {
-        LOGGER.info("loading image:" + file.getAbsolutePath());
-
-        final Optional<BufferedImage> maybeImg = ImageUtil.readImageFromFile(file);
-        if (!maybeImg.isPresent()) {
-            return new InputImage(file, null);
-        }
-
-        final BufferedImage img = maybeImg.get();
-
-        saveImageAtStage(img, file, "loading");
-
-        return new InputImage(file, img);
-    }
-
     private void saveImage(final String path, final Object image) throws IOException {
-        if (image instanceof IplImage) {
-            imwrite(path + ".jpg", cvarrToMat((IplImage) image));
+        if (image instanceof Mat) {
+            imwrite(path + ".png", (Mat) image);
         } else if (image instanceof BufferedImage) {
             ImageIO.write((BufferedImage) image, "png", new File(path + ".png"));
         }
     }
 
-    protected void saveImageAtStage(final Object image, final File imageFile, final String stage) {
+    private void saveImageAtStage(final Object image, final File imageFile, final String stage) {
         if (!debug) {
             return;
         }
@@ -117,7 +100,7 @@ public class ImageApiImpl implements ImageApi {
     }
 
 
-    protected String ocrNumberRectangle(final BufferedImage image) {
+    private String ocrNumberRectangle(final BufferedImage image) {
         LOGGER.info("starting number OCR");
         try {
             final String str = tessForNumbers.doOCR(image);
@@ -131,7 +114,8 @@ public class ImageApiImpl implements ImageApi {
         return "";
     }
 
-    protected String ocrRectangle(final BufferedImage image) {
+
+    private String ocrRectangle(final BufferedImage image) {
         LOGGER.info("starting OCR");
         try {
             final String str = tessForNames.doOCR(image);
@@ -145,121 +129,67 @@ public class ImageApiImpl implements ImageApi {
         return "";
     }
 
-    //using Line Segment Detector
-    private List<LineSegment> detectLines2(final BufferedImage image, final File file, final int pixelResolution,
-                                           final int threshold, final int maxGap,
-                                           final int minLength, final int maxLength) {
+    private List<LineSegment> detectHorizontalLines(final Mat image, final File file,
+                                                    final int minLength, final int maxLength) {
 
-        final IplImage img = ImageUtil.bufferedImageToIplImage(image);
-        final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
+//        final IplImage img = ImageUtil.bufferedImageToIplImage(image);
+//        final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
+        final Mat dst = new Mat(image.size(), 1);
+        Canny(image, dst, 400, 500);
+//        cvCanny(image, dst, 400, 500);
 
-        cvCanny(img, dst, 500, 500);
+        saveImageAtStage(dst, file, "line-detection-begin-before-kern");
 
-        final IplConvKernel linesOnlyKern = IplConvKernel.create(20, 1, 0, 0, CV_SHAPE_RECT, null);
+//        cvErode(dst, dst, ERODE_HLINES_K, 1);
+//        cvDilate(dst, dst, DILATE_HLINES_K, 1);
+        erode(dst, dst, ERODE_HLINES_K);
+        dilate(dst, dst, DILATE_HLINES_K);
 
-        cvErode(dst, dst, linesOnlyKern, 1);
-        cvDilate(dst, dst, linesOnlyKern, 1);
-
-//        imwrite("out/moo.png", cvarrToMat(dst));
+        saveImageAtStage(dst, file, "line-detection-begin");
 
         final LineSegmentDetector lsd = createLineSegmentDetector();
-        final Mat img_in = cvarrToMat(dst);
-        Mat lines = new Mat();
-        lsd.detect(img_in, lines);
 
-//        final Mat linesImage = imread("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp");
-//        lsd.drawSegments(linesImage, lines);
+//        final Mat imgAsMat = cvarrToMat(dst);
+        Mat lines = new Mat();
+        lsd.detect(dst, lines);
+
+        if (null == lines.arrayData()) {
+            return new ArrayList<>();
+        }
 
         final FloatRawIndexer indexer = lines.createIndexer();
         final long size = lines.total();
         final List<LineSegment> segments = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            segments.add(
-                    new LineSegment((int) indexer.get(0, i, 0), (int) indexer.get(0, i, 1),
-                            (int) indexer.get(0, i, 2), (int) indexer.get(0, i, 3))
-            );
-        }
-//        imwrite("out/moo-lsd.png", linesImage);
-//        final BufferedImage bi = ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), segments);
-//        imwrite("out/moo-segments-lsd.png", cvarrToMat(ImageUtil.bufferedImageToIplImage(bi)));
-
-        return null;
-    }
-
-    private List<LineSegment> detectLines(final BufferedImage image, final File file, final int pixelResolution,
-                                          final int threshold, final int maxGap,
-                                          final int minLength, final int maxLength) {
-
-//        should pick between canny and otsu binarization
-//        final IplImage img = ImageUtil.bufferedImageToIplImage(OtsuBinarize.binarizeImage(image));
-        final IplImage img = ImageUtil.bufferedImageToIplImage(image);
-        final IplImage dst = cvCreateImage(cvGetSize(img), img.depth(), 1);
-
-        cvCanny(img, dst, 80, 500, 3);
-
-        saveImageAtStage(dst, file, "line-detection-begin-before-kern");
-
-        final IplConvKernel linesOnlyKern = IplConvKernel.create(20, 1, 0, 0, CV_SHAPE_RECT, null);
-        cvErode(dst, dst, linesOnlyKern, 1);
-//        final IplConvKernel joinDoubleLinesKern = IplConvKernel.create(10, 1, 4, 0, CV_SHAPE_RECT, null);
-//        cvDilate(dst, dst, joinDoubleLinesKern, 1);
-
-        saveImageAtStage(ImageUtil.iplImageToBufferedImage(dst), file, "line-detection-begin");
-
-        final CvMemStorage storage = cvCreateMemStorage(0);
-
-        final double angleResolution = CV_PI / 2;
-
-        final CvSeq lines = cvHoughLines2(dst, storage, CV_HOUGH_PROBABILISTIC, pixelResolution, angleResolution,
-                threshold, minLength, maxGap, 0, CV_PI);
-
-        final List<LineSegment> segments = new ArrayList<>();
         final List<LineSegment> allSegments = new ArrayList<>();
-        for (int i = 0; i < lines.total(); i++) {
-            final Pointer line = new CvPoint2D32f(cvGetSeqElem(lines, i));
-
-            final CvPoint pt1 = new CvPoint(line.position(0));
-            final CvPoint pt2 = new CvPoint(line.position(1));
-
-            final LineSegment s = new LineSegment("L" + i, pt1.x(), pt1.y(), pt2.x(), pt2.y());
+        for (int i = 0; i < size; i++) {
+            final int a = (int) indexer.get(0, i, 0);
+            final int b = (int) indexer.get(0, i, 1);
+            final int c = (int) indexer.get(0, i, 2);
+            final int d = (int) indexer.get(0, i, 3);
+            //lines coords are from right to left, make them human friendly
+            final int x0 = a >= c ? c : a;
+            final int x1 = a < c ? c : a;
+            final int y0 = b >= d ? d : b;
+            final int y1 = b < d ? d : b;
+            final LineSegment s = new LineSegment("L" + i, x0, y0, x1, y1);
             allSegments.add(s);
-            if (distanceBetweenPoints(pt1.x(), pt1.y(), pt2.x(), pt2.y()) > maxLength) {
-                continue;
+            if (s.length() >= minLength && s.length() <= maxLength && s.y0 == s.y1) {
+                segments.add(s);
             }
-            segments.add(s);
         }
 
         if (debug) {
-            saveImageAtStage(ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), allSegments), file,
-                    "line-detection-end-all-lines");
-            saveImageAtStage(ImageUtil.drawSegments(ImageUtil.iplImageToBufferedImage(dst), segments), file,
-                    "line-detection-end-maxLength");
+            saveImageAtStage(ImageUtil.drawSegments(dst, allSegments), file, "line-detection-all-segments");
+            saveImageAtStage(ImageUtil.drawSegments(dst, segments), file, "line-detection-fitted-segments");
         }
 
-        return segments;
-    }
-
-    private List<LineSegment> detectHorizontalLines(final BufferedImage image, final File file,
-                                                    final int pixelResolution, final int threshold, final int maxGap,
-                                                    final int minLength, final int maxLength) {
-        return detectLines(image, file, pixelResolution, threshold, maxGap, minLength, maxLength)
-                .stream()
-                .filter(s -> s.y0 == s.y1)
-                .sorted((s1, s2) -> s1.y0 - s2.y0)
-                .collect(Collectors.toList());
-    }
-
-    private List<LineSegment> mergeHorizontalSegments(final BufferedImage img, final File file,
-                                                      final List<LineSegment> segments, final int threshold) {
-
-        final Map<Range, LineSegment> clusters = new HashMap<>();
-
+        final Map<Range, LineSegment> parallelClusters = new HashMap<>();
         for (final LineSegment s : segments) {
             Range foundRange = null;
-            for (final Range range : clusters.keySet()) {
+            for (final Range range : parallelClusters.keySet()) {
                 if (s.y0 >= range.low && s.y0 <= range.high) {
                     //don't merge if the segments are colinear-ish by a few pixels
-                    final LineSegment rangeSegment = clusters.get(range);
+                    final LineSegment rangeSegment = parallelClusters.get(range);
                     if (rangeSegment.x1 < s.x0 || rangeSegment.x0 > s.x1) {
                         continue;
                     }
@@ -267,32 +197,40 @@ public class ImageApiImpl implements ImageApi {
                     break;
                 }
             }
+            final int threshold = 5;
             final int low = s.y0 - threshold;
             final int high = s.y0 + threshold;
             if (null != foundRange) {
                 final int newLow = low < foundRange.low ? low : foundRange.low;
                 final int newHigh = high > foundRange.high ? high : foundRange.high;
                 final Range newRange = new Range(newLow, newHigh);
-                clusters.put(newRange, clusters.remove(foundRange));
+                parallelClusters.put(newRange, parallelClusters.remove(foundRange));
             } else {
-                clusters.put(new Range(low, high), s);
+                parallelClusters.put(new Range(low, high), s);
             }
         }
-        final List<LineSegment> out = new ArrayList<>(clusters.values());
-        out.sort((o1, o2) -> o1.y0 - o2.y0);
-        saveImageAtStage(ImageUtil.drawSegments(img, out), file, "merge-horizontal-progress");
-        return out;
+
+        final List<LineSegment> sortedMergedSegments =
+                parallelClusters
+                        .values()
+                        .stream()
+                        .sorted((s1, s2) -> s1.y0 - s2.y0)
+                        .collect(Collectors.toList());
+
+        saveImageAtStage(ImageUtil.drawSegments(image, sortedMergedSegments), file, "line-detected-sorted-merged");
+
+        return sortedMergedSegments;
     }
 
     private DataRectangle<ImageType> detectSelectedTab(final InputImage inputImage) {
 
         final File file = inputImage.getFile();
-        final BufferedImage originalImage = inputImage.getImage();
+        final Mat originalImage = inputImage.getImage();
 
         final int totalPowerPlayTabs = 6;
-        final int maxLength = inputImage.getImage().getWidth() / totalPowerPlayTabs;
-        final int minLength = inputImage.getImage().getWidth() / (2 * totalPowerPlayTabs);
-        final List<LineSegment> segments = detectHorizontalLines(originalImage, file, 1, 80, 2, minLength, maxLength);
+        final int minLength = originalImage.size().width() / (2 * totalPowerPlayTabs);
+        final int maxLength = originalImage.size().width() / totalPowerPlayTabs;
+        final List<LineSegment> segments = detectHorizontalLines(originalImage, file, minLength, maxLength);
 
         if (debug) {
             saveImageAtStage(ImageUtil.drawSegments(originalImage, segments), file, "detect-selected-tab-segments");
@@ -309,18 +247,20 @@ public class ImageApiImpl implements ImageApi {
                 segments.get(1).x1, segments.get(1).y1
         ), scaleDownFactor);
 
-        final Optional<BufferedImage> maybeTabImage = ImageUtil.crop(tab, originalImage);
+//        final Optional<BufferedImage> maybeTabImage = ImageUtil.crop(tab, originalImage);
+        final Optional<Mat> maybeTabImage = ImageUtil.crop(tab, originalImage);
         if (!maybeTabImage.isPresent()) {
             return new DataRectangle<>(UNKNOWN, tab);
         }
-        final BufferedImage tabImage = maybeTabImage.get();
-        saveImageAtStage(tabImage, file, "detect-selected-tab-selection");
+//        final BufferedImage tabImage = maybeTabImage.get();
+        saveImageAtStage(maybeTabImage.get(), file, "detect-selected-tab-selection");
 
-        final BufferedImage ocrInputImage = invert(scale(tabImage));
+//        final BufferedImage ocrInputImage = invert(scale(maybeTabImage.get()));
+        final Mat ocrInputImage = invert(scale(maybeTabImage.get()));
 
         saveImageAtStage(ocrInputImage, file, "detect-selected-tab-ocr-input");
 
-        final String str = ocrRectangle(ocrInputImage);
+        final String str = ocrRectangle(matToBufferedImage(ocrInputImage));
 
         final String title = str.trim().replace("0", "O");
         LOGGER.info("Selected tab, raw OCR:[" + str + "], corrected:[" + title + "]");
@@ -339,13 +279,15 @@ public class ImageApiImpl implements ImageApi {
 
     private DataRectangle<Power> detectSelectedPower(final InputImage inputImage) {
         final File file = inputImage.getFile();
-        final BufferedImage img = inputImage.getImage();
+//        final BufferedImage img = inputImage.getImage();
+        final Mat img = inputImage.getImage();
 
         final double longSeparatorLinesLengthFactor = 0.8;
-        final int maxLength = img.getWidth();
-        final int minLength = (int) (img.getWidth() * longSeparatorLinesLengthFactor);
-        final List<LineSegment> segments = detectHorizontalLines(img, file, 1, 80, 10, minLength, maxLength);
-        final List<LineSegment> merged = mergeHorizontalSegments(img, file, segments, 3);
+//        final int minLength = (int) (img.getWidth() * longSeparatorLinesLengthFactor);
+//        final int maxLength = img.getWidth();
+        final int minLength = (int) (img.cols() * longSeparatorLinesLengthFactor);
+        final int maxLength = img.cols();
+        final List<LineSegment> merged = detectHorizontalLines(img, file, minLength, maxLength);
         if (debug) {
             saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "detect-selected-power");
         }
@@ -359,14 +301,17 @@ public class ImageApiImpl implements ImageApi {
                 merged.get(2).x1, merged.get(2).y1
         );
 
-        final Optional<BufferedImage> maybePowerImage = ImageUtil.crop(powerNameRectangle, img);
+//        final Optional<BufferedImage> maybePowerImage = ImageUtil.crop(powerNameRectangle, img);
+        final Optional<Mat> maybePowerImage = ImageUtil.crop(powerNameRectangle, img);
         if (!maybePowerImage.isPresent()) {
             return new DataRectangle<>(Power.UNKNOWN, powerNameRectangle);
         }
-        final BufferedImage powerImage = maybePowerImage.get();
+//        final BufferedImage powerImage = maybePowerImage.get();
+        final Mat powerImage = maybePowerImage.get();
         saveImageAtStage(powerImage, file, "detect-selected-power");
 
-        final BufferedImage ocrInputImage = invert(scale(filterRedAndBinarize(powerImage, 85)));
+//        final BufferedImage ocrInputImage = invert(scale(filterRedAndBinarize(powerImage, 85)));
+        final BufferedImage ocrInputImage = matToBufferedImage(invert(scale(filterRedAndBinarize(powerImage, 85))));
 
         saveImageAtStage(ocrInputImage, file, "detect-selected-power-ocr-input");
 
@@ -385,7 +330,9 @@ public class ImageApiImpl implements ImageApi {
     private DataRectangle<String> extractSystemName(final ClassifiedImage input) {
 
         final File file = input.getInputImage().getFile();
-        final BufferedImage img = input.getInputImage().getImage();
+//        final BufferedImage img = input.getInputImage().getImage();
+        final Mat img = input.getInputImage().getImage();
+
 
         LOGGER.info("Name extraction start for file: " + file.getAbsolutePath());
 
@@ -394,20 +341,24 @@ public class ImageApiImpl implements ImageApi {
         final int y0Offset = 20;//a few extra pixels to remove the line below the power name
         final int y0 = reference.y1 + y0Offset;
         final int x1 = reference.x1;
-        final int y1 = img.getHeight();
+//        final int y1 = img.getHeight();
+        final int y1 = img.rows();
         final Rectangle skipTabsAndPower = new Rectangle(x0, y0, x1, y1);
-        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
+//        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
+        final Optional<Mat> maybeImg2 = ImageUtil.crop(skipTabsAndPower, img);
         if (!maybeImg2.isPresent()) {
             return new DataRectangle<>(Corrector.UNKNOWN_SYSTEM, null);
         }
-        final BufferedImage img2 = maybeImg2.get();
+//        final BufferedImage img2 = maybeImg2.get();
+        final Mat img2 = maybeImg2.get();
         saveImageAtStage(img2, file, "extract-name-data-details-area");
 
         final double horizontalLineBelowSystemNameLengthFactor = 0.3;
-        final int minLength = (int) (img2.getWidth() * horizontalLineBelowSystemNameLengthFactor);
-        final int maxLength = img2.getWidth();
-        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, 80, 1, minLength, maxLength);
-        final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
+//        final int minLength = (int) (img2.getWidth() * horizontalLineBelowSystemNameLengthFactor);
+//        final int maxLength = img2.getWidth();
+        final int minLength = (int) (img2.cols() * horizontalLineBelowSystemNameLengthFactor);
+        final int maxLength = img2.cols();
+        final List<LineSegment> merged = detectHorizontalLines(img2, file, minLength, maxLength);
         if (debug) {
             saveImageAtStage(ImageUtil.drawSegments(img2, merged), file, "extract-name-data-lines");
         }
@@ -419,22 +370,25 @@ public class ImageApiImpl implements ImageApi {
         final LineSegment sysNameLine = merged.get(0);
 
         final Rectangle sysNameRect = new Rectangle(
-                sysNameLine.x0, 0, sysNameLine.x1, sysNameLine.y1
+                sysNameLine.x0 - HORIZONTAL_KERNEL_SIZE/2, 0, sysNameLine.x1, sysNameLine.y1
         );
         final Rectangle sysNameRectReal = new Rectangle(
                 sysNameRect.x0 + x0, sysNameRect.y0 + y0,
                 sysNameRect.x1 + x0, sysNameRect.y1 + y0
         );
 
-        final Optional<BufferedImage> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
+//        final Optional<BufferedImage> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
+        final Optional<Mat> maybeImg3 = ImageUtil.crop(sysNameRect, img2);
         if (!maybeImg3.isPresent()) {
             return new DataRectangle<>(UNKNOWN_SYSTEM, sysNameRectReal);
         }
 
-        final BufferedImage img3 = maybeImg3.get();
+//        final BufferedImage img3 = maybeImg3.get();
+        final Mat img3 = maybeImg3.get();
         saveImageAtStage(img3, file, "extract-name-data");
 
-        final BufferedImage ocrInputImage = invert(scale(img3));
+//        final BufferedImage ocrInputImage = invert(scale(img3));
+        final BufferedImage ocrInputImage = matToBufferedImage(invert(scale(img3)));
 
         saveImageAtStage(ocrInputImage, file, "extract-name-ocr-input");
 
@@ -457,7 +411,8 @@ public class ImageApiImpl implements ImageApi {
         }
 
         final File file = input.getInputImage().getFile();
-        final BufferedImage img = input.getInputImage().getImage();
+//        final BufferedImage img = input.getInputImage().getImage();
+        final Mat img = input.getInputImage().getImage();
 
         LOGGER.info("Control data extraction start for file: " + file.getAbsolutePath());
 
@@ -466,11 +421,11 @@ public class ImageApiImpl implements ImageApi {
         final int y0Offset = 10;//a few extra px remove the line below the system name
         final int y0 = reference.y1 + y0Offset;
         final int x1 = reference.x1;
-        final int y1 = img.getHeight();
+//        final int y1 = img.getHeight();
+        final int y1 = img.cols();
         final Rectangle skipTabsPowerAndSystemName = new Rectangle(x0, y0, x1, y1);
-        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsPowerAndSystemName,
-                img
-        );
+//        final Optional<BufferedImage> maybeImg2 = ImageUtil.crop(skipTabsPowerAndSystemName, img);
+        final Optional<Mat> maybeImg2 = ImageUtil.crop(skipTabsPowerAndSystemName, img);
         if (!maybeImg2.isPresent()) {
             LOGGER.info("Error cropping control details rectangle: " + skipTabsPowerAndSystemName.toString() +
                     " for file: " + file.getAbsolutePath());
@@ -478,16 +433,17 @@ public class ImageApiImpl implements ImageApi {
                     -1, -1);
         }
 
-        final BufferedImage img2 = maybeImg2.get();
+//        final BufferedImage img2 = maybeImg2.get();
+        final Mat img2 = maybeImg2.get();
 
         saveImageAtStage(img2, file, "extract-control-data-details-area");
 
         final double horizontalLinesOnTopAndBottomOfCountersRectangles = 0.4;
-        final int minLength = (int) (img2.getWidth() * horizontalLinesOnTopAndBottomOfCountersRectangles);
-        final int maxLength = (int) (img2.getWidth() * 0.6);
-        final int threshold = 200;
-        final List<LineSegment> segments = detectHorizontalLines(img2, file, 1, threshold, 0, minLength, maxLength);
-        final List<LineSegment> merged = mergeHorizontalSegments(img2, file, segments, 3);
+//        final int minLength = (int) (img2.getWidth() * horizontalLinesOnTopAndBottomOfCountersRectangles);
+//        final int maxLength = (int) (img2.getWidth() * 0.6);
+        final int minLength = (int) (img2.cols() * horizontalLinesOnTopAndBottomOfCountersRectangles);
+        final int maxLength = (int) (img2.cols() * 0.6);
+        final List<LineSegment> merged = detectHorizontalLines(img2, file, minLength, maxLength);
         if (debug) {
             saveImageAtStage(ImageUtil.drawSegments(img2, merged), file, "extract-control-data-horizontal-lines");
         }
@@ -504,7 +460,8 @@ public class ImageApiImpl implements ImageApi {
         */
         final List<LineSegment> sortedFilteredSegments = merged
                 .stream()
-                .filter(s -> (s.x1 + 10) - img2.getWidth() <= 0)
+//                .filter(s -> (s.x1 + 10) - img2.getWidth() <= 0)
+                .filter(s -> (s.x1 + 10) - img2.cols() <= 0)
                 .sorted(
                         (s1, s2) -> {
                             final int res = s1.y0 - s2.y0;
@@ -528,7 +485,8 @@ public class ImageApiImpl implements ImageApi {
 
         final Rectangle costsRectangle = new Rectangle(
                 bottomFortificationSegment.x1, 0,
-                img2.getWidth(), topFortificationSegment.y1
+//                img2.getWidth(), topFortificationSegment.y1
+                img2.cols(), topFortificationSegment.y1
         );
         final Rectangle fortificationRectangle = new Rectangle(
                 0, topFortificationSegment.y0,
@@ -536,7 +494,8 @@ public class ImageApiImpl implements ImageApi {
         );
         final Rectangle underminingRectangle = new Rectangle(
                 bottomFortificationSegment.x1, topFortificationSegment.y0,
-                img2.getWidth(), bottomFortificationSegment.y0
+//                img2.getWidth(), bottomFortificationSegment.y0
+                img2.rows(), bottomFortificationSegment.y0
         );
 
         Integer upkeepFromLastCycle = -1;
@@ -544,12 +503,15 @@ public class ImageApiImpl implements ImageApi {
         Integer costIfFortified = -1;
         Integer costIfUndermined = -1;
         Integer baseIncome = -1;
-        final Optional<BufferedImage> maybeCostsImg = ImageUtil.crop(costsRectangle, img2);
+//        final Optional<BufferedImage> maybeCostsImg = ImageUtil.crop(costsRectangle, img2);
+        final Optional<Mat> maybeCostsImg = ImageUtil.crop(costsRectangle, img2);
         if (maybeCostsImg.isPresent()) {
 
-            final BufferedImage costsImg = maybeCostsImg.get();
+//            final BufferedImage costsImg = maybeCostsImg.get();
+            final Mat costsImg = maybeCostsImg.get();
 
-            final BufferedImage costsInputForOcr = scale(filterRedAndBinarize(costsImg, settings.ocr.filterRedChannelMin));
+            final BufferedImage costsInputForOcr = matToBufferedImage(scale(filterRedAndBinarize(costsImg, settings.ocr
+                    .filterRedChannelMin)));
 
             saveImageAtStage(costsInputForOcr, file, "extract-control-data-costs-ocr-input");
 
@@ -572,12 +534,15 @@ public class ImageApiImpl implements ImageApi {
 
         Integer fortifyTotal = -1;
         Integer fortifyTrigger = -1;
-        final Optional<BufferedImage> maybeFortificationImg = ImageUtil.crop(fortificationRectangle, img2);
+//        final Optional<BufferedImage> maybeFortificationImg = ImageUtil.crop(fortificationRectangle, img2);
+        final Optional<Mat> maybeFortificationImg = ImageUtil.crop(fortificationRectangle, img2);
         if (maybeFortificationImg.isPresent()) {
 
-            final BufferedImage fortificationImg = maybeFortificationImg.get();
+//            final BufferedImage fortificationImg = maybeFortificationImg.get();
+            final Mat fortificationImg = maybeFortificationImg.get();
 
-            final BufferedImage fortificationOcrInput = filterRedAndBinarize(fortificationImg, settings.ocr.filterRedChannelMin);
+            final BufferedImage fortificationOcrInput = matToBufferedImage(filterRedAndBinarize(fortificationImg, settings.ocr
+                    .filterRedChannelMin));
 
             saveImageAtStage(fortificationOcrInput, file, "extract-control-data-fortif-ocr-input");
 
@@ -600,14 +565,17 @@ public class ImageApiImpl implements ImageApi {
 
         Integer undermineTotal = -1;
         Integer undermineTrigger = -1;
-        final Optional<BufferedImage> maybeUnderminingImg = ImageUtil.crop(underminingRectangle, img2);
+//        final Optional<BufferedImage> maybeUnderminingImg = ImageUtil.crop(underminingRectangle, img2);
+        final Optional<Mat> maybeUnderminingImg = ImageUtil.crop(underminingRectangle, img2);
         if (maybeUnderminingImg.isPresent()) {
 
-            final BufferedImage underminingImg = maybeUnderminingImg.get();
+//            final BufferedImage underminingImg = maybeUnderminingImg.get();
+            final Mat underminingImg = maybeUnderminingImg.get();
 
             saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
 
-            final BufferedImage underminingOcrInput = filterRedAndBinarize(underminingImg, settings.ocr.filterRedChannelMin);
+            final BufferedImage underminingOcrInput = matToBufferedImage(filterRedAndBinarize(underminingImg, settings.ocr
+                    .filterRedChannelMin));
 
             saveImageAtStage(underminingOcrInput, file, "extract-control-data-undermine-ocr-input");
 
@@ -654,10 +622,30 @@ public class ImageApiImpl implements ImageApi {
 
         return new ControlDto(
                 input, sysNameRect, sysNameRect.getData(), costsReal, fortificationReal, undermineReal,
-                upkeepFromLastCycle, defaultUpkeepCost, baseIncome, costIfFortified, costIfUndermined, fortifyTotal,
+                upkeepFromLastCycle, defaultUpkeepCost, costIfFortified, costIfUndermined, baseIncome, fortifyTotal,
                 fortifyTrigger, undermineTotal, undermineTrigger
         );
     }
+
+    @Override
+    public SettingsDto getSettings() {
+        return this.settings;
+    }
+
+    @Override
+    public InputImage load(final File file) {
+        LOGGER.info("loading image:" + file.getAbsolutePath());
+
+        final Optional<Mat> maybeImg = ImageUtil.readImageFromFile(file);
+        if (!maybeImg.isPresent()) {
+            return new InputImage(file, null);
+        }
+
+        saveImageAtStage(maybeImg.get(), file, "loading");
+
+        return new InputImage(file, maybeImg.get());
+    }
+
 
     @Override
     public ClassifiedImage classify(final InputImage inputImage) {
@@ -691,7 +679,8 @@ public class ImageApiImpl implements ImageApi {
             return new PowerPlayDto(input, null, null);
         }
 
-        final BufferedImage img = input.getInputImage().getImage();
+//        final BufferedImage img = input.getInputImage().getImage();
+        final Mat img = input.getInputImage().getImage();
         final File file = input.getInputImage().getFile();
 
         LOGGER.info("Extraction start for file: " + file.getAbsolutePath());
@@ -735,19 +724,23 @@ public class ImageApiImpl implements ImageApi {
                 .map(this::extract)
                 .forEach(
                         ppDto -> {
-                            final Power power = ppDto.classifiedImage.getPower().getData();
-                            PowerReportDto powerReport = reportDto.powers.get(power);
-                            if (null == powerReport) {
-                                powerReport = new PowerReportDto();
+                            try {
+                                final Power power = ppDto.classifiedImage.getPower().getData();
+                                PowerReportDto powerReport = reportDto.powers.get(power);
+                                if (null == powerReport) {
+                                    powerReport = new PowerReportDto();
+                                }
+                                if (ppDto instanceof ControlDto) {
+                                    powerReport.control.add((ControlDto) ppDto);
+                                } else if (ppDto instanceof ExpansionDto) {
+                                    powerReport.expansion.add((ExpansionDto) ppDto);
+                                } else if (ppDto instanceof PreparationDto) {
+                                    powerReport.preparation.add((PreparationDto) ppDto);
+                                }
+                                reportDto.powers.put(power, powerReport);
+                            } catch (final NullPointerException e) {
+                                //FIXME
                             }
-                            if (ppDto instanceof ControlDto) {
-                                powerReport.control.add((ControlDto) ppDto);
-                            } else if (ppDto instanceof ExpansionDto) {
-                                powerReport.expansion.add((ExpansionDto) ppDto);
-                            } else if (ppDto instanceof PreparationDto) {
-                                powerReport.preparation.add((PreparationDto) ppDto);
-                            }
-                            reportDto.powers.put(power, powerReport);
                         }
                 );
 
@@ -764,28 +757,4 @@ public class ImageApiImpl implements ImageApi {
         return reportDto;
     }
 
-    public static void main(String[] args) {
-        try {
-            final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
-
-            api.extractDataFromImages(
-                    Arrays.asList(
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0050.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0058.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0080.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0013.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0000.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0024.bmp"),
-                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0059.bmp"),
-                            new File("data/control_images/1920x1080/winters/control/undermined-fortified.bmp"),
-                            new File("data/control_images/1920x1080/delaine/control/fortified-undermined.bmp"),
-                            new File("data/control_images/1920x1080/mahon/control/undermined-fortified.bmp"),
-                            new File("data/control_images/1920x1080/patreus/control/fortified-undermined.bmp")
-                    )
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

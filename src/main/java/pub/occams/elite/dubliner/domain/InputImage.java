@@ -1,14 +1,15 @@
 package pub.occams.elite.dubliner.domain;
 
-import java.awt.image.BufferedImage;
+import org.bytedeco.javacpp.opencv_core.Mat;
+
 import java.io.File;
 
 public class InputImage {
 
     private final File file;
-    private final BufferedImage image;
+    private final Mat image;
 
-    public InputImage(final File file, final BufferedImage image) {
+    public InputImage(final File file, final Mat image) {
         this.file = file;
         this.image = image;
     }
@@ -17,7 +18,7 @@ public class InputImage {
         return file;
     }
 
-    public BufferedImage getImage() {
+    public Mat getImage() {
         return image;
     }
 }

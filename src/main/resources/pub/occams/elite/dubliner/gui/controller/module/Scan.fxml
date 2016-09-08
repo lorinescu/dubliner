@@ -24,7 +24,7 @@
          <content>
               <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" nodeOrientation="LEFT_TO_RIGHT" spacing="20.0">
                   <children>
-                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Select a screenshot directory which will be scanned for images. Supported resolutions:  1920x1200, 1920x1080" wrapText="true" />
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Select a screenshot directory which will be scanned for images. Tested with resolutions:  1920x1200, 1920x1080 . Screenshots should be taken with  &quot;GUI effects&quot; disabled in the Graphics settings." wrapText="true" />
                       <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                           <children>
                               <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectScreenshotDirectory" prefHeight="35.0" prefWidth="112.0" text="Browse" />
