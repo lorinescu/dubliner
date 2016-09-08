@@ -1,10 +1,8 @@
 package pub.occams.elite.dubliner.util;
 
+import org.bytedeco.javacpp.indexer.UByteRawIndexer;
 import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_core.Mat;
-import org.bytedeco.javacpp.opencv_core.Rect;
-import org.bytedeco.javacpp.opencv_core.Scalar;
-import org.bytedeco.javacpp.opencv_core.Size;
+import org.bytedeco.javacpp.opencv_core.*;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.slf4j.Logger;
@@ -19,8 +17,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_SIMPLEX;
-import static org.bytedeco.javacpp.opencv_core.bitwise_not;
+import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
@@ -74,29 +71,24 @@ public class ImageUtil {
         return new Rectangle(r.x0 + widthDelta, r.y0 + heightDelta, r.x1 - widthDelta, r.y1 - heightDelta);
     }
 
-    public static BufferedImage filterRedAndBinarize(final BufferedImage image, final int minRed) {
-        final BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-        for (int x = 0; x < image.getWidth(); x++) {
-            for (int y = 0; y < image.getHeight(); y++) {
-                int rgb = image.getRGB(x, y);
-//                int alpha = rgb >> 24 & 0xff;
-                int red = rgb >> 16 & 0xff;
-//                int green = rgb >> 8 & 0xff;
-//                int blue = rgb & 0xff;
+    public static Mat filterRedAndBinarize(final Mat in, final int minRed) {
 
-                int color = 2147483647;
-                if (red > minRed) {
-                    color = 0;
+        final Mat out = new Mat(in.size(), CV_8UC1);
+
+        final UByteRawIndexer inIdx = in.createIndexer();
+        final UByteRawIndexer outIdx = out.createIndexer();
+
+        for (long x = 0; x < inIdx.cols(); x++) {
+            for (long y = 0; y < inIdx.rows(); y++) {
+                int r = inIdx.get(y, x, 2);
+                if (r > minRed) {
+                    outIdx.put(y, x, 0, 0);
+                } else {
+                    outIdx.put(y, x, 0, 255);
                 }
-                output.setRGB(x, y, color);
             }
         }
-        return output;
-    }
-
-    //dummy impl
-    public static Mat filterRedAndBinarize(final Mat image, final int minRed) {
-        return image;
+        return out;
     }
 
     public static Mat drawSegments(final Mat in, final List<LineSegment> segments) {

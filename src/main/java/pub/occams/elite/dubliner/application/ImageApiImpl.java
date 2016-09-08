@@ -502,8 +502,8 @@ public class ImageApiImpl implements ImageApi {
 
             final Mat fortificationImg = maybeFortificationImg.get();
 
-            final BufferedImage fortificationOcrInput = matToBufferedImage(filterRedAndBinarize(fortificationImg, settings.ocr
-                    .filterRedChannelMin));
+            final BufferedImage fortificationOcrInput = matToBufferedImage(scale(filterRedAndBinarize(fortificationImg,
+                    settings.ocr.filterRedChannelMin)));
 
             saveImageAtStage(fortificationOcrInput, file, "extract-control-data-fortif-ocr-input");
 
@@ -533,8 +533,8 @@ public class ImageApiImpl implements ImageApi {
 
             saveImageAtStage(underminingImg, file, "extract-control-data-undermine");
 
-            final BufferedImage underminingOcrInput = matToBufferedImage(filterRedAndBinarize(underminingImg, settings.ocr
-                    .filterRedChannelMin));
+            final BufferedImage underminingOcrInput = matToBufferedImage(scale(filterRedAndBinarize(underminingImg,
+                    settings.ocr.filterRedChannelMin)));
 
             saveImageAtStage(underminingOcrInput, file, "extract-control-data-undermine-ocr-input");
 
