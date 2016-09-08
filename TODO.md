@@ -1,8 +1,12 @@
 TODO:
 
 * (request) support for Preparation and Expansion tabs
-* (request) support other power's scraping
 * reduce memory footprint - currently all original screenshots and the extracted segments sit in memory. they should be loaded only when needed.
+* system names have a common OCR problem O is recognized as 0 almost every time
+* in a few cases the undermine trigger value is not extracted correctly as no space is "seen" between "TRIGGER" and the actual counter
+* show more information about data extraction progress - current image processed out of n, estimated duration, make a sound when done
+* scale down a bit the layout, on smaller screens not everything is visible
+* in the system ListView mark entries that have invalid data
 * use SuperCSV or similar for generating CSV files instead of joining strings with commas
 * have a (user) configurable worker pool for processing images in parallel
 * to keep the game's screenshot directory clean, move interesting images to a spool directory and process them there
