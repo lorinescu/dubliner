@@ -586,6 +586,220 @@ public class ImageApiImpl implements ImageApi {
         );
     }
 
+    private PreparationDto extractPreparation(final ClassifiedImage input,
+                                              final DataRectangle<String> sysNameRect) {
+
+        if (null == input.getInputImage() || ImageType.UNKNOWN == input.getType().getData()
+                || Power.UNKNOWN == input.getPower().getData() || Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+        }
+
+        final File file = input.getInputImage().getFile();
+        final Mat img = input.getInputImage().getImage();
+
+        LOGGER.info("Preparation data extraction start for file: " + file.getAbsolutePath());
+
+        final Rectangle reference = sysNameRect.getRectangle();
+
+        final int listX0 = 0;
+        final int listY0 = reference.y0;
+        final int listX1 = reference.x0;
+        final int listY1 = img.rows();
+        final Rectangle systemListLeftSide = new Rectangle(listX0, listY0, listX1, listY1);
+        final Optional<Mat> maybeSystemListImg = ImageUtil.crop(systemListLeftSide, img);
+        if (!maybeSystemListImg.isPresent()) {
+            LOGGER.info("Error cropping preparation system list rectangle: " + systemListLeftSide.toString() +
+                    " for file: " + file.getAbsolutePath());
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+        }
+
+        final Mat systemListImg = maybeSystemListImg.get();
+
+        saveImageAtStage(systemListImg, file, "extract-preparation-data-system-list-area");
+
+        final int minLength = systemListImg.cols() / 2;
+        final int maxLength = systemListImg.cols();
+        final List<LineSegment> systemListSegments = detectHorizontalLines(systemListImg, file, minLength, maxLength);
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawSegments(systemListImg, systemListSegments), file,
+                    "extract-preparation-data-system-list-horizontal-lines");
+        }
+
+        if (systemListSegments.size() < 4) {
+            LOGGER.info("Not enough segments to determine preparation system list rectangles for file:" + file
+                    .getAbsolutePath());
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+        }
+
+        final int toSpendX0 = systemListSegments.get(0).x0 + (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
+        final int toSpendY0 = systemListSegments.get(0).y0;
+        final int toSpendX1 = systemListSegments.get(0).x1;
+        final int toSpendY1 = systemListSegments.get(1).y1;
+
+        final Rectangle toSpendRect = new Rectangle(toSpendX0, toSpendY0, toSpendX1, toSpendY1);
+        final Optional<Mat> maybeToSpendImg = ImageUtil.crop(toSpendRect, systemListImg);
+        if (!maybeToSpendImg.isPresent()) {
+            LOGGER.info("Error cropping preparation system list to-spend rectangle: " + toSpendRect.toString() +
+                    " for file: " + file.getAbsolutePath());
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+        }
+
+        final Mat toSpendImg = maybeToSpendImg.get();
+
+        saveImageAtStage(toSpendImg, file, "extract-preparation-data-system-list-to-spend-area");
+
+        final BufferedImage toSpendOcrInputImage = matToBufferedImage(invert(scale(filterRedAndBinarize(toSpendImg, settings
+                .ocr.filterRedChannelMin))));
+
+        saveImageAtStage(toSpendOcrInputImage, file, "extract-preparation-data-system-list-to-spend-ocr-input");
+
+        final String toSpendStr = ocrRectangle(toSpendOcrInputImage);
+        LOGGER.info("To-spend preparation, raw OCR:[" + toSpendStr + "]");
+
+        String[] parts = corrector.correctGlobalOcrErrors(toSpendStr).split("\n| ");
+        String previous = "";
+        Integer toSpend = -1;
+        for (final String part : parts) {
+            if (Corrector.CC.equals(part)) {
+                toSpend = corrector.cleanPositiveInteger(previous);
+                break;
+            }
+            previous = part;
+        }
+        LOGGER.info("System to-spend preparation, corrected to: [" + toSpend + "]");
+
+        final int prepX0 = systemListSegments.get(2).x0;
+        final int prepY0 = systemListSegments.get(2).y0;
+        final int prepX1 = systemListSegments.get(2).x1 - (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
+        final int prepY1 = systemListSegments.get(3).y1;
+
+        final Rectangle prepAmountRect = new Rectangle(prepX0, prepY0, prepX1, prepY1);
+        final Optional<Mat> maybePrepAmountImg = ImageUtil.crop(prepAmountRect, systemListImg);
+        if (!maybePrepAmountImg.isPresent()) {
+            LOGGER.info("Error cropping preparation system list prep-amount rectangle: " + prepAmountRect.toString() +
+                    " for file: " + file.getAbsolutePath());
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, Power.UNKNOWN, -1, -1, -1);
+        }
+
+        final Mat prepAmountImg = maybePrepAmountImg.get();
+
+        saveImageAtStage(prepAmountImg, file, "extract-preparation-data-system-list-prep-amount-area");
+
+        final BufferedImage prepAmountOcrInputImage = matToBufferedImage(scale(prepAmountImg));
+
+        saveImageAtStage(prepAmountOcrInputImage, file, "extract-preparation-data-system-prep-amount-ocr-input");
+
+        final String prepAmountStr = ocrRectangle(prepAmountOcrInputImage);
+        LOGGER.info("Prep-amount preparation, raw OCR:[" + prepAmountStr + "]");
+
+        parts = corrector.correctGlobalOcrErrors(prepAmountStr).split("\n| ");
+        previous = "";
+        Integer prepAmount = -1;
+        for (final String part : parts) {
+            if (Corrector.PREP.equals(previous)) {
+                prepAmount = corrector.cleanPositiveInteger(part);
+                break;
+            }
+            previous = part;
+        }
+        LOGGER.info("Prep-amount preparation, corrected to: [" + prepAmount + "]");
+
+        final int costX0 = systemListSegments.get(2).x0 + (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
+        final int costY0 = systemListSegments.get(2).y0;
+        final int costX1 = systemListSegments.get(2).x1;
+        final int costY1 = systemListSegments.get(3).y1;
+
+        final Rectangle costRect = new Rectangle(costX0, costY0, costX1, costY1);
+        final Optional<Mat> maybeCostImg = ImageUtil.crop(costRect, systemListImg);
+        if (!maybeCostImg.isPresent()) {
+            LOGGER.info("Error cropping preparation system list cost rectangle: " + costRect.toString() +
+                    " for file: " + file.getAbsolutePath());
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, Power.UNKNOWN, -1, -1, prepAmount);
+        }
+
+        final Mat costImg = maybeCostImg.get();
+
+        saveImageAtStage(costImg, file, "extract-preparation-data-system-list-cost-area");
+
+        final BufferedImage costOcrInputImage = matToBufferedImage(scale(costImg));
+
+        saveImageAtStage(costOcrInputImage, file, "extract-preparation-data-system-cost-ocr-input");
+
+        final String costStr = ocrRectangle(costOcrInputImage);
+        LOGGER.info("Cost preparation, raw OCR:[" + costStr + "]");
+
+        parts = corrector.correctGlobalOcrErrors(costStr).split("\n| ");
+        previous = "";
+        Integer cost = -1;
+        for (final String part : parts) {
+            if (Corrector.CC.equals(part)) {
+                cost = corrector.cleanPositiveInteger(previous);
+                break;
+            }
+            previous = part;
+        }
+        LOGGER.info("Cost preparation, corrected to: [" + cost + "]");
+
+        final int detailsX0 = reference.x0 + (reference.x1 - reference.x0) / 3;
+        final int detailsY0 = reference.y1;
+        final int detailsX1 = reference.x1;
+        final int detailsY1 = reference.y0 + (img.rows() - reference.y0) / 2;
+        final Rectangle detailsArea = new Rectangle(detailsX0, detailsY0, detailsX1, detailsY1);
+        final Optional<Mat> maybeDetailsImg = ImageUtil.crop(detailsArea, img);
+        if (!maybeDetailsImg.isPresent()) {
+            LOGGER.info("Error cropping preparation details rectangle: " + detailsArea.toString() +
+                    " for file: " + file.getAbsolutePath());
+            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, Power.UNKNOWN, -1, cost,
+                    prepAmount);
+        }
+
+        final Mat detailsImg = maybeDetailsImg.get();
+
+        saveImageAtStage(detailsImg, file, "extract-preparation-data-details-area");
+
+
+        final BufferedImage prepDetailsOcrInputImage = matToBufferedImage(filterRedAndBinarize(invert
+                (detailsImg), settings.ocr.filterRedChannelMin));
+
+        saveImageAtStage(prepDetailsOcrInputImage, file, "extract-preparation-data-system-prep-details-ocr-input");
+
+        final String prepDetailsStr = ocrRectangle(prepDetailsOcrInputImage);
+        LOGGER.info("Prep-details preparation, raw OCR:[" + prepDetailsStr + "]");
+
+        //AISUNG DUVAL [24660]
+        final String[] lines = corrector.correctGlobalOcrErrors(prepDetailsStr).split("\n");
+        Integer highestContributingPowerAmount = -1;
+        Power highestContributingPower = Power.UNKNOWN;
+        for (final String line : lines) {
+            final String[] words = line.split(" ");
+
+            //firstName lastName [highest contribution]
+            if (words.length < 3) {
+                continue;
+            }
+
+            final String lastWord = words[words.length - 1];
+            if (!(lastWord.startsWith("[") && lastWord.endsWith("]"))) {
+                continue;
+            }
+
+            final Optional<Power> maybePower = corrector.powerFromString(line);
+
+            if (!maybePower.isPresent()) {
+                continue;
+            }
+
+            highestContributingPower = maybePower.get();
+            highestContributingPowerAmount = corrector.cleanPositiveInteger(lastWord.replace("[", "").replace("]", ""));
+            break;
+        }
+        LOGGER.info("System preparation highest contribution, corrected to: [" + highestContributingPower.getName() +
+                "," + highestContributingPowerAmount + "]");
+
+        return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, highestContributingPower, highestContributingPowerAmount,
+                cost, prepAmount);
+    }
+
     @Override
     public SettingsDto getSettings() {
         return this.settings;
@@ -659,7 +873,7 @@ public class ImageApiImpl implements ImageApi {
             case PP_EXPANSION:
                 return new ExpansionDto(input, sysNameRect, null);
             case PP_PREPARATION:
-                return new PreparationDto(input, sysNameRect, null);
+                return extractPreparation(input, sysNameRect);
             default:
                 break;
         }

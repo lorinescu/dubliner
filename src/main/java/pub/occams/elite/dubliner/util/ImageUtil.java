@@ -71,7 +71,8 @@ public class ImageUtil {
         return new Rectangle(r.x0 + widthDelta, r.y0 + heightDelta, r.x1 - widthDelta, r.y1 - heightDelta);
     }
 
-    public static Mat filterRedAndBinarize(final Mat in, final int minRed) {
+
+    private static Mat filterChannelAndBinarize(final Mat in, final int channel, final int min) {
 
         final Mat out = new Mat(in.size(), CV_8UC1);
 
@@ -80,8 +81,8 @@ public class ImageUtil {
 
         for (long x = 0; x < inIdx.cols(); x++) {
             for (long y = 0; y < inIdx.rows(); y++) {
-                int r = inIdx.get(y, x, 2);
-                if (r > minRed) {
+                int r = inIdx.get(y, x, channel);
+                if (r > min) {
                     outIdx.put(y, x, 0, 0);
                 } else {
                     outIdx.put(y, x, 0, 255);
@@ -89,6 +90,11 @@ public class ImageUtil {
             }
         }
         return out;
+    }
+
+    public static Mat filterRedAndBinarize(final Mat in, final int minRed) {
+
+        return filterChannelAndBinarize(in, 2, minRed);
     }
 
     public static Mat drawSegments(final Mat in, final List<LineSegment> segments) {
