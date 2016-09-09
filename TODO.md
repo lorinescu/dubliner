@@ -1,8 +1,9 @@
 TODO:
 
 * (request) support for Preparation and Expansion tabs
+* (request) dynamically reload settings and allow to manually re-trigger an individual image processing
 * reduce memory footprint - currently all original screenshots and the extracted segments sit in memory. they should be loaded only when needed.
-* system names have a common OCR problem O is recognized as 0 almost every time
+* system names have a common OCR problem - O is recognized as 0 almost every time
 * in a few cases the undermine trigger value is not extracted correctly as no space is "seen" between "TRIGGER" and the actual counter
 * show more information about data extraction progress - current image processed out of n, estimated duration, make a sound when done
 * scale down a bit the layout, on smaller screens not everything is visible
