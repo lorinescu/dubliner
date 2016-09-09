@@ -43,7 +43,7 @@ public class ImageApiImpl implements ImageApi {
 
     private final int HORIZONTAL_KERNEL_SIZE = 20;
     private final Mat ERODE_HLINES_K = getStructuringElement(MORPH_RECT, new Size(HORIZONTAL_KERNEL_SIZE, 1));
-    private final Mat DILATE_HLINES_K = getStructuringElement(MORPH_RECT, new Size(HORIZONTAL_KERNEL_SIZE, 2));
+    private final Mat DILATE_HLINES_K = getStructuringElement(MORPH_RECT, new Size(HORIZONTAL_KERNEL_SIZE, 3));
 
     private final SettingsDto settings;
     private final Corrector corrector;
@@ -126,7 +126,7 @@ public class ImageApiImpl implements ImageApi {
     }
 
     private List<LineSegment> detectHorizontalLines(final Mat image, final File file,
-                                                    final int minLength, final int maxLength) {
+                                                    final int minLength, final int maxLength, final int mergeThreshold) {
 
         final Mat dst = new Mat(image.size(), 1);
         Canny(image, dst, 400, 500);
@@ -187,9 +187,8 @@ public class ImageApiImpl implements ImageApi {
                     break;
                 }
             }
-            final int threshold = 5;
-            final int low = s.y0 - threshold;
-            final int high = s.y0 + threshold;
+            final int low = s.y0 - mergeThreshold;
+            final int high = s.y0 + mergeThreshold;
             if (null != foundRange) {
                 final int newLow = low < foundRange.low ? low : foundRange.low;
                 final int newHigh = high > foundRange.high ? high : foundRange.high;
@@ -210,6 +209,11 @@ public class ImageApiImpl implements ImageApi {
         saveImageAtStage(ImageUtil.drawSegments(image, sortedMergedSegments), file, "line-detected-sorted-merged");
 
         return sortedMergedSegments;
+    }
+
+    private List<LineSegment> detectHorizontalLines(final Mat image, final File file,
+                                                    final int minLength, final int maxLength) {
+        return detectHorizontalLines(image, file, minLength, maxLength, 10);
     }
 
     private DataRectangle<ImageType> detectSelectedTab(final InputImage inputImage) {
@@ -271,7 +275,7 @@ public class ImageApiImpl implements ImageApi {
         final double longSeparatorLinesLengthFactor = 0.8;
         final int minLength = (int) (img.cols() * longSeparatorLinesLengthFactor);
         final int maxLength = img.cols();
-        final List<LineSegment> merged = detectHorizontalLines(img, file, minLength, maxLength);
+        final List<LineSegment> merged = detectHorizontalLines(img, file, minLength, maxLength,20);
         if (debug) {
             saveImageAtStage(ImageUtil.drawSegments(img, merged), file, "detect-selected-power");
         }
@@ -427,7 +431,6 @@ public class ImageApiImpl implements ImageApi {
         */
         final List<LineSegment> sortedFilteredSegments = merged
                 .stream()
-//                .filter(s -> (s.x1 + 10) - img2.getWidth() <= 0)
                 .filter(s -> (s.x1 + 10) - img2.cols() <= 0)
                 .sorted(
                         (s1, s2) -> {
