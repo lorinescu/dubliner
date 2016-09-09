@@ -11,11 +11,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.application.ImageApi;
 import pub.occams.elite.dubliner.application.ImageApiImpl;
-import pub.occams.elite.dubliner.dto.ocr.ReportDto;
+import pub.occams.elite.dubliner.domain.powerplay.PowerPlayReport;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.gui.controller.MasterController;
-import pub.occams.elite.dubliner.gui.controller.module.HelpController;
 import pub.occams.elite.dubliner.gui.controller.module.ScanController;
 
 import java.io.File;
@@ -51,10 +50,8 @@ public class App extends Application {
         final ScanController scanController = loadFxml(ScanController.class, "Scan.fxml");
         scanController.postConstruct(imageApi);
 
-        final HelpController helpController = loadFxml(HelpController.class, "Help.fxml");
-
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
-        masterController.postConstruct(scanController, helpController);
+        masterController.postConstruct(scanController);
 
         final Scene scene = new Scene(masterController.getView());
         scene.getStylesheets().add(App.class.getResource("gui/style/custom.css").toExternalForm());
@@ -120,7 +117,7 @@ public class App extends Application {
             } else {
                 input.add(imageFileOrDir);
             }
-            final ReportDto dto = imageApi.extractDataFromImages(input);
+            final PowerPlayReport dto = imageApi.generateReport(input);
             App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(System.out, dto);
         } else {
             launch(args);

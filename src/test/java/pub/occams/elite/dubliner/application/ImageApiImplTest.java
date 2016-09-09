@@ -1,17 +1,13 @@
 package pub.occams.elite.dubliner.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.dto.ocr.ReportDto;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,10 +35,10 @@ public class ImageApiImplTest {
 //        final File referenceJson = new File(DATA_CONTROL_IMAGES + "reference.json");
 //        assertNotNull(referenceJson);
 //
-//        final String referenceData = JSON_MAPPER.writeValueAsString(JSON_MAPPER.readValue(referenceJson, ReportDto
+//        final String referenceData = JSON_MAPPER.writeValueAsString(JSON_MAPPER.readValue(referenceJson, PowerPlayReport
 //                .class));
 //
-//        final String extractedData = JSON_MAPPER.writeValueAsString(imageApi.extractDataFromImages(new ArrayList<>
+//        final String extractedData = JSON_MAPPER.writeValueAsString(imageApi.generateReport(new ArrayList<>
 //                (referenceFiles)));
 
 //        assertEquals(referenceData, extractedData);
@@ -53,7 +49,7 @@ public class ImageApiImplTest {
         try {
             final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
 
-            api.extractDataFromImages(
+            api.generateReport(
                     Arrays.asList(
                             //control
 //                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0019.bmp"),

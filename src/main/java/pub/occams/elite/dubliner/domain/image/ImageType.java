@@ -1,4 +1,4 @@
-package pub.occams.elite.dubliner.domain;
+package pub.occams.elite.dubliner.domain.image;
 
 public enum ImageType {
     PP_PREPARATION("preparation"),

@@ -1,5 +1,6 @@
-package pub.occams.elite.dubliner.domain;
+package pub.occams.elite.dubliner.domain.image;
 
+import pub.occams.elite.dubliner.domain.powerplay.Power;
 import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 
 public class ClassifiedImage {

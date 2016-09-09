@@ -18,17 +18,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.application.ImageApi;
-import pub.occams.elite.dubliner.domain.Power;
-import pub.occams.elite.dubliner.dto.ocr.ReportDto;
+import pub.occams.elite.dubliner.domain.powerplay.ControlSystem;
+import pub.occams.elite.dubliner.domain.powerplay.Power;
+import pub.occams.elite.dubliner.domain.powerplay.PowerPlayReport;
+import pub.occams.elite.dubliner.domain.powerplay.PreparationSystem;
+import pub.occams.elite.dubliner.gui.control.ValidTextField;
 import pub.occams.elite.dubliner.gui.controller.Controller;
-import pub.occams.elite.dubliner.gui.model.ControlModel;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 
 import static javafx.embed.swing.SwingFXUtils.toFXImage;
 import static pub.occams.elite.dubliner.util.ImageUtil.matToBufferedImage;
@@ -47,49 +50,81 @@ public class ScanController extends Controller<AnchorPane> {
 
     @FXML
     private ComboBox<Power> powersCombo;
+
+    /* Control tab */
     @FXML
-    private ListView<ControlModel> controlSystemList;
+    private ListView<ControlSystem> controlSystemList;
     @FXML
-    private TextField nameText;
+    private TextField controlNameText;
     @FXML
-    private ImageView nameImage;
+    private ImageView controlNameImage;
 
     @FXML
-    private TextField upkeepFromLastCycleText;
+    private TextField controlUpkeepFromLastCycleText;
     @FXML
-    private TextField defaultUpkeepCost;
+    private TextField controlDefaultUpkeepCostText;
     @FXML
-    private TextField fortifiedCostText;
+    private TextField controlFortifiedCostText;
     @FXML
-    private TextField underminedCostText;
+    private TextField controlUnderminedCostText;
     @FXML
-    private TextField baseIncomeText;
+    private TextField controlBaseIncomeText;
     @FXML
-    private ImageView costsImage;
+    private ImageView controlCostsImage;
 
     @FXML
-    private TextField fortifyTotalText;
+    private TextField controlFortifyTotalText;
     @FXML
-    private TextField fortifyTriggerText;
+    private TextField controlFortifyTriggerText;
     @FXML
-    private ImageView fortifyImage;
+    private ImageView controlFortifyImage;
 
     @FXML
-    private TextField undermineTotalText;
+    private TextField controlUndermineTotalText;
     @FXML
-    private TextField undermineTriggerText;
+    private TextField controlUndermineTriggerText;
     @FXML
-    private ImageView undermineImage;
+    private ImageView controlUndermineImage;
 
-    private final Map<Power, List<ControlModel>> report = new HashMap<>();
+    /* Preparation tab */
+    @FXML
+    private ValidTextField preparationNameText;
+    @FXML
+    private ListView<PreparationSystem> preparationSystemList;
+    @FXML
+    private ImageView preparationNameImage;
+    @FXML
+    private ValidTextField preparationCcToSpendThisCycleText;
+    @FXML
+    private ImageView preparationCcToSpendThisCycleImage;
+    @FXML
+    private ValidTextField preparationPrepText;
+    @FXML
+    private ImageView preparationPrepImage;
+    @FXML
+    private ValidTextField preparationCostText;
+    @FXML
+    private ImageView preparationCostImage;
+    @FXML
+    private ValidTextField preparationHighestContributionText;
+    @FXML
+    private ValidTextField preparationHighestContributingPowerText;
+    @FXML
+    private ImageView preparationContributionImage;
+
+
 
     private final ObservableList<Power> powerData = FXCollections.observableArrayList();
-    private final ObservableList<ControlModel> controlData = FXCollections.observableArrayList();
+    private final ObservableList<ControlSystem> controlData = FXCollections.observableArrayList();
+    private final ObservableList<PreparationSystem> preparationData = FXCollections.observableArrayList();
 
     private final ObjectProperty<File> imageDir = new SimpleObjectProperty<>(null);
+
+    private final ObjectProperty<PowerPlayReport> report = new SimpleObjectProperty<>();
+
     private ImageApi imageApi;
 
-    private Task<ReportDto> ocrTask;
+    private Task<PowerPlayReport> ocrTask;
 
     @FXML
     private void initialize() {
@@ -106,11 +141,23 @@ public class ScanController extends Controller<AnchorPane> {
 
         powersCombo.setItems(powerData);
         powersCombo.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> {
-                    if (null == newValue) {
+                (observable, oldValue, selectedPower) -> {
+                    if (null == selectedPower) {
                         return;
                     }
-                    controlData.setAll(report.get(newValue));
+                    preparationData.setAll(report.powers.get(selectedPower).preparation);
+                    controlData.setAll(report.powers.get(selectedPower).control);
+                }
+        );
+
+        preparationSystemList.setItems(preparationData);
+        preparationSystemList.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, preparationSystem) -> {
+                    if (null == preparationSystem) {
+                        resetPreparationDetails();
+                    } else {
+                        setPreparationDetails(preparationSystem);
+                    }
                 }
         );
 
@@ -118,14 +165,16 @@ public class ScanController extends Controller<AnchorPane> {
         controlSystemList.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, controlSystem) -> {
                     if (null == controlSystem) {
-                        resetDetails();
+                        resetControlDetails();
                     } else {
-                        setDetails(controlSystem);
+                        setControlDetails(controlSystem);
                     }
                 }
         );
+
         progressIndicator.setVisible(false);
     }
+
 
     @FXML
     private void selectScreenshotDirectory(ActionEvent actionEvent) {
@@ -149,11 +198,15 @@ public class ScanController extends Controller<AnchorPane> {
             return;
         }
 
-        resetDetails();
+        report = null;
 
-        report.clear();
+        resetControlDetails();
+        resetPreparationDetails();
+
+
         powerData.clear();
         powersCombo.setPromptText(null);
+        preparationData.clear();
         controlData.clear();
 
         progressIndicator.setVisible(true);
@@ -161,36 +214,53 @@ public class ScanController extends Controller<AnchorPane> {
         startScan();
     }
 
+    @FXML
+    private void copyPreparationCSV(ActionEvent actionEvent) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Name,CCtoSpendThisCycle,HighestContributingPower,HighestContributingPowerAmount,Cost,Prep");
+        preparationData.forEach(
+                s -> sb
+                        .append("\"").append(s.systemName).append("\",")
+                        .append("\"").append(s.ccToSpendThisCycle).append("\",")
+                        .append("\"").append(s.highestContributingPower).append("\",")
+                        .append("\"").append(s.highestContributingPowerAmount).append("\",")
+                        .append("\"").append(s.cost).append("\",")
+                        .append("\"").append(s.prep).append("\",")
+                        .append("\"").append(s.classifiedImage.getInputImage().getFile().getAbsolutePath()).append("\"\n")
+        );
+        final ClipboardContent content = new ClipboardContent();
+        content.putString(sb.toString());
+        Clipboard.getSystemClipboard().setContent(content);
+    }
 
     @FXML
-    private void copyCSV(final ActionEvent actionEvent) {
+    private void copyControlCSV(final ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name,UpkeepFromLastCycle,DefaultUpkeepCost, CostIfFortified,CostIfUndermined,BaseIncome," +
                 "FortifyTotal,FortifyTrigger," +
                 "UndermineTotal,UndermineTrigger,InputFile\n");
         controlData.forEach(
-                cs -> sb
-                        .append("\"").append(cs.systemName).append("\",")
-                        .append("\"").append(cs.upkeepFromLastCycle).append("\",")
-                        .append("\"").append(cs.defaultUpkeepCost).append("\",")
-                        .append("\"").append(cs.costIfFortified).append("\",")
-                        .append("\"").append(cs.costIfUndermined).append("\",")
-                        .append("\"").append(cs.baseIncome).append("\",")
-                        .append("\"").append(cs.fortifyTotal).append("\",")
-                        .append("\"").append(cs.fortifyTrigger).append("\",")
-                        .append("\"").append(cs.undermineTotal).append("\",")
-                        .append("\"").append(cs.undermineTrigger).append(",")
-                        .append("\"").append(cs.classifiedImage.getInputImage().getFile().getAbsolutePath()).append("\"\n")
+                s -> sb
+                        .append("\"").append(s.systemName).append("\",")
+                        .append("\"").append(s.upkeepFromLastCycle).append("\",")
+                        .append("\"").append(s.defaultUpkeepCost).append("\",")
+                        .append("\"").append(s.costIfFortified).append("\",")
+                        .append("\"").append(s.costIfUndermined).append("\",")
+                        .append("\"").append(s.baseIncome).append("\",")
+                        .append("\"").append(s.fortifyTotal).append("\",")
+                        .append("\"").append(s.fortifyTrigger).append("\",")
+                        .append("\"").append(s.undermineTotal).append("\",")
+                        .append("\"").append(s.undermineTrigger).append(",")
+                        .append("\"").append(s.classifiedImage.getInputImage().getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
         content.putString(sb.toString());
         Clipboard.getSystemClipboard().setContent(content);
-
     }
 
     @FXML
-    private void showOriginalImage(ActionEvent actionEvent) {
-        final ControlModel system = controlSystemList.getSelectionModel().getSelectedItem();
+    private void showOriginalControlImage(ActionEvent actionEvent) {
+        final ControlSystem system = controlSystemList.getSelectionModel().getSelectedItem();
         if (null == system) {
             return;
         }
@@ -206,31 +276,38 @@ public class ScanController extends Controller<AnchorPane> {
         alert.show();
     }
 
+    @FXML
+    private void showOriginalPreparationImage(ActionEvent actionEvent) {
+        final PreparationSystem system = preparationSystemList.getSelectionModel().getSelectedItem();
+        if (null == system) {
+            return;
+        }
+
+        final BufferedImage originalImage = matToBufferedImage(system.classifiedImage.getInputImage().getImage());
+        if (null == originalImage) {
+            return;
+        }
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.getDialogPane().setContent(new ImageView(toFXImage(originalImage, null)));
+        alert.setHeaderText(system.classifiedImage.getInputImage().getFile().getAbsolutePath());
+        alert.show();
+    }
+
+
     private void startScan() {
-        ocrTask = new Task<ReportDto>() {
+        ocrTask = new Task<PowerPlayReport>() {
             @Override
-            protected ReportDto call() throws Exception {
-                return imageApi.extractDataFromImages(
+            protected PowerPlayReport call() throws Exception {
+                return imageApi.generateReport(
                         getUnprocessedFilesFromDir(imageDir.get())
                 );
             }
         };
         ocrTask.setOnSucceeded(
                 event -> {
-                    final ReportDto dto = ocrTask.getValue();
-                    dto.powers.forEach(
-                            (power, powerReportDto) -> {
-                                report.put(
-                                        power,
-                                        powerReportDto.control
-                                                .stream()
-                                                .map(x -> ControlModel.fromDto(power, x))
-                                                .collect(Collectors.toList())
-                                );
-                                powerData.add(power);
-                            }
-                    );
-                    if (dto.powers.size() > 0) {
+                    report = ocrTask.getValue();
+                    if (report.powers.size() > 0) {
                         powersCombo.setPromptText("Powers found");
                     }
                     progressIndicator.setVisible(false);
@@ -238,12 +315,14 @@ public class ScanController extends Controller<AnchorPane> {
         );
         ocrTask.exceptionProperty().addListener(
                 (observable, oldValue, ex) -> {
+                    report = null;
                     progressIndicator.setVisible(false);
                     LOGGER.error("Error in ocrTask", ex);
                 }
         );
         ocrTask.setOnFailed(
                 event -> {
+                    report = null;
                     progressIndicator.setVisible(false);
                     LOGGER.error("OcrTask failed");
                 }
@@ -252,66 +331,133 @@ public class ScanController extends Controller<AnchorPane> {
         new Thread(this.ocrTask).start();
     }
 
-    private void setDetails(final ControlModel m) {
-        nameText.setText(m.systemName);
-        if (null != m.systemNameRectangle) {
-            nameImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.systemNameRectangle.getRectangle(), m.classifiedImage
+    private void resetPreparationDetails() {
+        preparationNameText.setText(null);
+        preparationNameImage.setImage(null);
+
+        preparationCcToSpendThisCycleText.setText(null);
+        preparationCcToSpendThisCycleImage.setImage(null);
+
+
+        preparationPrepText.setText(null);
+        preparationPrepImage.setImage(null);
+
+        preparationCostText.setText(null);
+        preparationCostImage.setImage(null);
+
+        preparationHighestContributingPowerText.setText(null);
+        preparationHighestContributionText.setText(null);
+
+        preparationCostText.setText(null);
+        preparationContributionImage.setImage(null);
+    }
+
+    private void setPreparationDetails(final PreparationSystem s) {
+        preparationNameText.setText(s.systemName);
+        if (null != s.systemNameRectangle) {
+            preparationNameImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.systemNameRectangle.getRectangle(), s.classifiedImage
                     .getInputImage().getImage()).get()), null));
         } else {
-            nameImage.setImage(null);
+            preparationNameImage.setImage(null);
         }
-        upkeepFromLastCycleText.setText(String.valueOf(m.upkeepFromLastCycle));
-        defaultUpkeepCost.setText(String.valueOf(m.defaultUpkeepCost));
-        fortifiedCostText.setText(String.valueOf(m.costIfFortified));
-        underminedCostText.setText(String.valueOf(m.costIfUndermined));
-        baseIncomeText.setText(String.valueOf(m.baseIncome));
 
-        if (null != m.costsRectangle) {
-            costsImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.costsRectangle.getRectangle(), m.classifiedImage
+        preparationCcToSpendThisCycleText.setText(String.valueOf(s.ccToSpendThisCycle));
+        if (null != s.ccToSpendThisCycleRectangle) {
+            preparationCcToSpendThisCycleImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.ccToSpendThisCycleRectangle.getRectangle(), s.classifiedImage
                     .getInputImage().getImage()).get()), null));
         } else {
-            costsImage.setImage(null);
+            preparationCcToSpendThisCycleImage.setImage(null);
         }
 
-        fortifyTotalText.setText(String.valueOf(m.fortifyTotal));
-        fortifyTriggerText.setText(String.valueOf(m.fortifyTrigger));
 
-        if (null != m.fortifyRectangle) {
-            fortifyImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.fortifyRectangle.getRectangle(), m.classifiedImage
+        preparationPrepText.setText(String.valueOf(s.prep));
+        if (null != s.prepRectangle) {
+            preparationPrepImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.prepRectangle.getRectangle(), s.classifiedImage
                     .getInputImage().getImage()).get()), null));
         } else {
-            fortifyImage.setImage(null);
+            preparationPrepImage.setImage(null);
         }
 
-        undermineTotalText.setText(String.valueOf(m.undermineTotal));
-        undermineTriggerText.setText(String.valueOf(m.undermineTrigger));
-        if (null != m.undermineRectangle) {
-            undermineImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(m.undermineRectangle.getRectangle(), m.classifiedImage
+        preparationCostText.setText(String.valueOf(s.cost));
+        if (null != s.costRectangle) {
+            preparationCostImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.costRectangle.getRectangle(), s.classifiedImage
                     .getInputImage().getImage()).get()), null));
         } else {
-            undermineImage.setImage(null);
+            preparationCostImage.setImage(null);
+        }
+
+        preparationHighestContributingPowerText.setText(s.highestContributingPower.getName());
+        preparationHighestContributionText.setText(String.valueOf(s.highestContributingPowerAmount));
+        preparationCostText.setText(String.valueOf(s.cost));
+        if (null != s.preparationHighestContributionRectangle) {
+            preparationContributionImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.preparationHighestContributionRectangle.getRectangle(), s.classifiedImage
+                    .getInputImage().getImage()).get()), null));
+        } else {
+            preparationContributionImage.setImage(null);
         }
     }
 
-    private void resetDetails() {
 
-        nameText.setText(null);
-        nameImage.setImage(null);
+    private void setControlDetails(final ControlSystem s) {
+        controlNameText.setText(s.systemName);
+        if (null != s.systemNameRectangle) {
+            controlNameImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.systemNameRectangle.getRectangle(), s.classifiedImage
+                    .getInputImage().getImage()).get()), null));
+        } else {
+            controlNameImage.setImage(null);
+        }
+        controlUpkeepFromLastCycleText.setText(String.valueOf(s.upkeepFromLastCycle));
+        controlDefaultUpkeepCostText.setText(String.valueOf(s.defaultUpkeepCost));
+        controlFortifiedCostText.setText(String.valueOf(s.costIfFortified));
+        controlUnderminedCostText.setText(String.valueOf(s.costIfUndermined));
+        controlBaseIncomeText.setText(String.valueOf(s.baseIncome));
 
-        upkeepFromLastCycleText.setText(null);
-        defaultUpkeepCost.setText(null);
-        baseIncomeText.setText(null);
-        fortifiedCostText.setText(null);
-        underminedCostText.setText(null);
-        costsImage.setImage(null);
+        if (null != s.costsRectangle) {
+            controlCostsImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.costsRectangle.getRectangle(), s.classifiedImage
+                    .getInputImage().getImage()).get()), null));
+        } else {
+            controlCostsImage.setImage(null);
+        }
 
-        fortifyTotalText.setText(null);
-        fortifyTriggerText.setText(null);
-        fortifyImage.setImage(null);
+        controlFortifyTotalText.setText(String.valueOf(s.fortifyTotal));
+        controlFortifyTriggerText.setText(String.valueOf(s.fortifyTrigger));
 
-        undermineTotalText.setText(null);
-        undermineTriggerText.setText(null);
-        undermineImage.setImage(null);
+        if (null != s.fortifyRectangle) {
+            controlFortifyImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.fortifyRectangle.getRectangle(), s.classifiedImage
+                    .getInputImage().getImage()).get()), null));
+        } else {
+            controlFortifyImage.setImage(null);
+        }
+
+        controlUndermineTotalText.setText(String.valueOf(s.undermineTotal));
+        controlUndermineTriggerText.setText(String.valueOf(s.undermineTrigger));
+        if (null != s.undermineRectangle) {
+            controlUndermineImage.setImage(toFXImage(matToBufferedImage(ImageUtil.crop(s.undermineRectangle.getRectangle(), s.classifiedImage
+                    .getInputImage().getImage()).get()), null));
+        } else {
+            controlUndermineImage.setImage(null);
+        }
+    }
+
+    private void resetControlDetails() {
+
+        controlNameText.setText(null);
+        controlNameImage.setImage(null);
+
+        controlUpkeepFromLastCycleText.setText(null);
+        controlDefaultUpkeepCostText.setText(null);
+        controlBaseIncomeText.setText(null);
+        controlFortifiedCostText.setText(null);
+        controlUnderminedCostText.setText(null);
+        controlCostsImage.setImage(null);
+
+        controlFortifyTotalText.setText(null);
+        controlFortifyTriggerText.setText(null);
+        controlFortifyImage.setImage(null);
+
+        controlUndermineTotalText.setText(null);
+        controlUndermineTriggerText.setText(null);
+        controlUndermineImage.setImage(null);
     }
 
     private List<File> getUnprocessedFilesFromDir(final File dataDir) {
@@ -329,5 +475,4 @@ public class ScanController extends Controller<AnchorPane> {
     public void postConstruct(final ImageApi imageApi) {
         this.imageApi = imageApi;
     }
-
 }

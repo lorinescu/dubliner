@@ -1,4 +1,4 @@
-package pub.occams.elite.dubliner.domain;
+package pub.occams.elite.dubliner.domain.powerplay;
 
 public enum Power {
     AISLING_DUVAL("AISLING DUVAL"),

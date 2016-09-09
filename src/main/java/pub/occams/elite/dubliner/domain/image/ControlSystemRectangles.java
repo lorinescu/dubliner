@@ -1,4 +1,4 @@
-package pub.occams.elite.dubliner.domain;
+package pub.occams.elite.dubliner.domain.image;
 
 import java.awt.image.BufferedImage;
 

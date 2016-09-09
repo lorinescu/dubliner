@@ -17,8 +17,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
-
 <?import pub.occams.elite.dubliner.gui.control.ValidTextField?>
+
 <AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
     <children>
       <ScrollPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -37,19 +37,136 @@
                   <ComboBox fx:id="powersCombo" prefHeight="35.0" prefWidth="168.0" />
                   <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
                     <tabs>
+                        <Tab closable="false" text="Preparation">
+                           <content>
+                              <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                 <children>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                       <children>
+                                          <Button mnemonicParsing="false" onAction="#copyPreparationCSV" prefHeight="35.0" prefWidth="112.0" text="Copy CSV" />
+                                          <ListView fx:id="preparationSystemList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="400.0" />
+                                       </children>
+                                    </VBox>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                       <children>
+                                          <Button mnemonicParsing="false" onAction="#showOriginalPreparationImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                          <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="System name" />
+                                                      <ValidTextField fx:id="preparationNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="preparationNameImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                             </children>
+                                          </HBox>
+                                          <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                                             <children>
+                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                  <columnConstraints>
+                                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                  </columnConstraints>
+                                                  <rowConstraints>
+                                                    <RowConstraints vgrow="SOMETIMES" />
+                                                  </rowConstraints>
+                                                   <children>
+                                                      <Label text="CC to spend this cycle" />
+                                                      <ValidTextField fx:id="preparationCcToSpendThisCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="preparationCcToSpendThisCycleImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                             </children>
+                                          </HBox>
+                                          <HBox layoutX="10.0" layoutY="407.0">
+                                             <children>
+                                                <GridPane hgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints />
+                                                      <RowConstraints />
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="Prep" GridPane.rowIndex="1" />
+                                                      <ValidTextField fx:id="preparationPrepText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="preparationPrepImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                             </children>
+                                          </HBox>
+                                          <HBox layoutX="10.0" layoutY="101.0">
+                                             <children>
+                                                <GridPane hgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="Cost" />
+                                                      <ValidTextField fx:id="preparationCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="preparationCostImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                             </children>
+                                          </HBox>
+                                          <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                                      <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="Highest contribution" GridPane.rowIndex="1" />
+                                                      <ValidTextField fx:id="preparationHighestContributionText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <Label layoutX="10.0" layoutY="20.0" text="Highest contributing power" />
+                                                      <ValidTextField fx:id="preparationHighestContributingPowerText" editable="false" layoutX="220.0" layoutY="10.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="preparationContributionImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                              </HBox>
+                           </content>
+                        </Tab>
                       <Tab closable="false" text="Control">
                            <content>
                               <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                  <children>
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                        <children>
-                                          <Button mnemonicParsing="false" onAction="#copyCSV" prefHeight="35.0" prefWidth="112.0" text="Copy CSV" />
+                                          <Button mnemonicParsing="false" onAction="#copyControlCSV" prefHeight="35.0" prefWidth="112.0" text="Copy CSV" />
                                           <ListView fx:id="controlSystemList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="400.0" />
                                        </children>
                                     </VBox>
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                        <children>
-                                          <Button mnemonicParsing="false" onAction="#showOriginalImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                          <Button mnemonicParsing="false" onAction="#showOriginalControlImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
                                           <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
                                                 <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
@@ -62,10 +179,10 @@
                                                   </rowConstraints>
                                                    <children>
                                                       <Label text="System name" />
-                                                      <ValidTextField fx:id="nameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <ValidTextField fx:id="controlNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
-                                                <ImageView fx:id="nameImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                                <ImageView fx:id="controlNameImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
                                              </children>
                                           </HBox>
                                           <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
@@ -87,15 +204,15 @@
                                                       <Label text="Cost if fortified" GridPane.rowIndex="2" />
                                                       <Label text="Cost if undermined" GridPane.rowIndex="3" />
                                                       <Label text="Base income" GridPane.rowIndex="4" />
-                                                      <ValidTextField fx:id="upkeepFromLastCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                      <ValidTextField fx:id="fortifiedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                      <ValidTextField fx:id="underminedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                                      <ValidTextField fx:id="baseIncomeText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                      <ValidTextField fx:id="controlUpkeepFromLastCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <ValidTextField fx:id="controlFortifiedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                      <ValidTextField fx:id="controlUnderminedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                      <ValidTextField fx:id="controlBaseIncomeText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                                       <Label layoutX="10.0" layoutY="20.0" text="Default upkeep cost" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="defaultUpkeepCost" editable="false" layoutX="220.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <ValidTextField fx:id="controlDefaultUpkeepCostText" editable="false" layoutX="220.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
-                                                <ImageView fx:id="costsImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                                <ImageView fx:id="controlCostsImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                                              </children>
                                           </HBox>
                                           <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
@@ -112,11 +229,11 @@
                                                    <children>
                                                       <Label layoutX="10.0" layoutY="197.0" text="Undermine total" />
                                                       <Label layoutX="10.0" layoutY="227.0" text="Undermine trigger" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="undermineTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                      <ValidTextField fx:id="undermineTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <ValidTextField fx:id="controlUndermineTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <ValidTextField fx:id="controlUndermineTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
-                                                <ImageView fx:id="undermineImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                                <ImageView fx:id="controlUndermineImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                                              </children>
                                           </HBox>
                                           <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
@@ -133,11 +250,11 @@
                                                    <children>
                                                       <Label text="Fortify total" />
                                                       <Label text="Fortify trigger" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="fortifyTotalText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                      <ValidTextField fx:id="fortifyTriggerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <ValidTextField fx:id="controlFortifyTotalText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <ValidTextField fx:id="controlFortifyTriggerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
-                                                <ImageView fx:id="fortifyImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                                <ImageView fx:id="controlFortifyImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                                              </children>
                                           </HBox>
                                        </children>

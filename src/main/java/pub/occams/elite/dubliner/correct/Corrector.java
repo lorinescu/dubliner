@@ -3,7 +3,7 @@ package pub.occams.elite.dubliner.correct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.domain.Power;
+import pub.occams.elite.dubliner.domain.powerplay.Power;
 import pub.occams.elite.dubliner.dto.settings.CorrectionsDto;
 
 import java.util.Map;

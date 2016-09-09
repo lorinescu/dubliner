@@ -1,14 +1,13 @@
 package pub.occams.elite.dubliner.application;
 
-import pub.occams.elite.dubliner.domain.ClassifiedImage;
-import pub.occams.elite.dubliner.domain.InputImage;
-import pub.occams.elite.dubliner.dto.ocr.PowerPlayDto;
-import pub.occams.elite.dubliner.dto.ocr.ReportDto;
+import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
+import pub.occams.elite.dubliner.domain.image.InputImage;
+import pub.occams.elite.dubliner.domain.powerplay.SystemBase;
+import pub.occams.elite.dubliner.domain.powerplay.PowerPlayReport;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 public interface ImageApi {
 
@@ -18,8 +17,8 @@ public interface ImageApi {
 
     ClassifiedImage classify(final InputImage file);
 
-    PowerPlayDto extract(final ClassifiedImage input);
+    SystemBase extract(final ClassifiedImage input);
 
-    ReportDto extractDataFromImages(final List<File> files);
+    PowerPlayReport generateReport(final List<File> files);
 
 }

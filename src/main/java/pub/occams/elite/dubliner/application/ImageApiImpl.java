@@ -9,15 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.correct.Corrector;
-import pub.occams.elite.dubliner.domain.ClassifiedImage;
-import pub.occams.elite.dubliner.domain.ImageType;
-import pub.occams.elite.dubliner.domain.InputImage;
-import pub.occams.elite.dubliner.domain.Power;
+import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
+import pub.occams.elite.dubliner.domain.image.ImageType;
+import pub.occams.elite.dubliner.domain.image.InputImage;
+import pub.occams.elite.dubliner.domain.powerplay.Power;
 import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
 import pub.occams.elite.dubliner.domain.geometry.Range;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
-import pub.occams.elite.dubliner.dto.ocr.*;
+import pub.occams.elite.dubliner.domain.powerplay.*;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imwrite;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static pub.occams.elite.dubliner.correct.Corrector.*;
-import static pub.occams.elite.dubliner.domain.ImageType.*;
+import static pub.occams.elite.dubliner.domain.image.ImageType.*;
 import static pub.occams.elite.dubliner.util.ImageUtil.*;
 
 public class ImageApiImpl implements ImageApi {
@@ -84,7 +84,10 @@ public class ImageApiImpl implements ImageApi {
             final String path = "out" + File.separator + imageName;
             final File dir = new File(path);
             if (!dir.exists()) {
-                dir.mkdirs();
+                if (dir.mkdirs()) {
+                    LOGGER.info("could not create directory:"+path);
+                    return;
+                }
             }
 
             final String filePath = dir + File.separator + cnt + "-" + stage;
@@ -378,12 +381,12 @@ public class ImageApiImpl implements ImageApi {
         return new DataRectangle<>(sysName, sysNameRectReal);
     }
 
-    private ControlDto extractControl(final ClassifiedImage input,
-                                      final DataRectangle<String> sysNameRect) {
+    private ControlSystem extractControl(final ClassifiedImage input,
+                                         final DataRectangle<String> sysNameRect) {
 
         if (null == input.getInputImage() || ImageType.UNKNOWN == input.getType().getData()
                 || Power.UNKNOWN == input.getPower().getData() || Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
-            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
+            return new ControlSystem(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
                     -1, -1);
         }
 
@@ -403,7 +406,7 @@ public class ImageApiImpl implements ImageApi {
         if (!maybeImg2.isPresent()) {
             LOGGER.info("Error cropping control details rectangle: " + skipTabsPowerAndSystemName.toString() +
                     " for file: " + file.getAbsolutePath());
-            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
+            return new ControlSystem(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
                     -1, -1);
         }
 
@@ -446,7 +449,7 @@ public class ImageApiImpl implements ImageApi {
         if (sortedFilteredSegments.size() < 2) {
             LOGGER.info("Not enough left side segments to determine control details rectangles for file: " +
                     file.getAbsolutePath());
-            return new ControlDto(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
+            return new ControlSystem(input, sysNameRect, sysNameRect.getData(), null, null, null, -1, -1, -1, -1, -1, -1, -1,
                     -1, -1);
         }
 
@@ -582,19 +585,20 @@ public class ImageApiImpl implements ImageApi {
                     "extract-data-rects");
         }
 
-        return new ControlDto(
+        return new ControlSystem(
                 input, sysNameRect, sysNameRect.getData(), costsReal, fortificationReal, undermineReal,
                 upkeepFromLastCycle, defaultUpkeepCost, costIfFortified, costIfUndermined, baseIncome, fortifyTotal,
                 fortifyTrigger, undermineTotal, undermineTrigger
         );
     }
 
-    private PreparationDto extractPreparation(final ClassifiedImage input,
-                                              final DataRectangle<String> sysNameRect) {
+    private PreparationSystem extractPreparation(final ClassifiedImage input,
+                                                 final DataRectangle<String> sysNameRect) {
 
         if (null == input.getInputImage() || ImageType.UNKNOWN == input.getType().getData()
                 || Power.UNKNOWN == input.getPower().getData() || Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null,
+                    -1, Power.UNKNOWN, -1, -1, -1);
         }
 
         final File file = input.getInputImage().getFile();
@@ -613,7 +617,8 @@ public class ImageApiImpl implements ImageApi {
         if (!maybeSystemListImg.isPresent()) {
             LOGGER.info("Error cropping preparation system list rectangle: " + systemListLeftSide.toString() +
                     " for file: " + file.getAbsolutePath());
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null,
+                    -1, Power.UNKNOWN, -1, -1, -1);
         }
 
         final Mat systemListImg = maybeSystemListImg.get();
@@ -631,7 +636,8 @@ public class ImageApiImpl implements ImageApi {
         if (systemListSegments.size() < 4) {
             LOGGER.info("Not enough segments to determine preparation system list rectangles for file:" + file
                     .getAbsolutePath());
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(),null, null,null,null,
+                    -1, Power.UNKNOWN, -1, -1, -1);
         }
 
         final int toSpendX0 = systemListSegments.get(0).x0 + (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
@@ -644,7 +650,8 @@ public class ImageApiImpl implements ImageApi {
         if (!maybeToSpendImg.isPresent()) {
             LOGGER.info("Error cropping preparation system list to-spend rectangle: " + toSpendRect.toString() +
                     " for file: " + file.getAbsolutePath());
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), -1, Power.UNKNOWN, -1, -1, -1);
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null,
+                    -1, Power.UNKNOWN, -1, -1, -1);
         }
 
         final Mat toSpendImg = maybeToSpendImg.get();
@@ -681,7 +688,7 @@ public class ImageApiImpl implements ImageApi {
         if (!maybePrepAmountImg.isPresent()) {
             LOGGER.info("Error cropping preparation system list prep-amount rectangle: " + prepAmountRect.toString() +
                     " for file: " + file.getAbsolutePath());
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, Power.UNKNOWN, -1, -1, -1);
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null, toSpend, Power.UNKNOWN, -1, -1, -1);
         }
 
         final Mat prepAmountImg = maybePrepAmountImg.get();
@@ -717,7 +724,7 @@ public class ImageApiImpl implements ImageApi {
         if (!maybeCostImg.isPresent()) {
             LOGGER.info("Error cropping preparation system list cost rectangle: " + costRect.toString() +
                     " for file: " + file.getAbsolutePath());
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, Power.UNKNOWN, -1, -1, prepAmount);
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null,toSpend, Power.UNKNOWN, -1, -1, prepAmount);
         }
 
         final Mat costImg = maybeCostImg.get();
@@ -752,7 +759,7 @@ public class ImageApiImpl implements ImageApi {
         if (!maybeDetailsImg.isPresent()) {
             LOGGER.info("Error cropping preparation details rectangle: " + detailsArea.toString() +
                     " for file: " + file.getAbsolutePath());
-            return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, Power.UNKNOWN, -1, cost,
+            return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null,toSpend, Power.UNKNOWN, -1, cost,
                     prepAmount);
         }
 
@@ -799,7 +806,7 @@ public class ImageApiImpl implements ImageApi {
         LOGGER.info("System preparation highest contribution, corrected to: [" + highestContributingPower.getName() +
                 "," + highestContributingPowerAmount + "]");
 
-        return new PreparationDto(input, sysNameRect, sysNameRect.getData(), toSpend, highestContributingPower, highestContributingPowerAmount,
+        return new PreparationSystem(input, sysNameRect, sysNameRect.getData(), null, null,null,null,toSpend, highestContributingPower, highestContributingPowerAmount,
                 cost, prepAmount);
     }
 
@@ -848,11 +855,11 @@ public class ImageApiImpl implements ImageApi {
     }
 
     @Override
-    public PowerPlayDto extract(final ClassifiedImage input) {
+    public SystemBase extract(final ClassifiedImage input) {
 
         if (null == input.getInputImage().getImage() || ImageType.UNKNOWN == input.getType().getData()
                 || Power.UNKNOWN == input.getPower().getData()) {
-            return new PowerPlayDto(input, null, null);
+            return new SystemBase(input, null, null);
         }
 
         final Mat img = input.getInputImage().getImage();
@@ -862,7 +869,7 @@ public class ImageApiImpl implements ImageApi {
 
         final DataRectangle<String> sysNameRect = extractSystemName(input);
         if (Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.getData())) {
-            return new PowerPlayDto(input, sysNameRect, UNKNOWN_SYSTEM);
+            return new SystemBase(input, sysNameRect, UNKNOWN_SYSTEM);
         }
 
         if (debug) {
@@ -874,7 +881,7 @@ public class ImageApiImpl implements ImageApi {
             case PP_CONTROL:
                 return extractControl(input, sysNameRect);
             case PP_EXPANSION:
-                return new ExpansionDto(input, sysNameRect, null);
+                return new ExpansionSystem(input, sysNameRect, null);
             case PP_PREPARATION:
                 return extractPreparation(input, sysNameRect);
             default:
@@ -882,37 +889,39 @@ public class ImageApiImpl implements ImageApi {
         }
         LOGGER.info("Extraction end for file: " + file.getAbsolutePath());
 
-        return new PowerPlayDto(input, sysNameRect, null);
+        return new SystemBase(input, sysNameRect, null);
     }
 
     @Override
-    public ReportDto extractDataFromImages(final List<File> files) {
+    public PowerPlayReport generateReport(final List<File> files) {
 
         final long startMillis = System.currentTimeMillis();
 
-        final ReportDto reportDto = new ReportDto();
-        reportDto.powers = new HashMap<>();
+        final PowerPlayReport powerPlayReport = new PowerPlayReport();
+        powerPlayReport.powers = new HashMap<>();
         files
                 .stream()
                 .map(this::load)
                 .map(this::classify)
                 .map(this::extract)
                 .forEach(
-                        ppDto -> {
+                        system -> {
+                            //gc friendly
+                            system.classifiedImage.getInputImage().nullImage();
                             try {
-                                final Power power = ppDto.classifiedImage.getPower().getData();
-                                PowerReportDto powerReport = reportDto.powers.get(power);
+                                final Power power = system.classifiedImage.getPower().getData();
+                                PowerReport powerReport = powerPlayReport.powers.get(power);
                                 if (null == powerReport) {
-                                    powerReport = new PowerReportDto();
+                                    powerReport = new PowerReport();
                                 }
-                                if (ppDto instanceof ControlDto) {
-                                    powerReport.control.add((ControlDto) ppDto);
-                                } else if (ppDto instanceof ExpansionDto) {
-                                    powerReport.expansion.add((ExpansionDto) ppDto);
-                                } else if (ppDto instanceof PreparationDto) {
-                                    powerReport.preparation.add((PreparationDto) ppDto);
+                                if (system instanceof ControlSystem) {
+                                    powerReport.control.add((ControlSystem) system);
+                                } else if (system instanceof ExpansionSystem) {
+                                    powerReport.expansion.add((ExpansionSystem) system);
+                                } else if (system instanceof PreparationSystem) {
+                                    powerReport.preparation.add((PreparationSystem) system);
                                 }
-                                reportDto.powers.put(power, powerReport);
+                                powerPlayReport.powers.put(power, powerReport);
                             } catch (final NullPointerException e) {
                                 //FIXME
                             }
@@ -920,7 +929,7 @@ public class ImageApiImpl implements ImageApi {
                 );
 
         try {
-            LOGGER.info("Data extracted:" + App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(reportDto));
+            LOGGER.info("Data extracted:" + App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(powerPlayReport));
         } catch (IOException e) {
             LOGGER.error("Error in json conversion of extraction results", e);
         }
@@ -929,7 +938,7 @@ public class ImageApiImpl implements ImageApi {
 
         LOGGER.info("Finished, duration:" + (endMillis - startMillis) + "ms");
 
-        return reportDto;
+        return powerPlayReport;
     }
 
 }
