@@ -1,7 +1,7 @@
 package pub.occams.elite.dubliner.domain.powerplay;
 
-import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
+import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 
 public class PreparationSystem extends SystemBase {
 
@@ -32,5 +32,15 @@ public class PreparationSystem extends SystemBase {
         this.highestContributingPowerAmount = highestContributingPowerAmount;
         this.cost = cost;
         this.prep = prep;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ","
+                + ccToSpendThisCycle + ","
+                + highestContributingPower + ","
+                + highestContributingPowerAmount + ","
+                + cost + ","
+                + prep;
     }
 }

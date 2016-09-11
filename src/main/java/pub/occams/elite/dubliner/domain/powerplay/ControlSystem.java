@@ -46,4 +46,18 @@ public class ControlSystem extends SystemBase {
         this.undermineTotal = undermineTotal;
         this.undermineTrigger = undermineTrigger;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + "," +
+                upkeepFromLastCycle + "," +
+                defaultUpkeepCost + "," +
+                costIfFortified + "," +
+                costIfUndermined + "," +
+                baseIncome + "," +
+                fortifyTotal + "," +
+                fortifyTrigger + "," +
+                undermineTotal + "," +
+                undermineTrigger;
+    }
 }

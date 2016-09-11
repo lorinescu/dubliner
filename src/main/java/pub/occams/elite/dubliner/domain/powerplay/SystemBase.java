@@ -14,4 +14,10 @@ public class SystemBase {
         this.systemNameRectangle = systemNameRectangle;
         this.systemName = systemName;
     }
+
+    @Override
+    public String toString() {
+        return classifiedImage.getPower().getData().getName() + ","
+                + systemName;
+    }
 }

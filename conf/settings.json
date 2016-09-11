@@ -31,11 +31,17 @@
   "corrections": {
     "powerName": {
       "AISUNG DUVAL" : "AISLING DUVAL",
+      "AISLWG DUVAL" : "AISLING DUVAL",
+      "ARCHON DELAWE" : "ARCHON DELAINE",
       "E D M U N D MAH0N": "EDMUND MAHON",
       "EDMUND MAH0N": "EDMUND MAHON",
+      "FEUCYA WWTERS" : "FELICIA WINTERS",
       "LI Y0NG-RUI": "LI YONG-RUI",
+      "LI Y0NG-RUY" : "LI YONG-RUI",
+      "LI YONG-RUY" : "LI YONG-RUI",
       "ARCH0N DELAINE" : "ARCHON DELAINE",
       "ZEMINA T0RVAL" : "ZEMINA TORVAL",
+      "ZEMWA TORVAL" : "ZEMINA TORVAL",
       "DENT0N PATREUS" : "DENTON PATREUS",
       "ZACHARY HUDS0N" : "ZACHARY HUDSON"
     },
@@ -118,6 +124,7 @@
       "B0NIT0U": "BONITOU",
       "B0NITOU": "BONITOU",
       "B0REAS": "BOREAS",
+      "BAR0TRITES" : "BAROTRITES",
       "BD+03 353 1A": "BD+03 3531A",
       "BD+42 39 1 7" : "BD+42 3917",
       "BD+65 696": "BD+66 696",
@@ -417,6 +424,7 @@
       "ZELAN0" : "ZELANO",
       "ZHA0" : "ZHAO",
       "ZVAITHH0GG" : "ZVAITHHOGG",
+      "YAQU E" : "YAQUE",
       "YEM0TEPA" : "YEMOTEPA",
       "YUR0R" : "YUROR"
     }
