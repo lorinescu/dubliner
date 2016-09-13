@@ -2,6 +2,7 @@ TODO:
 
 * (request) dynamically reload settings and allow to manually re-trigger an individual image processing
 * (request) use EDDB populated systems data in system name corrections
+* (request) traffic report, bounty hounter report, crime report and top 5 bounties
 * system names have a common OCR problem - O is recognized as 0 almost every time
 * in a few cases the undermine trigger value is not extracted correctly as no space is "seen" between "TRIGGER" and the actual counter
 * Control and Expansion screen data extraction flows are similar, they could be merged somehow

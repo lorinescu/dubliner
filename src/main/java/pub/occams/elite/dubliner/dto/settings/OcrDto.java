@@ -7,8 +7,8 @@ public class OcrDto {
     @JsonProperty("filterRedChannelMin")
     public Integer filterRedChannelMin;
 
-    @JsonProperty("tesseractForSystemNames")
-    public TesseractSettingsDto tesseractForSystemNames;
+    @JsonProperty("tesseractForNumbersAndLetters")
+    public TesseractSettingsDto tesseractForNumbersAndLetters;
 
 
     @JsonProperty("tesseractForNumbers")

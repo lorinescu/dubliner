@@ -17,7 +17,7 @@ import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 import pub.occams.elite.dubliner.domain.image.ImageType;
 import pub.occams.elite.dubliner.domain.image.InputImage;
 import pub.occams.elite.dubliner.domain.powerplay.*;
-import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemsDto;
+import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -52,7 +52,7 @@ public class ImageApiImpl implements ImageApi {
     private final Tesseract tessForNumbers = new Tesseract();
     private final Tesseract tessForNames = new Tesseract();
 
-    public ImageApiImpl(final SettingsDto settings, PopulatedSystemsDto eddbSystems, final boolean dbg) {
+    public ImageApiImpl(final SettingsDto settings, List<PopulatedSystemDto> eddbSystems, final boolean dbg) {
         this.settings = settings;
         this.corrector = Corrector.buildCorrector(settings, eddbSystems);
         this.debug = dbg;
@@ -62,9 +62,9 @@ public class ImageApiImpl implements ImageApi {
         settings.ocr.tesseractForNumbers.variables.forEach(tessForNumbers::setTessVariable);
         settings.ocr.tesseractForNumbers.variables.forEach(tessForNumbers::setTessVariable);
 
-        tessForNames.setDatapath(settings.ocr.tesseractForSystemNames.dataPath);
-        tessForNames.setLanguage(settings.ocr.tesseractForSystemNames.language);
-        settings.ocr.tesseractForSystemNames.variables.forEach(tessForNames::setTessVariable);
+        tessForNames.setDatapath(settings.ocr.tesseractForNumbersAndLetters.dataPath);
+        tessForNames.setLanguage(settings.ocr.tesseractForNumbersAndLetters.language);
+        settings.ocr.tesseractForNumbersAndLetters.variables.forEach(tessForNames::setTessVariable);
     }
 
     private void saveImage(final String path, final Object image) throws IOException {
@@ -417,7 +417,7 @@ public class ImageApiImpl implements ImageApi {
 
         final int minLength = systemListImg.cols() / 2;
         final int maxLength = systemListImg.cols();
-        final List<LineSegment> systemListSegments = detectHorizontalLines(systemListImg, file, minLength, maxLength);
+        final List<LineSegment> systemListSegments = detectHorizontalLines(systemListImg, file, minLength, maxLength, 5);
         if (debug) {
             saveImageAtStage(ImageUtil.drawSegments(systemListImg, systemListSegments), file,
                     "extract-preparation-data-system-list-horizontal-lines");
@@ -431,7 +431,8 @@ public class ImageApiImpl implements ImageApi {
         }
 
         final int toSpendX0 = systemListSegments.get(0).x0 + (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
-        final int toSpendY0 = systemListSegments.get(0).y0;
+        final int toSpendY0Offset = 5; //shave top line
+        final int toSpendY0 = systemListSegments.get(0).y0 + toSpendY0Offset;
         final int toSpendX1 = systemListSegments.get(0).x1;
         final int toSpendY1 = systemListSegments.get(1).y1;
 
@@ -463,6 +464,9 @@ public class ImageApiImpl implements ImageApi {
             if (Corrector.CC.equals(part)) {
                 toSpend = corrector.cleanPositiveInteger(previous);
                 break;
+            } else if (part.contains(Corrector.CC)) {
+                toSpend = corrector.cleanPositiveInteger(part);
+                break;
             }
             previous = part;
         }
@@ -476,9 +480,9 @@ public class ImageApiImpl implements ImageApi {
 
         LOGGER.info("System to-spend preparation, corrected to: [" + toSpend + "]");
 
-        final int prepX0 = systemListSegments.get(2).x0;
+        final int prepX0 = systemListSegments.get(0).x0;
         final int prepY0 = systemListSegments.get(2).y0;
-        final int prepX1 = systemListSegments.get(2).x1 - (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
+        final int prepX1 = systemListSegments.get(0).x1 - (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
         final int prepY1 = systemListSegments.get(3).y1;
 
         final Rectangle prepAmountRect = new Rectangle(prepX0, prepY0, prepX1, prepY1);
@@ -511,6 +515,15 @@ public class ImageApiImpl implements ImageApi {
             }
             previous = part;
         }
+        //make a second pass but awesome there's no space between PREP and the amount
+        if (-1 == prepAmount) {
+            for (final String part : parts) {
+                if (part.contains(Corrector.PREP)) {
+                    prepAmount = corrector.cleanPositiveInteger(part);
+                    break;
+                }
+            }
+        }
 
         final int prepRealX0 = listX0 + prepX0;
         final int prepRealY0 = listY0 + prepY0;
@@ -523,7 +536,8 @@ public class ImageApiImpl implements ImageApi {
         LOGGER.info("Prep-amount preparation, corrected to: [" + prepAmount + "]");
 
         final int costX0 = systemListSegments.get(2).x0 + (systemListSegments.get(0).x1 - systemListSegments.get(0).x0) / 2;
-        final int costY0 = systemListSegments.get(2).y0;
+        final int costY0Offset = 5; //shave the top line
+        final int costY0 = systemListSegments.get(2).y0 + costY0Offset;
         final int costX1 = systemListSegments.get(2).x1;
         final int costY1 = systemListSegments.get(3).y1;
 
@@ -553,6 +567,10 @@ public class ImageApiImpl implements ImageApi {
         for (final String part : parts) {
             if (Corrector.CC.equals(part)) {
                 cost = corrector.cleanPositiveInteger(previous);
+                break;
+                //sometime space is not detected between the prep value and "CC"
+            } else if (part.contains(Corrector.CC)) {
+                cost = corrector.cleanPositiveInteger(part);
                 break;
             }
             previous = part;
@@ -586,7 +604,6 @@ public class ImageApiImpl implements ImageApi {
 
         saveImageAtStage(detailsImg, file, "extract-preparation-data-details-area");
 
-
         final BufferedImage prepDetailsOcrInputImage = matToBufferedImage(filterRedAndBinarize(invert
                 (detailsImg), settings.ocr.filterRedChannelMin));
 
@@ -600,6 +617,11 @@ public class ImageApiImpl implements ImageApi {
         Integer highestContributingPowerAmount = -1;
         Power highestContributingPower = Power.UNKNOWN;
         for (final String line : lines) {
+            final Optional<Power> mayberPower = corrector.powerFromString(line);
+            if (!mayberPower.isPresent()) {
+                continue;
+            }
+            highestContributingPower = mayberPower.get();
             final String[] words = line.split(" ");
 
             //firstName lastName [highest contribution]
@@ -611,14 +633,6 @@ public class ImageApiImpl implements ImageApi {
             if (!(lastWord.startsWith("[") && lastWord.endsWith("]"))) {
                 continue;
             }
-
-            final Optional<Power> maybePower = corrector.powerFromString(line);
-
-            if (!maybePower.isPresent()) {
-                continue;
-            }
-
-            highestContributingPower = maybePower.get();
             highestContributingPowerAmount = corrector.cleanPositiveInteger(lastWord.replace("[", "").replace("]", ""));
             break;
         }

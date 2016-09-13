@@ -49,6 +49,7 @@
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                        <children>
                                           <Button mnemonicParsing="false" onAction="#showOriginalPreparationImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                          <Label text="(click on text fields to see raw OCR output)" />
                                           <HBox layoutX="10.0" layoutY="55.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
                                                 <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
@@ -184,6 +185,7 @@
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                        <children>
                                           <Button mnemonicParsing="false" onAction="#showOriginalExpansionImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                          <Label text="(click on text fields to see raw OCR output)" />
                                           <HBox layoutX="10.0" layoutY="55.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
                                                 <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
@@ -302,6 +304,7 @@
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                        <children>
                                           <Button mnemonicParsing="false" onAction="#showOriginalControlImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                          <Label text="(click on text fields to see raw OCR output)" />
                                           <HBox layoutX="10.0" layoutY="55.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
                                                 <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">

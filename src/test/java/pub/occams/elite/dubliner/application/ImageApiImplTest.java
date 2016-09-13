@@ -20,7 +20,7 @@ public class ImageApiImplTest {
 
     @Before
     public void setUp() throws Exception {
-        imageApi = new ImageApiImpl(App.loadSettings(), false);
+        imageApi = new ImageApiImpl(App.loadSettings(), App.loadEddbSystems(), false);
     }
 
     @Test
@@ -47,7 +47,7 @@ public class ImageApiImplTest {
     //playground
     public static void main(String[] args) {
         try {
-            final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), true);
+            final ImageApiImpl api = new ImageApiImpl(App.loadSettings(), App.loadEddbSystems(), true);
 
             api.generateReport(
                     Arrays.asList(

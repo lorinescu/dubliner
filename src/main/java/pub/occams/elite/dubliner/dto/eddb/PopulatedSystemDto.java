@@ -6,13 +6,13 @@ public class PopulatedSystemDto {
     @JsonProperty("allegiance")
     public String allegiance;
     @JsonProperty("edsm_id")
-    public Integer edsmId;
+    public Long edsmId;
     @JsonProperty("faction")
     public String faction;
     @JsonProperty("government")
     public String government;
     @JsonProperty("id")
-    public Integer id;
+    public Long id;
     @JsonProperty("is_populated")
     public Integer isPopulated;
     @JsonProperty("name")
@@ -20,7 +20,7 @@ public class PopulatedSystemDto {
     @JsonProperty("needs_permit")
     public Integer needsPermit;
     @JsonProperty("population")
-    public Integer population;
+    public Long population;
     @JsonProperty("power")
     public Object power;
     @JsonProperty("power_state")

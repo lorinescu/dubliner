@@ -6,6 +6,7 @@
       "language": "eng1",
       "variables": {
         "tessedit_char_whitelist": "-0123456789CABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "tessedit_char_blacklist" : "abcdefghijklmnopqrstuvwxyz",
         "classify_enable_adaptive_matcher ": "F",
         "classify_enable_learning": "F",
         "load_system_dawg": "F",
@@ -15,16 +16,18 @@
         "load_number_dawg": "F",
         "load_fixed_length_dawgs": "F",
         "load_bigram_dawg": "F",
-        "tosp_min_sane_kn_sp" : "6"
+        "tosp_min_sane_kn_sp" : "4"
       }
     },
-    "tesseractForSystemNames": {
+    "tesseractForNumbersAndLetters": {
       "dataPath": "data/training/numbers_eurocaps",
       "language": "eng1",
       "variables": {
         "load_system_dawg": "F",
         "load_freq_dawg": "F",
-        "tessedit_char_whitelist": "-+.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ[]"
+        "tessedit_char_whitelist": "-+.'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ[]()",
+        "tessedit_char_blacklist" : "abcdefghijklmnopqrstuvwxyz",
+        "tosp_min_sane_kn_sp" : "4"
       }
     }
   },
@@ -32,13 +35,20 @@
     "powerName": {
       "AISUNG DUVAL" : "AISLING DUVAL",
       "AISLWG DUVAL" : "AISLING DUVAL",
+      "AYSUNG DUVAL" : "AISLING DUVAL",
+      "A. LAWGNY-DUVAL" : "AISLING DUVAL",
       "ARCHON DELAWE" : "ARCHON DELAINE",
       "E D M U N D MAH0N": "EDMUND MAHON",
       "EDMUND MAH0N": "EDMUND MAHON",
       "FEUCYA WWTERS" : "FELICIA WINTERS",
+      "FEUC]A WWTERS" : "FELICIA WINTERS",
+      "FEUC]A WINTERS" : "FELICIA WINTERS",
       "LI Y0NG-RUI": "LI YONG-RUI",
       "LI Y0NG-RUY" : "LI YONG-RUI",
       "LI YONG-RUY" : "LI YONG-RUI",
+      "LIYONG-RUH" : "LI YONG-RUI",
+      "LIY0NG-RUH" : "LI YONG-RUI",
+      "LIY0NG-RUY" : "LI YONG-RUI",
       "ARCH0N DELAINE" : "ARCHON DELAINE",
       "ZEMINA T0RVAL" : "ZEMINA TORVAL",
       "ZEMWA TORVAL" : "ZEMINA TORVAL",
@@ -121,6 +131,7 @@
       "ATFER0" : "ATFERO",
       "ATR0P0S" : "ATROPOS",
       "ATROP0S" : "ATROPOS",
+      "B0GA" : "BOGA",
       "B0NIT0U": "BONITOU",
       "B0NITOU": "BONITOU",
       "B0REAS": "BOREAS",

@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.powerplay.Power;
-import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemsDto;
+import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import java.util.*;
@@ -48,6 +48,9 @@ public class Corrector {
         }
         distance += Math.abs(aLen - bLen);
 
+        if (a.contains("KAWIL0CIDI") && b.contains("KAWILOCIDI")) {
+            System.out.println("DISTANCE = " + distance);
+        }
         return distance;
     }
 
@@ -63,7 +66,7 @@ public class Corrector {
         final List<String> possibleNames =
                 knownSystemNames
                         .stream()
-                        .filter(name -> editDistance(nameWithoutTurmoil, str) < minSimilarityByEditDistance)
+                        .filter(name -> editDistance(nameWithoutTurmoil, name) <= minSimilarityByEditDistance)
                         .collect(Collectors.toList());
         //if we get more than 1 system -> unreliable result
         if (possibleNames.size() == 1) {
@@ -100,7 +103,8 @@ public class Corrector {
             return Integer.parseInt(
                     str
                             .trim()
-                            .replace("CC", "")
+                            .replace(CC, "")
+                            .replace(PREP, "")
                             .replace("O", "0")
                             .replace("'", "")
                             .replace(" ", "")
@@ -122,20 +126,21 @@ public class Corrector {
                 .toUpperCase()
                 .replace("\n\n", "\n")
                 .replace("T0TAL", TOTAL)
-                .replace("TDTAL", TOTAL);
+                .replace("TDTAL", TOTAL)
+                .replace("TRDGGER", TRIGGER);
     }
 
-    public static Corrector buildCorrector(final SettingsDto settings, final PopulatedSystemsDto populatedSystems) {
+    public static Corrector buildCorrector(final SettingsDto settings, final List<PopulatedSystemDto> populatedSystems) {
         final Map<String, String> systems = new HashMap<>();
         settings.corrections.systemName.forEach(systems::put);
 
         final Map<String, String> powers = new HashMap<>();
         settings.corrections.powerName.forEach(powers::put);
 
-        final Set<String> knownSystemNames = populatedSystems.systems.
+        final Set<String> knownSystemNames = populatedSystems.
                 stream()
                 .filter(sys -> null != sys.name && !sys.name.isEmpty())
-                .map(sys -> sys.name)
+                .map(sys -> sys.name.trim().toUpperCase())
                 .collect(Collectors.toSet());
 
         return new Corrector(systems, powers, knownSystemNames);
