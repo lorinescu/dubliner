@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.application.ImageApi;
 import pub.occams.elite.dubliner.application.ImageApiImpl;
 import pub.occams.elite.dubliner.domain.powerplay.PowerPlayReport;
+import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemsDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.gui.controller.MasterController;
@@ -71,6 +72,13 @@ public class App extends Application {
         return JSON_MAPPER.readValue(configFile, SettingsDto.class);
     }
 
+    public static PopulatedSystemsDto loadEddbSystems() throws IOException {
+        JSON_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+
+        final File configFile = new File("conf/eddb_systems_populated.json");
+        return JSON_MAPPER.readValue(configFile, PopulatedSystemsDto.class);
+    }
+
     public static void main(String[] args) throws IOException {
 
         LoggerFactory.getLogger(LOGGER_NAME).info("Starting " + NAME + "-" + VERSION);
@@ -94,7 +102,7 @@ public class App extends Application {
         }
 
         try {
-            imageApi = new ImageApiImpl(loadSettings(), debug);
+            imageApi = new ImageApiImpl(loadSettings(), loadEddbSystems(), debug);
         } catch (IOException e) {
             LoggerFactory.getLogger(LOGGER_NAME).error("Failed to load settings ", e);
         }

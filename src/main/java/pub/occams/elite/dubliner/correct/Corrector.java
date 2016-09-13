@@ -4,10 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
 import pub.occams.elite.dubliner.domain.powerplay.Power;
-import pub.occams.elite.dubliner.dto.settings.CorrectionsDto;
+import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemsDto;
+import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Corrector {
 
@@ -23,31 +24,64 @@ public class Corrector {
     public static final String CC = "CC";
     public static final String PREP = "PREP";
 
-    private final CorrectionsDto corrections;
+    private final Map<String, String> systems;
+    private final Map<String, String> powers;
+    private final Set<String> knownSystemNames;
 
-    public Corrector(final CorrectionsDto corrections) {
-        this.corrections = corrections;
+    private Corrector(final Map<String, String> systems, final Map<String, String> powers,
+                      final Set<String> knownSystemNames) {
+        this.systems = systems;
+        this.powers = powers;
+        this.knownSystemNames = knownSystemNames;
+    }
+
+    private static int editDistance(final String a, final String b) {
+
+        int distance = 0;
+        int aLen = a.length();
+        int bLen = b.length();
+
+        for (int i = 0; i < aLen && i < bLen; i++) {
+            if (a.charAt(i) != b.charAt(i)) {
+                distance++;
+            }
+        }
+        distance += Math.abs(aLen - bLen);
+
+        return distance;
     }
 
     public String cleanSystemName(final String str) {
         final String nameWithoutTurmoil = str.replaceAll("(\\(|\\[).*", "").trim();
-        if (corrections.systemName.containsKey(nameWithoutTurmoil)) {
-            return corrections.systemName.get(nameWithoutTurmoil);
-        } else {
-            return nameWithoutTurmoil;
+        if (systems.containsKey(nameWithoutTurmoil)) {
+            return systems.get(nameWithoutTurmoil);
         }
+
+        //TODO: evaluate a weighted option and a more relevant algo (ex: levensthein distance)
+        //find a similar name in known systems
+        final int minSimilarityByEditDistance = 4;
+        final List<String> possibleNames =
+                knownSystemNames
+                        .stream()
+                        .filter(name -> editDistance(nameWithoutTurmoil, str) < minSimilarityByEditDistance)
+                        .collect(Collectors.toList());
+        //if we get more than 1 system -> unreliable result
+        if (possibleNames.size() == 1) {
+            return possibleNames.get(0);
+        }
+
+        //best effort
+        return nameWithoutTurmoil;
     }
 
     public Optional<Power> powerFromString(final String str) {
 
         final String powerString = str.trim().toUpperCase();
 
-        final Map<String, String> corr = corrections.powerName;
-
         String correctedPowerString = powerString;
-        for (final String badName : corr.keySet()) {
+        for (final String badName : powers.keySet()) {
             if (powerString.contains(badName)) {
-                correctedPowerString = corr.get(badName);
+                correctedPowerString = powers.get(badName);
                 break;
             }
         }
@@ -87,7 +121,23 @@ public class Corrector {
                 .trim()
                 .toUpperCase()
                 .replace("\n\n", "\n")
-                .replace("T0TAL", "TOTAL")
-                .replace("TDTAL", "TOTAL");
+                .replace("T0TAL", TOTAL)
+                .replace("TDTAL", TOTAL);
+    }
+
+    public static Corrector buildCorrector(final SettingsDto settings, final PopulatedSystemsDto populatedSystems) {
+        final Map<String, String> systems = new HashMap<>();
+        settings.corrections.systemName.forEach(systems::put);
+
+        final Map<String, String> powers = new HashMap<>();
+        settings.corrections.powerName.forEach(powers::put);
+
+        final Set<String> knownSystemNames = populatedSystems.systems.
+                stream()
+                .filter(sys -> null != sys.name && !sys.name.isEmpty())
+                .map(sys -> sys.name)
+                .collect(Collectors.toSet());
+
+        return new Corrector(systems, powers, knownSystemNames);
     }
 }

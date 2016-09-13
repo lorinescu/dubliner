@@ -17,6 +17,7 @@ import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 import pub.occams.elite.dubliner.domain.image.ImageType;
 import pub.occams.elite.dubliner.domain.image.InputImage;
 import pub.occams.elite.dubliner.domain.powerplay.*;
+import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemsDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
@@ -51,10 +52,10 @@ public class ImageApiImpl implements ImageApi {
     private final Tesseract tessForNumbers = new Tesseract();
     private final Tesseract tessForNames = new Tesseract();
 
-    public ImageApiImpl(final SettingsDto settings, final boolean debug) {
+    public ImageApiImpl(final SettingsDto settings, PopulatedSystemsDto eddbSystems, final boolean dbg) {
         this.settings = settings;
-        this.corrector = new Corrector(settings.corrections);
-        this.debug = debug;
+        this.corrector = Corrector.buildCorrector(settings, eddbSystems);
+        this.debug = dbg;
 
         tessForNumbers.setDatapath(settings.ocr.tesseractForNumbers.dataPath);
         tessForNumbers.setLanguage(settings.ocr.tesseractForNumbers.language);
