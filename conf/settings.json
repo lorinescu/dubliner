@@ -15,7 +15,7 @@
         "load_number_dawg": "F",
         "load_fixed_length_dawgs": "F",
         "load_bigram_dawg": "F",
-        "tosp_min_sane_kn_sp" : "5"
+        "tosp_min_sane_kn_sp" : "6"
       }
     },
     "tesseractForSystemNames": {

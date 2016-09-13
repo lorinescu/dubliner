@@ -1,13 +1,13 @@
 package pub.occams.elite.dubliner.domain.powerplay;
 
-import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
+import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
 import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 
 public class ControlSystem extends SystemBase {
 
-    public final DataRectangle<String> costsRectangle;
-    public final DataRectangle<String> fortifyRectangle;
-    public final DataRectangle<String> undermineRectangle;
+    public final OcrDataRectangle<String> costsRectangle;
+    public final OcrDataRectangle<String> fortifyRectangle;
+    public final OcrDataRectangle<String> undermineRectangle;
 
     public final Integer upkeepFromLastCycle;
 
@@ -26,9 +26,9 @@ public class ControlSystem extends SystemBase {
 
     public final Integer undermineTrigger;
 
-    public ControlSystem(final ClassifiedImage classifiedImage, final DataRectangle<String> systemNameRectangle,
-                         final String systemName, final DataRectangle<String> costsRectangle,
-                         final DataRectangle<String> fortifyRectangle, final DataRectangle<String> undermineRectangle,
+    public ControlSystem(final ClassifiedImage classifiedImage, final OcrDataRectangle<String> systemNameRectangle,
+                         final String systemName, final OcrDataRectangle<String> costsRectangle,
+                         final OcrDataRectangle<String> fortifyRectangle, final OcrDataRectangle<String> undermineRectangle,
                          final Integer upkeepFromLastCycle, final Integer defaultUpkeepCost, final Integer costIfFortified,
                          final Integer costIfUndermined, final Integer baseIncome, final Integer fortifyTotal,
                          final Integer fortifyTrigger, final Integer undermineTotal, final Integer undermineTrigger) {

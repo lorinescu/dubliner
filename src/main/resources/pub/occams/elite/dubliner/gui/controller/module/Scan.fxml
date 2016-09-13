@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
-<?import pub.occams.elite.dubliner.gui.control.ValidTextField?>
+<?import pub.occams.elite.dubliner.gui.control.OcrDataTextField?>
 
 <AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.module.ScanController">
     <children>
@@ -60,7 +60,7 @@
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="Power" />
-                                                      <ValidTextField fx:id="preparationPowerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationPowerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationPowerImage" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -78,7 +78,7 @@
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="System name" />
-                                                      <ValidTextField fx:id="preparationNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationNameImage" fitHeight="60.0" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -96,7 +96,7 @@
                                                   </rowConstraints>
                                                    <children>
                                                       <Label text="CC to spend this cycle" />
-                                                      <ValidTextField fx:id="preparationCcToSpendThisCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationCcToSpendThisCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationCcToSpendThisCycleImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -116,7 +116,7 @@
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="Prep" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="preparationPrepText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationPrepText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationPrepImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -134,7 +134,7 @@
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="Cost" />
-                                                      <ValidTextField fx:id="preparationCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationCostImage" fitHeight="30.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -153,12 +153,130 @@
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="Highest contribution" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="preparationHighestContributionText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationHighestContributionText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                       <Label layoutX="10.0" layoutY="20.0" text="Highest contributing power" />
-                                                      <ValidTextField fx:id="preparationHighestContributingPowerText" editable="false" layoutX="220.0" layoutY="10.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationHighestContributingPowerText" editable="false" layoutX="220.0" layoutY="10.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationContributionImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                              </HBox>
+                           </content>
+                        </Tab>
+                        <Tab closable="false" text="Expansion">
+                           <content>
+                              <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                 <children>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                       <children>
+                                          <Button mnemonicParsing="false" onAction="#copyExpansionCSV" prefHeight="35.0" prefWidth="112.0" text="Copy CSV" />
+                                          <ListView fx:id="expansionSystemList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="400.0" />
+                                       </children>
+                                    </VBox>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                       <children>
+                                          <Button mnemonicParsing="false" onAction="#showOriginalExpansionImage" prefHeight="35.0" prefWidth="112.0" text="Image" />
+                                          <HBox layoutX="10.0" layoutY="55.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="Power" />
+                                                      <OcrDataTextField fx:id="expansionPowerText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="expansionPowerImage" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                             </children>
+                                          </HBox>
+                                          <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="System name" />
+                                                      <OcrDataTextField fx:id="expansionNameText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="expansionNameImage" fitHeight="60.0" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
+                                             </children>
+                                          </HBox>
+                                          <HBox spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="Potential value" />
+                                                      <OcrDataTextField fx:id="expansionPotentialValueText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="expansionPotentialValueImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                             </children>
+                                          </HBox>
+                                          <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                                      <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label layoutX="10.0" layoutY="197.0" text="Expansion total" />
+                                                      <Label layoutX="10.0" layoutY="227.0" text="Expansion trigger" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="expansionTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="expansionTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="expansionImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                                             </children>
+                                          </HBox>
+                                          <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                             <children>
+                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                   <columnConstraints>
+                                                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+                                                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+                                                   </columnConstraints>
+                                                   <rowConstraints>
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                   </rowConstraints>
+                                                   <children>
+                                                      <Label text="Opposition total" />
+                                                      <Label text="Opposition trigger" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="oppositionTotalText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="oppositionTriggerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                   </children>
+                                                </GridPane>
+                                                <ImageView fx:id="oppositionImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                                              </children>
                                           </HBox>
                                        </children>
@@ -195,7 +313,7 @@
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="Power" />
-                                                      <ValidTextField fx:id="controlPowerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="controlPowerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="controlPowerImage" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -213,7 +331,7 @@
                                                   </rowConstraints>
                                                    <children>
                                                       <Label text="System name" />
-                                                      <ValidTextField fx:id="controlNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="controlNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="controlNameImage" fitHeight="60.0" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -238,12 +356,12 @@
                                                       <Label text="Cost if fortified" GridPane.rowIndex="2" />
                                                       <Label text="Cost if undermined" GridPane.rowIndex="3" />
                                                       <Label text="Base income" GridPane.rowIndex="4" />
-                                                      <ValidTextField fx:id="controlUpkeepFromLastCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                      <ValidTextField fx:id="controlFortifiedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                      <ValidTextField fx:id="controlUnderminedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                                      <ValidTextField fx:id="controlBaseIncomeText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                      <OcrDataTextField fx:id="controlUpkeepFromLastCycleText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="controlFortifiedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                      <OcrDataTextField fx:id="controlUnderminedCostText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                      <OcrDataTextField fx:id="controlBaseIncomeText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                                       <Label layoutX="10.0" layoutY="20.0" text="Default upkeep cost" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="controlDefaultUpkeepCostText" editable="false" layoutX="220.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="controlDefaultUpkeepCostText" editable="false" layoutX="220.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="controlCostsImage" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
@@ -263,8 +381,8 @@
                                                    <children>
                                                       <Label layoutX="10.0" layoutY="197.0" text="Undermine total" />
                                                       <Label layoutX="10.0" layoutY="227.0" text="Undermine trigger" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="controlUndermineTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                      <ValidTextField fx:id="controlUndermineTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="controlUndermineTotalText" editable="false" layoutX="142.0" layoutY="187.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="controlUndermineTriggerText" editable="false" layoutX="142.0" layoutY="217.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="controlUndermineImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
@@ -284,8 +402,8 @@
                                                    <children>
                                                       <Label text="Fortify total" />
                                                       <Label text="Fortify trigger" GridPane.rowIndex="1" />
-                                                      <ValidTextField fx:id="controlFortifyTotalText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
-                                                      <ValidTextField fx:id="controlFortifyTriggerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                      <OcrDataTextField fx:id="controlFortifyTotalText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="controlFortifyTriggerText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="controlFortifyImage" fitHeight="150.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />

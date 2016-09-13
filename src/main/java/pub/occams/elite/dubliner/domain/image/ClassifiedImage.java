@@ -1,31 +1,20 @@
 package pub.occams.elite.dubliner.domain.image;
 
+import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
 import pub.occams.elite.dubliner.domain.powerplay.Power;
-import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
 
 public class ClassifiedImage {
 
-    private final InputImage inputImage;
-    private final DataRectangle<ImageType> type;
-    private final DataRectangle<Power> power;
+    public final InputImage inputImage;
+    public final OcrDataRectangle<ImageType> type;
+    public final OcrDataRectangle<Power> power;
 
     public ClassifiedImage(final InputImage inputImage,
-                           final DataRectangle<ImageType> type,
-                           final DataRectangle<Power> power) {
+                           final OcrDataRectangle<ImageType> type,
+                           final OcrDataRectangle<Power> power) {
         this.inputImage = inputImage;
         this.type = type;
         this.power = power;
     }
 
-    public InputImage getInputImage() {
-        return inputImage;
-    }
-
-    public DataRectangle<ImageType> getType() {
-        return type;
-    }
-
-    public DataRectangle<Power> getPower() {
-        return power;
-    }
 }

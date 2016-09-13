@@ -1,14 +1,14 @@
 package pub.occams.elite.dubliner.domain.powerplay;
 
-import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
+import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
 import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 
 public class PreparationSystem extends SystemBase {
 
-    public final DataRectangle<String> ccToSpendThisCycleRectangle;
-    public final DataRectangle<String> prepRectangle;
-    public final DataRectangle<String> costRectangle;
-    public final DataRectangle<String> preparationHighestContributionRectangle;
+    public final OcrDataRectangle<Integer> ccToSpendThisCycleRectangle;
+    public final OcrDataRectangle<Integer> prepRectangle;
+    public final OcrDataRectangle<Integer> costRectangle;
+    public final OcrDataRectangle<String> preparationHighestContributionRectangle;
 
     public final Integer ccToSpendThisCycle;
     public final Power highestContributingPower;
@@ -16,10 +16,13 @@ public class PreparationSystem extends SystemBase {
     public final Integer cost;
     public final Integer prep;
 
-    public PreparationSystem(final ClassifiedImage classifiedImage, final DataRectangle<String> systemNameRectangle,
-                             final String systemName, final DataRectangle<String> ccToSpendThisCycleRectangle,
-                             final DataRectangle<String> prepRectangle, final DataRectangle<String> costRectangle,
-                             final DataRectangle<String> preparationHighestContributionRectangle,
+    public PreparationSystem(final ClassifiedImage classifiedImage,
+                             final OcrDataRectangle<String> systemNameRectangle,
+                             final String systemName,
+                             final OcrDataRectangle<Integer> ccToSpendThisCycleRectangle,
+                             final OcrDataRectangle<Integer> prepRectangle,
+                             final OcrDataRectangle<Integer> costRectangle,
+                             final OcrDataRectangle<String> preparationHighestContributionRectangle,
                              final Integer ccToSpendThisCycle, final Power highestContributingPower,
                              final Integer highestContributingPowerAmount, final Integer cost, final Integer prep) {
         super(classifiedImage, systemNameRectangle, systemName);

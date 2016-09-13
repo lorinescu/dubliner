@@ -8,7 +8,7 @@ import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
+import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
 import pub.occams.elite.dubliner.domain.geometry.LineSegment;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 
@@ -116,20 +116,20 @@ public class ImageUtil {
         return out;
     }
 
-    public static Mat drawDataRectangles(final Mat in, final DataRectangle... rects) {
+    public static Mat drawDataRectangles(final Mat in, final OcrDataRectangle... rects) {
         if (null == in || null == in.data()) {
             return new Mat();
         }
 
         final Mat out = new Mat();
         in.copyTo(out);
-        for (final DataRectangle dr : rects) {
-            final Rectangle r = dr.getRectangle();
+        for (final OcrDataRectangle dr : rects) {
+            final Rectangle r = dr.rectangle;
             final opencv_core.Point b = new opencv_core.Point(r.x0, r.y0);
             final opencv_core.Point e = new opencv_core.Point(r.x1, r.y1);
             rectangle(out, b, e, BLUE);
-            if (null != dr.getData()) {
-                putText(out, dr.getData().toString(), b, FONT_HERSHEY_SIMPLEX, 1, BLUE);
+            if (null != dr.data) {
+                putText(out, dr.data.toString(), b, FONT_HERSHEY_SIMPLEX, 1, BLUE);
             }
         }
         return out;

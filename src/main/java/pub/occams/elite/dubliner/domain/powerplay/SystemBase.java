@@ -1,14 +1,14 @@
 package pub.occams.elite.dubliner.domain.powerplay;
 
 import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
-import pub.occams.elite.dubliner.domain.geometry.DataRectangle;
+import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
 
 public class SystemBase {
     public ClassifiedImage classifiedImage;
-    public DataRectangle<String> systemNameRectangle;
+    public OcrDataRectangle<String> systemNameRectangle;
     public String systemName;
 
-    public SystemBase(final ClassifiedImage classifiedImage, final DataRectangle<String> systemNameRectangle,
+    public SystemBase(final ClassifiedImage classifiedImage, final OcrDataRectangle<String> systemNameRectangle,
                       final String systemName) {
         this.classifiedImage = classifiedImage;
         this.systemNameRectangle = systemNameRectangle;
@@ -17,7 +17,7 @@ public class SystemBase {
 
     @Override
     public String toString() {
-        return classifiedImage.getPower().getData().getName() + ","
+        return classifiedImage.power.data.name + ","
                 + systemName;
     }
 }

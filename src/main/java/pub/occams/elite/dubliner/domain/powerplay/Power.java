@@ -13,14 +13,10 @@ public enum Power {
     ZEMINA_TORVAL("ZEMINA TORVAL"),
     UNKNOWN("unknown");
 
-    private final String name;
+    public final String name;
 
     Power(final String name) {
         this.name = name;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @Override

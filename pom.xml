@@ -22,6 +22,7 @@
         <tess4j.version>2.0.1</tess4j.version>
         <jackson.version>2.6.2</jackson.version>
         <javacv.version>1.2</javacv.version>
+        <controlsfx.version>8.40.12</controlsfx.version>
 
     </properties>
 
@@ -81,6 +82,13 @@
             <artifactId>javacv</artifactId>
             <version>${javacv.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>${controlsfx.version}</version>
+        </dependency>
+
 
     </dependencies>
     <build>

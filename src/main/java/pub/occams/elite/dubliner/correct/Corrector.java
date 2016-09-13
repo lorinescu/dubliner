@@ -53,7 +53,7 @@ public class Corrector {
         }
 
         for (final Power p : Power.values()) {
-            if (correctedPowerString.contains(p.getName())) {
+            if (correctedPowerString.contains(p.name)) {
                 return Optional.of(p);
             }
         }
