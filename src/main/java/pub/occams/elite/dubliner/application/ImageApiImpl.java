@@ -25,6 +25,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static org.bytedeco.javacpp.opencv_imgcodecs.imwrite;
@@ -1141,13 +1143,22 @@ public class ImageApiImpl implements ImageApi {
     }
 
     @Override
-    public PowerPlayReport generateReport(final List<File> files) {
+    public PowerPlayReport generateReport(final List<File> files, final BiConsumer<Double, String> progressCallback) {
 
         final long startMillis = System.currentTimeMillis();
+
+        final AtomicLong processedFiles = new AtomicLong(0);
 
         final PowerPlayReport report = new PowerPlayReport();
         files
                 .stream()
+                .map(file -> {
+                            final String fileName = file.getAbsolutePath();
+                            final Double progress = processedFiles.getAndIncrement() / (double) files.size();
+                            progressCallback.accept(progress, fileName);
+                            return file;
+                        }
+                )
                 .map(this::load)
                 .map(this::classify)
                 .map(this::extract)

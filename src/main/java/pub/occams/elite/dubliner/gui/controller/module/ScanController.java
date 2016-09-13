@@ -1,5 +1,6 @@
 package pub.occams.elite.dubliner.gui.controller.module;
 
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -7,10 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
@@ -37,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.prefs.Preferences;
 
@@ -55,6 +54,8 @@ public class ScanController extends Controller<AnchorPane> {
     private TextField screenshotDirectoryField;
     @FXML
     private ProgressIndicator progressIndicator;
+    @FXML
+    private Label currentFileLabel;
 
     /* Preparation tab */
     @FXML
@@ -216,7 +217,7 @@ public class ScanController extends Controller<AnchorPane> {
                 }
         );
 
-        progressIndicator.setVisible(false);
+        progressIndicator.setProgress(0);
     }
 
 
@@ -251,8 +252,6 @@ public class ScanController extends Controller<AnchorPane> {
         preparationData.clear();
         expansionData.clear();
         controlData.clear();
-
-        progressIndicator.setVisible(true);
 
         startScan();
     }
@@ -359,8 +358,17 @@ public class ScanController extends Controller<AnchorPane> {
         ocrTask = new Task<PowerPlayReport>() {
             @Override
             protected PowerPlayReport call() throws Exception {
+                final BiConsumer<Double, String> progressCallback =
+                        (progress, fileName) ->
+                                Platform.runLater(
+                                        () -> {
+                                            progressIndicator.setProgress(progress);
+                                            currentFileLabel.setText(fileName);
+                                        }
+                                );
                 return imageApi.generateReport(
-                        getUnprocessedFilesFromDir(imageDir.get())
+                        getUnprocessedFilesFromDir(imageDir.get()),
+                        progressCallback
                 );
             }
         };
@@ -370,22 +378,18 @@ public class ScanController extends Controller<AnchorPane> {
                     preparationData.setAll(report.preparation);
                     expansionData.setAll(report.expansion);
                     controlData.setAll(report.control);
-
-                    progressIndicator.setVisible(false);
-
+                    progressIndicator.setProgress(1.0);
                     MEDIA_PLAYER.play();
                 }
         );
         ocrTask.exceptionProperty().addListener(
                 (observable, oldValue, ex) -> {
-                    progressIndicator.setVisible(false);
                     MEDIA_PLAYER.play();
                     LOGGER.error("Error in ocrTask", ex);
                 }
         );
         ocrTask.setOnFailed(
                 event -> {
-                    progressIndicator.setVisible(false);
                     MEDIA_PLAYER.play();
                     LOGGER.error("OcrTask failed");
                 }

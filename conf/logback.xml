@@ -19,11 +19,11 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n</pattern>
         </encoder>
     </appender>
+    <logger name="App" level="INFO">
+        <appender-ref ref="DublinerLog" additivity="false"/>
+    </logger>
     <root level="DEBUG">
         <appender-ref ref="DublinerLog" />
-    </root>
-    <logger name="App" level="DEBUG">
-        <appender-ref ref="DublinerLog"/>
         <appender-ref ref="stdout"/>
-    </logger>
+    </root>
 </configuration>

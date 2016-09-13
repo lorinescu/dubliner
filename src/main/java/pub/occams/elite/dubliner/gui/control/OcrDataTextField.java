@@ -26,8 +26,6 @@ public class OcrDataTextField extends TextField {
     }
 
     private void init() {
-
-
         textProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     if (null == newValue || newValue.isEmpty() || "null".equals(newValue) || "-1".equals(newValue) ||

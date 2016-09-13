@@ -1,9 +1,9 @@
 TODO:
 
 * (request) dynamically reload settings and allow to manually re-trigger an individual image processing
+* (request) use EDDB populated systems data in system name corrections
 * system names have a common OCR problem - O is recognized as 0 almost every time
 * in a few cases the undermine trigger value is not extracted correctly as no space is "seen" between "TRIGGER" and the actual counter
-* show more information about data extraction progress - current image processed out of n, estimated duration
 * Control and Expansion screen data extraction flows are similar, they could be merged somehow
 * scale down a bit the layout, on smaller screens not everything is visible
 * in the system ListView mark entries that have invalid data

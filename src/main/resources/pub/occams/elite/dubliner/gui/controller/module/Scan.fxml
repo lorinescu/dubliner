@@ -30,9 +30,10 @@
                               <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectScreenshotDirectory" prefHeight="35.0" prefWidth="112.0" text="Browse" />
                               <TextField fx:id="screenshotDirectoryField" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="384.0" promptText="Screenshot directory" />
                             <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#start" prefHeight="35.0" prefWidth="112.0" text="Scan" />
-                        <ProgressIndicator fx:id="progressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="20.0" />
+                        <ProgressIndicator fx:id="progressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="40.0" prefWidth="40.0" progress="1.0" HBox.hgrow="NEVER" />
                           </children>
                       </HBox>
+                  <Label fx:id="currentFileLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="---" />
                   <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0" VBox.vgrow="ALWAYS">
                     <tabs>
                         <Tab closable="false" text="Preparation">
@@ -66,19 +67,19 @@
                                                 <ImageView fx:id="preparationPowerImage" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
                                              </children>
                                           </HBox>
-                                          <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                          <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
-                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                <GridPane hgap="10.0" vgap="10.0">
                                                    <columnConstraints>
                                                       <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
-                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints minWidth="200.0" />
                                                    </columnConstraints>
                                                    <rowConstraints>
-                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                      <RowConstraints fillHeight="false" vgrow="NEVER" />
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="System name" />
-                                                      <OcrDataTextField fx:id="preparationNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="preparationNameText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="preparationNameImage" fitHeight="60.0" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
@@ -201,15 +202,15 @@
                                                 <ImageView fx:id="expansionPowerImage" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
                                              </children>
                                           </HBox>
-                                          <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                          <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
-                                                <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
+                                                <GridPane hgap="10.0" vgap="10.0" HBox.hgrow="NEVER">
                                                    <columnConstraints>
                                                       <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
                                                       <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
                                                    </columnConstraints>
                                                    <rowConstraints>
-                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                      <RowConstraints fillHeight="false" vgrow="NEVER" />
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="System name" />
@@ -219,15 +220,15 @@
                                                 <ImageView fx:id="expansionNameImage" fitHeight="60.0" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
                                              </children>
                                           </HBox>
-                                          <HBox spacing="10.0">
+                                          <HBox fillHeight="false" spacing="10.0">
                                              <children>
                                                 <GridPane hgap="10.0" vgap="10.0">
                                                    <columnConstraints>
-                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
-                                                      <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                      <ColumnConstraints minWidth="200.0" />
+                                                      <ColumnConstraints minWidth="200.0" />
                                                    </columnConstraints>
                                                    <rowConstraints>
-                                                      <RowConstraints vgrow="SOMETIMES" />
+                                                      <RowConstraints fillHeight="false" valignment="TOP" vgrow="NEVER" />
                                                    </rowConstraints>
                                                    <children>
                                                       <Label text="Potential value" />
@@ -319,19 +320,19 @@
                                                 <ImageView fx:id="controlPowerImage" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />
                                              </children>
                                           </HBox>
-                                          <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                          <HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                                              <children>
                                                 <GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" vgap="10.0">
                                                   <columnConstraints>
-                                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
-                                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" />
+                                                    <ColumnConstraints hgrow="NEVER" minWidth="200.0" />
+                                                    <ColumnConstraints hgrow="NEVER" minWidth="200.0" />
                                                   </columnConstraints>
                                                   <rowConstraints>
-                                                    <RowConstraints vgrow="SOMETIMES" />
+                                                    <RowConstraints vgrow="NEVER" />
                                                   </rowConstraints>
                                                    <children>
                                                       <Label text="System name" />
-                                                      <OcrDataTextField fx:id="controlNameText" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
+                                                      <OcrDataTextField fx:id="controlNameText" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="182.0" GridPane.columnIndex="1" />
                                                    </children>
                                                 </GridPane>
                                                 <ImageView fx:id="controlNameImage" fitHeight="60.0" fitWidth="450.0" pickOnBounds="true" preserveRatio="true" smooth="false" />

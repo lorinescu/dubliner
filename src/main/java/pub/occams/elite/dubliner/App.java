@@ -26,7 +26,7 @@ import java.util.List;
 public class App extends Application {
 
     public static final String NAME = "The Dubliner";
-    public static final String VERSION = "0.0.2";
+    public static final String VERSION = "0.0.3";
 
     public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -117,7 +117,7 @@ public class App extends Application {
             } else {
                 input.add(imageFileOrDir);
             }
-            final PowerPlayReport dto = imageApi.generateReport(input);
+            final PowerPlayReport dto = imageApi.generateReport(input, (x,y) -> {});
             App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(System.out, dto);
         } else {
             launch(args);

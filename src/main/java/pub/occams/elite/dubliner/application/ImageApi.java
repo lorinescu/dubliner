@@ -8,6 +8,7 @@ import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 
 import java.io.File;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public interface ImageApi {
 
@@ -19,6 +20,6 @@ public interface ImageApi {
 
     SystemBase extract(final ClassifiedImage input);
 
-    PowerPlayReport generateReport(final List<File> files);
+    PowerPlayReport generateReport(final List<File> files, final BiConsumer<Double, String> progressCallback);
 
 }

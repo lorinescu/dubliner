@@ -71,7 +71,8 @@ public class ImageApiImplTest {
 //                            new File("data/control_images/1920x1200/mahon/control/Screenshot_0101.bmp")
                             //preparation
                             new File("data/control_images/1920x1200/ad/preparation/1.bmp")
-                    )
+                    ),
+                    (x,y) -> {}
             );
         } catch (IOException e) {
             e.printStackTrace();
