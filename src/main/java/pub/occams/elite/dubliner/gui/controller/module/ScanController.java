@@ -259,7 +259,8 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private void copyPreparationCSV(ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Power,Name,CCtoSpendThisCycle,HighestContributingPower,HighestContributingPowerAmount,Cost,Prep");
+        sb.append("Power,Name,CCtoSpendThisCycle,HighestContributingPower,HighestContributingPowerAmount,Cost,Prep," +
+                "InputFile");
         preparationData.forEach(
                 s -> sb
                         .append("\"").append(s.classifiedImage.power.data).append("\"")
@@ -279,7 +280,8 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private void copyExpansionCSV(ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Power,Name,PotentialValue,ExpansionTotal,ExpansionTrigger,OppositionTotal,OppositionTrigger");
+        sb.append("Power,Name,PotentialValue,ExpansionTotal,ExpansionTrigger,OppositionTotal,OppositionTrigger, " +
+                "InputFile");
         expansionData.forEach(
                 s -> sb
                         .append("\"").append(s.classifiedImage.power.data).append("\"")

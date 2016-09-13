@@ -55,7 +55,7 @@ public class Corrector {
     }
 
     public String cleanSystemName(final String str) {
-        final String nameWithoutTurmoil = str.replaceAll("(\\(|\\[).*", "").trim();
+        final String nameWithoutTurmoil = str.replaceAll("(\\(|\\[).*", "").trim().toUpperCase();
         if (systems.containsKey(nameWithoutTurmoil)) {
             return systems.get(nameWithoutTurmoil);
         }
@@ -66,7 +66,8 @@ public class Corrector {
         final List<String> possibleNames =
                 knownSystemNames
                         .stream()
-                        .filter(name -> editDistance(nameWithoutTurmoil, name) <= minSimilarityByEditDistance)
+                        .map(name -> name.trim().toUpperCase())
+                        .filter(name -> editDistance(name, nameWithoutTurmoil) < minSimilarityByEditDistance)
                         .collect(Collectors.toList());
         //if we get more than 1 system -> unreliable result
         if (possibleNames.size() == 1) {

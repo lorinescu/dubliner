@@ -4,6 +4,7 @@
     * notification sound after finishing an OCR task
     * when clicking on an a text field with the OCR results show a popup with raw OCR output
     * show more information about data extraction progress: current processed image, % of work done
+    * use populated system list from EDDB as a whitelist for system name corrections
 * 0.0.2
     * control screen data extraction for all powers
     * using OpenCV for automatically identifying data rectangles
