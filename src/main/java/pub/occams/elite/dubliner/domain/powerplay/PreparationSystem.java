@@ -44,6 +44,7 @@ public class PreparationSystem extends SystemBase {
                 + highestContributingPower + ","
                 + highestContributingPowerAmount + ","
                 + cost + ","
-                + prep;
+                + prep + "," +
+                classifiedImage.inputImage.getFile().getAbsolutePath();
     }
 }

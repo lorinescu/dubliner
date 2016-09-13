@@ -314,7 +314,7 @@ public class ScanController extends Controller<AnchorPane> {
                         .append("\"").append(s.fortifyTotal).append("\",")
                         .append("\"").append(s.fortifyTrigger).append("\",")
                         .append("\"").append(s.undermineTotal).append("\",")
-                        .append("\"").append(s.undermineTrigger).append(",")
+                        .append("\"").append(s.undermineTrigger).append("\",")
                         .append("\"").append(s.classifiedImage.inputImage.getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
@@ -379,6 +379,7 @@ public class ScanController extends Controller<AnchorPane> {
                     expansionData.setAll(report.expansion);
                     controlData.setAll(report.control);
                     progressIndicator.setProgress(1.0);
+                    currentFileLabel.setText("---");
                     MEDIA_PLAYER.play();
                 }
         );
@@ -519,6 +520,9 @@ public class ScanController extends Controller<AnchorPane> {
     private void resetExpansionDetails() {
         expansionPowerText.setText(null, null);
         expansionPowerImage.setImage(null);
+
+        expansionNameText.setText(null, null);
+        expansionNameImage.setImage(null);
 
         expansionPotentialValueText.setText(null, null);
         expansionPotentialValueImage.setImage(null);

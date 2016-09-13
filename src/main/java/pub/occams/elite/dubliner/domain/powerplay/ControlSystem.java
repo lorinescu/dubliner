@@ -58,6 +58,7 @@ public class ControlSystem extends SystemBase {
                 fortifyTotal + "," +
                 fortifyTrigger + "," +
                 undermineTotal + "," +
-                undermineTrigger;
+                undermineTrigger + "," +
+                classifiedImage.inputImage.getFile().getAbsolutePath();
     }
 }

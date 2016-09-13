@@ -40,6 +40,7 @@ public class ExpansionSystem extends SystemBase {
                 expansionTotal + "," +
                 expansionTrigger + "," +
                 oppositionTotal + "," +
-                oppositionTrigger;
+                oppositionTrigger + "," +
+                classifiedImage.inputImage.getFile().getAbsolutePath();
     }
 }

@@ -1188,9 +1188,9 @@ public class ImageApiImpl implements ImageApi {
 
         final long endMillis = System.currentTimeMillis();
 
-        LOGGER.info("Finished, duration:" + (endMillis - startMillis) + "ms");
+        LOGGER.info("--------------------------------------------------------------Finished, duration: "
+                + (endMillis - startMillis) + " ms");
 
         return report;
     }
-
 }
