@@ -47,10 +47,7 @@ public class Corrector {
             }
         }
         distance += Math.abs(aLen - bLen);
-
-        if (a.contains("KAWIL0CIDI") && b.contains("KAWILOCIDI")) {
-            System.out.println("DISTANCE = " + distance);
-        }
+        
         return distance;
     }
 

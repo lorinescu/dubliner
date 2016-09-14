@@ -1,28 +1,17 @@
 package pub.occams.elite.dubliner.gui.controller.module;
 
-import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.stage.DirectoryChooser;
-import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import pub.occams.elite.dubliner.App;
-import pub.occams.elite.dubliner.application.ImageApi;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 import pub.occams.elite.dubliner.domain.powerplay.*;
 import pub.occams.elite.dubliner.gui.control.OcrDataTextField;
@@ -30,32 +19,13 @@ import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.util.ImageUtil;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
-import java.util.prefs.Preferences;
 
 import static javafx.embed.swing.SwingFXUtils.toFXImage;
 import static pub.occams.elite.dubliner.util.ImageUtil.matToBufferedImage;
 
-public class ScanController extends Controller<AnchorPane> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(App.LOGGER_NAME);
-
-    private static final Preferences prefs = Preferences.userRoot().node("pub/occams/elite/dubliner/prefs");
-    private static final String LAST_DIR = "LAST_DIR";
-    private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer(new Media(new File("conf/work-complete.wav").toURI().toString()));
-
-    @FXML
-    private TextField screenshotDirectoryField;
-    @FXML
-    private ProgressIndicator progressIndicator;
-    @FXML
-    private Label currentFileLabel;
+public class PowerPlayController extends Controller<AnchorPane> {
 
     /* Preparation tab */
     @FXML
@@ -160,30 +130,12 @@ public class ScanController extends Controller<AnchorPane> {
     @FXML
     private ImageView controlUndermineImage;
 
-    private final ObservableList<Power> powerData = FXCollections.observableArrayList();
     private final ObservableList<PreparationSystem> preparationData = FXCollections.observableArrayList();
     private final ObservableList<ExpansionSystem> expansionData = FXCollections.observableArrayList();
     private final ObservableList<ControlSystem> controlData = FXCollections.observableArrayList();
 
-    private final ObjectProperty<File> imageDir = new SimpleObjectProperty<>(null);
-
-    private ImageApi imageApi;
-
-    private Task<PowerPlayReport> ocrTask;
-
     @FXML
     private void initialize() {
-        imageDir.addListener(
-                (observable, oldValue, newDir) -> {
-                    if (null == newDir) {
-                        return;
-                    }
-                    screenshotDirectoryField.setText(newDir.getAbsolutePath());
-                    prefs.put(LAST_DIR, newDir.getAbsolutePath());
-                }
-        );
-        imageDir.setValue(new File(prefs.get(LAST_DIR, "./")));
-
         preparationSystemList.setItems(preparationData);
         preparationSystemList.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, preparationSystem) -> {
@@ -216,44 +168,6 @@ public class ScanController extends Controller<AnchorPane> {
                     }
                 }
         );
-
-        progressIndicator.setProgress(0);
-    }
-
-
-    @FXML
-    private void selectScreenshotDirectory(ActionEvent actionEvent) {
-        final DirectoryChooser chooser = new DirectoryChooser();
-        final File lastDir = new File(prefs.get(LAST_DIR, "."));
-        if (lastDir.exists() && lastDir.isDirectory()) {
-            chooser.setInitialDirectory(lastDir);
-        }
-
-        imageDir.set(chooser.showDialog(getView().getScene().getWindow()));
-    }
-
-    @FXML
-    private void start(ActionEvent actionEvent) {
-        if (null == imageDir.get()) {
-            return;
-        }
-
-        if (null != ocrTask && ocrTask.isRunning()) {
-            new Alert(Alert.AlertType.ERROR, "A scan task is already running").show();
-            return;
-        }
-
-        resetPreparationDetails();
-        resetExpansionDetails();
-        resetControlDetails();
-
-
-        powerData.clear();
-        preparationData.clear();
-        expansionData.clear();
-        controlData.clear();
-
-        startScan();
     }
 
     @FXML
@@ -356,52 +270,6 @@ public class ScanController extends Controller<AnchorPane> {
         showOriginalImage(controlSystemList.getSelectionModel().getSelectedItem());
     }
 
-    private void startScan() {
-        ocrTask = new Task<PowerPlayReport>() {
-            @Override
-            protected PowerPlayReport call() throws Exception {
-                final BiConsumer<Double, String> progressCallback =
-                        (progress, fileName) ->
-                                Platform.runLater(
-                                        () -> {
-                                            progressIndicator.setProgress(progress);
-                                            currentFileLabel.setText(fileName);
-                                        }
-                                );
-                return imageApi.generateReport(
-                        getUnprocessedFilesFromDir(imageDir.get()),
-                        progressCallback
-                );
-            }
-        };
-        ocrTask.setOnSucceeded(
-                event -> {
-                    final PowerPlayReport report = ocrTask.getValue();
-                    preparationData.setAll(report.preparation);
-                    expansionData.setAll(report.expansion);
-                    controlData.setAll(report.control);
-                    progressIndicator.setProgress(1.0);
-                    currentFileLabel.setText("---");
-                    MEDIA_PLAYER.play();
-                }
-        );
-        ocrTask.exceptionProperty().addListener(
-                (observable, oldValue, ex) -> {
-                    MEDIA_PLAYER.play();
-                    LOGGER.error("Error in ocrTask", ex);
-                }
-        );
-        ocrTask.setOnFailed(
-                event -> {
-                    MEDIA_PLAYER.play();
-                    LOGGER.error("OcrTask failed");
-                }
-        );
-
-        new Thread(this.ocrTask).start();
-    }
-
-
     private String getOrEmpty(final Supplier<String> func) {
         try {
             return func.get();
@@ -427,6 +295,8 @@ public class ScanController extends Controller<AnchorPane> {
     }
 
     private void resetPreparationDetails() {
+
+        preparationData.clear();
 
         preparationPowerText.setText(null, null);
         preparationPowerImage.setImage(null);
@@ -520,6 +390,8 @@ public class ScanController extends Controller<AnchorPane> {
     }
 
     private void resetExpansionDetails() {
+        expansionData.clear();
+
         expansionPowerText.setText(null, null);
         expansionPowerImage.setImage(null);
 
@@ -586,6 +458,7 @@ public class ScanController extends Controller<AnchorPane> {
     }
 
     private void resetControlDetails() {
+        controlData.clear();
 
         controlPowerText.setText(null, null);
         controlPowerImage.setImage(null);
@@ -673,19 +546,15 @@ public class ScanController extends Controller<AnchorPane> {
         controlUndermineImage.setImage(cropOrNull(() -> s.undermineRectangle.rectangle, originalImage));
     }
 
-    private List<File> getUnprocessedFilesFromDir(final File dataDir) {
-
-        if (null != dataDir && dataDir.isDirectory()) {
-            final String[] extensions = new String[1];
-            extensions[0] = "bmp";
-            final Collection<File> files = FileUtils.listFiles(dataDir, extensions, true);
-            return new ArrayList<>(files);
-        }
-
-        return new ArrayList<>();
+    public void setData(OcrResult report) {
+        preparationData.setAll(report.preparation);
+        expansionData.setAll(report.expansion);
+        controlData.setAll(report.control);
     }
 
-    public void postConstruct(final ImageApi imageApi) {
-        this.imageApi = imageApi;
+    public void resetData() {
+        resetPreparationDetails();
+        resetExpansionDetails();
+        resetControlDetails();
     }
 }

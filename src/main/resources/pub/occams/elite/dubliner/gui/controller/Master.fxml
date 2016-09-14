@@ -1,42 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
-
-<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1024.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pub.occams.elite.dubliner.gui.controller.MasterController">
-   <children>
-      <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <menus>
-          <Menu mnemonicParsing="false" text="File">
-            <items>
-              <MenuItem mnemonicParsing="false" onAction="#close" text="Close" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <items>
-              <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
-            </items>
-          </Menu>
-        </menus>
-      </MenuBar>
-      <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
-        <tabs>
-          <Tab fx:id="scanTab" text="Scan" />
-          <Tab fx:id="helpTab" text="Help">
-               <content>
-                  <VBox>
-                     <children>
-                        <TextArea prefHeight="200.0" prefWidth="200.0" text="conf/ directory can be found in the application's installation directory&#10;&#10;Modify conf/settings.json according to your needs then use http://http://jsonlint.com/ to validate it.&#10;&#10;&quot;You are probably not interested in the \&quot;ocr\&quot; section unless you want to tune the OCR engine&#10;&#10;In the &quot;corrections&quot; section you can add ... corrections. A correction is  used to transform common OCR &#10;output errors strings into valid ones. Currently this exquisite software supports only system names corrections. &#10;For example, if the OCR extracts system name AL1OTH instead of ALIOTH you can add:&#10;&#10;&quot;AL1OTH&quot; : &quot;ALIOTH&quot;&#10;&#10;The next time AL1OTH is found it will be replaced with ALIOTH.&#10;&#10;Power name corrections work the same way as system names." wrapText="true" VBox.vgrow="ALWAYS" />
-                     </children>
-                  </VBox>
-               </content></Tab>
-        </tabs>
-      </TabPane>
-   </children>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity"
+            minWidth="-Infinity" prefHeight="1024.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8.0.65"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="pub.occams.elite.dubliner.gui.controller.MasterController">
+    <children>
+        <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <menus>
+                <Menu mnemonicParsing="false" text="File">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#close" text="Close"/>
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Help">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#showHelp" text="Help"/>
+                        <MenuItem mnemonicParsing="false" onAction="#about" text="About"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <VBox layoutY="30.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
+            <children>
+                <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                       text="Select a screenshot directory which will be scanned for images. Tested with resolutions:  1920x1200, 1920x1080 . Screenshots should be taken with  &quot;GUI effects&quot; disabled in the Graphics settings."
+                       wrapText="true"/>
+                <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                      spacing="10.0">
+                    <children>
+                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                                minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false"
+                                onAction="#selectScreenshotDirectory" prefHeight="35.0" prefWidth="112.0"
+                                text="Browse"/>
+                        <TextField fx:id="screenshotDirectoryField" editable="false" maxHeight="1.7976931348623157E308"
+                                   maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
+                                   prefHeight="35.0" prefWidth="384.0" promptText="Screenshot directory"/>
+                        <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#startScan"
+                                prefHeight="35.0" prefWidth="112.0" text="Scan"/>
+                        <ProgressIndicator fx:id="progressIndicator" maxHeight="1.7976931348623157E308"
+                                           maxWidth="1.7976931348623157E308" prefHeight="40.0" prefWidth="40.0"
+                                           progress="1.0" HBox.hgrow="NEVER"/>
+                    </children>
+                </HBox>
+                <Label fx:id="currentFileLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                       text="---"/>
+                <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                         tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <Tab fx:id="powerPlayTab" closable="false" text="Power Play"/>
+                        <Tab fx:id="systemReportsTab" closable="false" text="System Reports"/>
+                    </tabs>
+                </TabPane>
+            </children>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+        </VBox>
+    </children>
 </AnchorPane>

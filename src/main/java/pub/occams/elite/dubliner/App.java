@@ -12,12 +12,13 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.LoggerFactory;
 import pub.occams.elite.dubliner.application.ImageApi;
 import pub.occams.elite.dubliner.application.ImageApiImpl;
-import pub.occams.elite.dubliner.domain.powerplay.PowerPlayReport;
+import pub.occams.elite.dubliner.domain.powerplay.OcrResult;
 import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
 import pub.occams.elite.dubliner.gui.controller.Controller;
 import pub.occams.elite.dubliner.gui.controller.MasterController;
-import pub.occams.elite.dubliner.gui.controller.module.ScanController;
+import pub.occams.elite.dubliner.gui.controller.module.PowerPlayController;
+import pub.occams.elite.dubliner.gui.controller.module.SystemReportsController;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,16 +50,15 @@ public class App extends Application {
     @Override
     public void start(final Stage primaryStage) throws Exception {
 
-        final ScanController scanController = loadFxml(ScanController.class, "Scan.fxml");
-        scanController.postConstruct(imageApi);
+        final PowerPlayController powerPlayController = loadFxml(PowerPlayController.class, "PowerPlay.fxml");
+        final SystemReportsController systemReportsController= loadFxml(SystemReportsController.class, "SystemReports.fxml");
 
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
-        masterController.postConstruct(scanController);
+        masterController.postConstruct(imageApi, powerPlayController, systemReportsController);
 
         final Scene scene = new Scene(masterController.getView());
         scene.getStylesheets().add(App.class.getResource("gui/style/custom.css").toExternalForm());
         primaryStage.setScene(scene);
-
 
         primaryStage.getIcons().add(new Image(MasterController.class.getResourceAsStream("edmund-fist.png")));
 
@@ -127,7 +127,7 @@ public class App extends Application {
             } else {
                 input.add(imageFileOrDir);
             }
-            final PowerPlayReport dto = imageApi.generateReport(input, (x, y) -> {
+            final OcrResult dto = imageApi.generateReport(input, (x, y) -> {
             });
             App.JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValue(System.out, dto);
         } else {

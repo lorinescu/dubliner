@@ -1158,13 +1158,13 @@ public class ImageApiImpl implements ImageApi {
     }
 
     @Override
-    public PowerPlayReport generateReport(final List<File> files, final BiConsumer<Double, String> progressCallback) {
+    public OcrResult generateReport(final List<File> files, final BiConsumer<Double, String> progressCallback) {
 
         final long startMillis = System.currentTimeMillis();
 
         final AtomicLong processedFiles = new AtomicLong(0);
 
-        final PowerPlayReport report = new PowerPlayReport();
+        final OcrResult report = new OcrResult();
         files
                 .stream()
                 .map(file -> {
