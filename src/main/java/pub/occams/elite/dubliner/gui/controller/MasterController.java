@@ -204,11 +204,12 @@ public class MasterController extends Controller<AnchorPane> {
     }
 
     public void postConstruct(final ImageApi imageApi, final PowerPlayController powerPlayController,
-                              final SystemReportsController systemReportsController  ) {
+                              final SystemReportsController systemReportsController) {
         this.imageApi = imageApi;
         this.powerPlayController = powerPlayController;
         this.systemReportsController = systemReportsController;
         this.powerPlayTab.setContent(powerPlayController.getView());
+        this.systemReportsTab.setContent(systemReportsController.getView());
     }
 
 }
