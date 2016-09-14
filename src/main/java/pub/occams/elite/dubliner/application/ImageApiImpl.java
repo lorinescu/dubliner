@@ -318,7 +318,7 @@ public class ImageApiImpl implements ImageApi {
         return new OcrDataRectangle<>(str, maybePower.get(), powerNameRectangle);
     }
 
-    private OcrDataRectangle<String> extractSystemName(final ClassifiedImage input) {
+    private OcrDataRectangle<String> extractSystemName(final PowerPlayImage input) {
 
         final File file = input.inputImage.getFile();
         final Mat img = input.inputImage.getImage();
@@ -382,7 +382,7 @@ public class ImageApiImpl implements ImageApi {
         return new OcrDataRectangle<>(str, sysName, sysNameRectReal);
     }
 
-    private PreparationSystem extractPreparation(final ClassifiedImage input,
+    private PreparationSystem extractPreparation(final PowerPlayImage input,
                                                  final OcrDataRectangle<String> sysNameRect) {
 
         if (null == input.inputImage || ImageType.UNKNOWN == input.type.data
@@ -654,7 +654,7 @@ public class ImageApiImpl implements ImageApi {
     }
 
 
-    private ControlSystem extractControl(final ClassifiedImage input,
+    private ControlSystem extractControl(final PowerPlayImage input,
                                          final OcrDataRectangle<String> sysNameRect) {
 
         if (null == input.inputImage || ImageType.UNKNOWN == input.type.data
@@ -872,7 +872,7 @@ public class ImageApiImpl implements ImageApi {
     }
 
 
-    private ExpansionSystem extractExpansion(final ClassifiedImage input,
+    private ExpansionSystem extractExpansion(final PowerPlayImage input,
                                              final OcrDataRectangle<String> sysNameRect) {
 
         if (null == input.inputImage || ImageType.UNKNOWN == input.type.data
@@ -1100,26 +1100,26 @@ public class ImageApiImpl implements ImageApi {
         LOGGER.info("classification start: " + file.getAbsolutePath());
 
         if (null == inputImage.getImage()) {
-            return new ClassifiedImage(inputImage, null, null);
+            return new ClassifiedImage(inputImage, null);
         }
 
         final OcrDataRectangle<ImageType> type = detectSelectedTab(inputImage);
         if (ImageType.UNKNOWN == type.data) {
-            return new ClassifiedImage(inputImage, type, null);
+            return new ClassifiedImage(inputImage, type);
         }
 
         final OcrDataRectangle<Power> power = detectSelectedPower(inputImage);
         if (Power.UNKNOWN == power.data) {
-            return new ClassifiedImage(inputImage, type, power);
+            return new ClassifiedImage(inputImage, type);
         }
 
         LOGGER.info("classification end: " + power.data + "/" + type.data + ", for file: " + file.getAbsolutePath());
 
-        return new ClassifiedImage(inputImage, type, power);
+        return new PowerPlayImage(inputImage, type, power);
     }
 
     @Override
-    public SystemBase extract(final ClassifiedImage input) {
+    public SystemBase extract(final PowerPlayImage input) {
 
         if (null == input.inputImage.getImage() || ImageType.UNKNOWN == input.type.data
                 || Power.UNKNOWN == input.power.data) {
@@ -1180,6 +1180,7 @@ public class ImageApiImpl implements ImageApi {
                 .forEach(
                         system -> {
                             //gc friendly
+
                             system.classifiedImage.inputImage.nullImage();
                             try {
                                 if (system instanceof PreparationSystem) {

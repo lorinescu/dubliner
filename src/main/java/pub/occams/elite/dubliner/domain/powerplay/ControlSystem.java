@@ -26,7 +26,7 @@ public class ControlSystem extends SystemBase {
 
     public final Integer undermineTrigger;
 
-    public ControlSystem(final ClassifiedImage classifiedImage, final OcrDataRectangle<String> systemNameRectangle,
+    public ControlSystem(final PowerPlayImage classifiedImage, final OcrDataRectangle<String> systemNameRectangle,
                          final String systemName, final OcrDataRectangle<String> costsRectangle,
                          final OcrDataRectangle<String> fortifyRectangle, final OcrDataRectangle<String> undermineRectangle,
                          final Integer upkeepFromLastCycle, final Integer defaultUpkeepCost, final Integer costIfFortified,

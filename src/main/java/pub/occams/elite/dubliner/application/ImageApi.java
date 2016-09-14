@@ -2,6 +2,7 @@ package pub.occams.elite.dubliner.application;
 
 import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 import pub.occams.elite.dubliner.domain.image.InputImage;
+import pub.occams.elite.dubliner.domain.powerplay.PowerPlayImage;
 import pub.occams.elite.dubliner.domain.powerplay.SystemBase;
 import pub.occams.elite.dubliner.domain.powerplay.OcrResult;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
@@ -18,7 +19,7 @@ public interface ImageApi {
 
     ClassifiedImage classify(final InputImage file);
 
-    SystemBase extract(final ClassifiedImage input);
+    SystemBase extract(final PowerPlayImage input);
 
     OcrResult generateReport(final List<File> files, final BiConsumer<Double, String> progressCallback);
 
