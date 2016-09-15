@@ -29,7 +29,7 @@ import java.util.List;
 public class App extends Application {
 
     public static final String NAME = "The Dubliner";
-    public static final String VERSION = "0.0.3";
+    public static final String VERSION = "0.0.4";
 
     public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
@@ -51,7 +51,9 @@ public class App extends Application {
     public void start(final Stage primaryStage) throws Exception {
 
         final PowerPlayController powerPlayController = loadFxml(PowerPlayController.class, "PowerPlay.fxml");
+        powerPlayController.setCsvSeparator(imageApi.getSettings().csvSeparator);
         final SystemReportsController systemReportsController= loadFxml(SystemReportsController.class, "SystemReports.fxml");
+        systemReportsController.setCsvSeparator(imageApi.getSettings().csvSeparator);
 
         final MasterController masterController = loadFxml(MasterController.class, "Master.fxml");
         masterController.postConstruct(imageApi, powerPlayController, systemReportsController);

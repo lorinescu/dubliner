@@ -1,4 +1,5 @@
 {
+  "csvSeparator" : "\t",
   "ocr": {
     "filterRedChannelMin": "85",
     "tesseractForNumbers": {

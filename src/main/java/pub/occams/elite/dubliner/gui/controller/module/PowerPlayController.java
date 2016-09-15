@@ -134,6 +134,8 @@ public class PowerPlayController extends Controller<AnchorPane> {
     private final ObservableList<ExpansionSystem> expansionData = FXCollections.observableArrayList();
     private final ObservableList<ControlSystem> controlData = FXCollections.observableArrayList();
 
+    private String csvSeparator = ",";
+
     @FXML
     private void initialize() {
         preparationSystemList.setItems(preparationData);
@@ -173,17 +175,23 @@ public class PowerPlayController extends Controller<AnchorPane> {
     @FXML
     private void copyPreparationCSV(ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Power,Name,CCtoSpendThisCycle,HighestContributingPower,HighestContributingPowerAmount,Cost,Prep," +
-                "InputFile");
+        sb.append("Power").append(csvSeparator)
+                .append("Name").append(csvSeparator)
+                .append("CCtoSpendThisCycle").append(csvSeparator)
+                .append("HighestContributingPower").append(csvSeparator)
+                .append("HighestContributingPowerAmount").append(csvSeparator)
+                .append("Cost").append(csvSeparator)
+                .append("Prep").append(csvSeparator)
+                .append("InputFile\n");
         preparationData.forEach(
                 s -> sb
-                        .append("\"").append(s.classifiedImage.power.data).append("\"")
-                        .append("\"").append(s.systemName).append("\",")
-                        .append("\"").append(s.ccToSpendThisCycle).append("\",")
-                        .append("\"").append(s.highestContributingPower).append("\",")
-                        .append("\"").append(s.highestContributingPowerAmount).append("\",")
-                        .append("\"").append(s.cost).append("\",")
-                        .append("\"").append(s.prep).append("\",")
+                        .append("\"").append(s.classifiedImage.power.data).append("\"").append(csvSeparator)
+                        .append("\"").append(s.systemName).append("\"").append(csvSeparator)
+                        .append("\"").append(s.ccToSpendThisCycle).append("\"").append(csvSeparator)
+                        .append("\"").append(s.highestContributingPower).append("\"").append(csvSeparator)
+                        .append("\"").append(s.highestContributingPowerAmount).append("\"").append(csvSeparator)
+                        .append("\"").append(s.cost).append("\"").append(csvSeparator)
+                        .append("\"").append(s.prep).append("\"").append(csvSeparator)
                         .append("\"").append(s.classifiedImage.inputImage.getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
@@ -194,17 +202,23 @@ public class PowerPlayController extends Controller<AnchorPane> {
     @FXML
     private void copyExpansionCSV(ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Power,Name,PotentialValue,ExpansionTotal,ExpansionTrigger,OppositionTotal,OppositionTrigger, " +
-                "InputFile");
+        sb.append("Power").append(csvSeparator)
+                .append("Name").append(csvSeparator)
+                .append("PotentialValue").append(csvSeparator)
+                .append("ExpansionTotal").append(csvSeparator)
+                .append("ExpansionTrigger").append(csvSeparator)
+                .append("OppositionTotal").append(csvSeparator)
+                .append("OppositionTrigger").append(csvSeparator)
+                .append("InputFile\n");
         expansionData.forEach(
                 s -> sb
-                        .append("\"").append(s.classifiedImage.power.data).append("\"")
-                        .append("\"").append(s.systemName).append("\",")
-                        .append("\"").append(s.potentialValue).append("\",")
-                        .append("\"").append(s.expansionTotal).append("\",")
-                        .append("\"").append(s.expansionTrigger).append("\",")
-                        .append("\"").append(s.oppositionTotal).append("\",")
-                        .append("\"").append(s.oppositionTrigger).append("\",")
+                        .append("\"").append(s.classifiedImage.power.data).append("\"").append(csvSeparator)
+                        .append("\"").append(s.systemName).append("\"").append(csvSeparator)
+                        .append("\"").append(s.potentialValue).append("\"").append(csvSeparator)
+                        .append("\"").append(s.expansionTotal).append("\"").append(csvSeparator)
+                        .append("\"").append(s.expansionTrigger).append("\"").append(csvSeparator)
+                        .append("\"").append(s.oppositionTotal).append("\"").append(csvSeparator)
+                        .append("\"").append(s.oppositionTrigger).append("\"").append(csvSeparator)
                         .append("\"").append(s.classifiedImage.inputImage.getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
@@ -215,22 +229,31 @@ public class PowerPlayController extends Controller<AnchorPane> {
     @FXML
     private void copyControlCSV(final ActionEvent actionEvent) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Power,Name,UpkeepFromLastCycle,DefaultUpkeepCost, CostIfFortified,CostIfUndermined,BaseIncome," +
-                "FortifyTotal,FortifyTrigger," +
-                "UndermineTotal,UndermineTrigger,InputFile\n");
+        sb.append("Power").append(csvSeparator)
+                .append("Name").append(csvSeparator)
+                .append("UpkeepFromLastCycle").append(csvSeparator)
+                .append("DefaultUpkeepCost").append(csvSeparator)
+                .append("CostIfFortified").append(csvSeparator)
+                .append("CostIfUndermined").append(csvSeparator)
+                .append("BaseIncome").append(csvSeparator)
+                .append("FortifyTotal").append(csvSeparator)
+                .append("FortifyTrigger").append(csvSeparator)
+                .append("UndermineTotal").append(csvSeparator)
+                .append("UndermineTrigger").append(csvSeparator)
+                .append("InputFile\n");
         controlData.forEach(
                 s -> sb
-                        .append("\"").append(s.classifiedImage.power.data).append("\"")
-                        .append("\"").append(s.systemName).append("\",")
-                        .append("\"").append(s.upkeepFromLastCycle).append("\",")
-                        .append("\"").append(s.defaultUpkeepCost).append("\",")
-                        .append("\"").append(s.costIfFortified).append("\",")
-                        .append("\"").append(s.costIfUndermined).append("\",")
-                        .append("\"").append(s.baseIncome).append("\",")
-                        .append("\"").append(s.fortifyTotal).append("\",")
-                        .append("\"").append(s.fortifyTrigger).append("\",")
-                        .append("\"").append(s.undermineTotal).append("\",")
-                        .append("\"").append(s.undermineTrigger).append("\",")
+                        .append("\"").append(s.classifiedImage.power.data).append("\"").append(csvSeparator)
+                        .append("\"").append(s.systemName).append("\"").append(csvSeparator)
+                        .append("\"").append(s.upkeepFromLastCycle).append("\"").append(csvSeparator)
+                        .append("\"").append(s.defaultUpkeepCost).append("\"").append(csvSeparator)
+                        .append("\"").append(s.costIfFortified).append("\"").append(csvSeparator)
+                        .append("\"").append(s.costIfUndermined).append("\"").append(csvSeparator)
+                        .append("\"").append(s.baseIncome).append("\"").append(csvSeparator)
+                        .append("\"").append(s.fortifyTotal).append("\"").append(csvSeparator)
+                        .append("\"").append(s.fortifyTrigger).append("\"").append(csvSeparator)
+                        .append("\"").append(s.undermineTotal).append("\"").append(csvSeparator)
+                        .append("\"").append(s.undermineTrigger).append("\"").append(csvSeparator)
                         .append("\"").append(s.classifiedImage.inputImage.getFile().getAbsolutePath()).append("\"\n")
         );
         final ClipboardContent content = new ClipboardContent();
@@ -556,5 +579,9 @@ public class PowerPlayController extends Controller<AnchorPane> {
         resetPreparationDetails();
         resetExpansionDetails();
         resetControlDetails();
+    }
+
+    public void setCsvSeparator(final String csvSeparator) {
+        this.csvSeparator = csvSeparator;
     }
 }

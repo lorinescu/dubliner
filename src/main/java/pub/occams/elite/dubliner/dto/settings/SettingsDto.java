@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SettingsDto {
 
 
+    @JsonProperty("csvSeparator")
+    public String csvSeparator;
+
     @JsonProperty("ocr")
     public OcrDto ocr;
 
