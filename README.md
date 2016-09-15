@@ -32,8 +32,9 @@ Notes:
 Changelog:
 
 * 0.0.4
-    * improved power name character recognition - Tesseract doesn't deal well with huge fonts so scaling
-    up the power name rectangle doesn't help at all
+    * improved power name character recognition - Tesseract does not deal well with huge fonts so scaling
+    up the power name rectangle does not help at all
+    * additional corrections for marker words variations
     * configurable csv export separator
     * missing separator in csv header
     * WIP - mock-up UI for system reports
