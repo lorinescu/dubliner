@@ -301,8 +301,8 @@ public class ImageApiImpl implements ImageApi {
         final Mat powerImage = maybePowerImage.get();
         saveImageAtStage(powerImage, file, "detect-selected-power");
 
-        final BufferedImage ocrInputImage = matToBufferedImage(invert(scale(filterRedAndBinarize(powerImage, settings
-                .ocr.filterRedChannelMin))));
+        final BufferedImage ocrInputImage = matToBufferedImage(filterRedAndBinarize(powerImage, settings
+                .ocr.filterRedChannelMin));
 
         saveImageAtStage(ocrInputImage, file, "detect-selected-power-ocr-input");
 
@@ -1119,9 +1119,14 @@ public class ImageApiImpl implements ImageApi {
     }
 
     @Override
-    public SystemBase extract(final PowerPlayImage input) {
-
-        if (null == input.inputImage.getImage() || ImageType.UNKNOWN == input.type.data
+    public SystemBase extract(final ClassifiedImage classified) {
+        final PowerPlayImage input;
+        if (classified instanceof PowerPlayImage) {
+            input = (PowerPlayImage) classified;
+        } else {
+            input = null;
+        }
+        if (null == input || null == input.inputImage.getImage() || ImageType.UNKNOWN == input.type.data
                 || Power.UNKNOWN == input.power.data) {
             return new SystemBase(input, null, null);
         }
@@ -1180,7 +1185,9 @@ public class ImageApiImpl implements ImageApi {
                 .forEach(
                         system -> {
                             //gc friendly
-
+                            if (null == system || null == system.classifiedImage || null == system.classifiedImage.inputImage) {
+                                return;
+                            }
                             system.classifiedImage.inputImage.nullImage();
                             try {
                                 if (system instanceof PreparationSystem) {

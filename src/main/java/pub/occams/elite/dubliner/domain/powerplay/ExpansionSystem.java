@@ -15,7 +15,7 @@ public class ExpansionSystem extends SystemBase {
     public final Integer oppositionTotal;
     public final Integer oppositionTrigger;
 
-    public ExpansionSystem(final ClassifiedImage classifiedImage,
+    public ExpansionSystem(final PowerPlayImage classifiedImage,
                            final OcrDataRectangle<String> systemNameRectangle, final String systemName,
                            final OcrDataRectangle<Integer> potentialValueRectangle,
                            final OcrDataRectangle<String> expansionRectangle,

@@ -19,7 +19,7 @@ public interface ImageApi {
 
     ClassifiedImage classify(final InputImage file);
 
-    SystemBase extract(final PowerPlayImage input);
+    SystemBase extract(final ClassifiedImage input);
 
     OcrResult generateReport(final List<File> files, final BiConsumer<Double, String> progressCallback);
 

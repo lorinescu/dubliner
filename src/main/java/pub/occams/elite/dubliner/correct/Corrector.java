@@ -126,7 +126,9 @@ public class Corrector {
                 .replace("T0TAL", TOTAL)
                 .replace("TDTAL", TOTAL)
                 .replace("TRDGGER", TRIGGER)
-                .replace("TFHGGER", TRIGGER);
+                .replace("TFHGGER", TRIGGER)
+                .replace("TR GGER", TRIGGER)
+                .replace("TREGGER", TRIGGER);
     }
 
     public static Corrector buildCorrector(final SettingsDto settings, final List<PopulatedSystemDto> populatedSystems) {

@@ -16,7 +16,7 @@ public class PreparationSystem extends SystemBase {
     public final Integer cost;
     public final Integer prep;
 
-    public PreparationSystem(final ClassifiedImage classifiedImage,
+    public PreparationSystem(final PowerPlayImage classifiedImage,
                              final OcrDataRectangle<String> systemNameRectangle,
                              final String systemName,
                              final OcrDataRectangle<Integer> ccToSpendThisCycleRectangle,
