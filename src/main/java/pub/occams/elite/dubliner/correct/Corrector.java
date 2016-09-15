@@ -47,7 +47,7 @@ public class Corrector {
             }
         }
         distance += Math.abs(aLen - bLen);
-        
+
         return distance;
     }
 
@@ -125,7 +125,8 @@ public class Corrector {
                 .replace("\n\n", "\n")
                 .replace("T0TAL", TOTAL)
                 .replace("TDTAL", TOTAL)
-                .replace("TRDGGER", TRIGGER);
+                .replace("TRDGGER", TRIGGER)
+                .replace("TFHGGER", TRIGGER);
     }
 
     public static Corrector buildCorrector(final SettingsDto settings, final List<PopulatedSystemDto> populatedSystems) {
