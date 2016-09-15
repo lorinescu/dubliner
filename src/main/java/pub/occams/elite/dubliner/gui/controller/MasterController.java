@@ -97,8 +97,12 @@ public class MasterController extends Controller<AnchorPane> {
         ocrTask = new Task<OcrResult>() {
             @Override
             protected OcrResult call() throws Exception {
-                powerPlayController.resetData();
-                systemReportsController.resetData();
+                Platform.runLater(
+                        () -> {
+                            powerPlayController.resetData();
+                            systemReportsController.resetData();
+                        }
+                );
                 final BiConsumer<Double, String> progressCallback =
                         (progress, fileName) ->
                                 Platform.runLater(
