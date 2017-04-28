@@ -16,6 +16,7 @@ import pub.occams.elite.dubliner.domain.geometry.Rectangle;
 import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 import pub.occams.elite.dubliner.domain.image.ImageType;
 import pub.occams.elite.dubliner.domain.image.InputImage;
+import pub.occams.elite.dubliner.domain.image.ProcessedImage;
 import pub.occams.elite.dubliner.domain.powerplay.*;
 import pub.occams.elite.dubliner.dto.eddb.PopulatedSystemDto;
 import pub.occams.elite.dubliner.dto.settings.SettingsDto;
@@ -318,14 +319,14 @@ public class ImageApiImpl implements ImageApi {
         return new OcrDataRectangle<>(str, maybePower.get(), powerNameRectangle);
     }
 
-    private OcrDataRectangle<String> extractSystemName(final PowerPlayImage input) {
+    private OcrDataRectangle<String> extractSystemName(final InputImage input, final OcrDataRectangle<Power> power) {
 
-        final File file = input.inputImage.getFile();
-        final Mat img = input.inputImage.getImage();
+        final File file = input.getFile();
+        final Mat img = input.getImage();
 
         LOGGER.info("Name extraction start for file: " + file.getAbsolutePath());
 
-        final Rectangle reference = input.power.rectangle;
+        final Rectangle reference = power.rectangle;
         final int x0 = reference.x0;
         final int y0Offset = 20;//a few extra pixels to remove the line below the power name
         final int y0 = reference.y1 + y0Offset;
@@ -1074,6 +1075,46 @@ public class ImageApiImpl implements ImageApi {
         );
     }
 
+    private ProcessedImage<PowerPlayImage> extractPowerPlay(final ClassifiedImage classifiedImage) {
+
+        final OcrDataRectangle<Power> power = detectSelectedPower(classifiedImage.inputImage);
+        if (Power.UNKNOWN == power.data) {
+            return new ProcessedImage<>(classifiedImage.inputImage, classifiedImage.type,
+                    new PowerPlayImage(classifiedImage.inputImage, classifiedImage.type, power));
+        }
+
+        final Mat img = classifiedImage.inputImage.getImage();
+        final File file = classifiedImage.inputImage.getFile();
+
+        LOGGER.info("Extraction start for file: " + file.getAbsolutePath());
+
+        final OcrDataRectangle<String> sysNameRect = extractSystemName(classifiedImage.inputImage, power);
+        if (Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.data)) {
+            return new ProcessedImage<>(input, sysNameRect, UNKNOWN_SYSTEM);
+        }
+
+        if (debug) {
+            saveImageAtStage(ImageUtil.drawDataRectangles(img, input.type, input.power, sysNameRect), file,
+                    "extract-data-rects");
+        }
+
+        switch (input.type.data) {
+            case PP_PREPARATION:
+                return extractPreparation(input, sysNameRect);
+            case PP_EXPANSION:
+                return extractExpansion(input, sysNameRect);
+            case PP_CONTROL:
+                return extractControl(input, sysNameRect);
+            default:
+                LOGGER.error("Unknown image type:" + file.getAbsolutePath());
+                break;
+        }
+        LOGGER.info("Extraction end for file: " + file.getAbsolutePath());
+
+        return new PowerPlayImage(input, sysNameRect, null);
+
+    }
+
     @Override
     public SettingsDto getSettings() {
         return this.settings;
@@ -1108,58 +1149,25 @@ public class ImageApiImpl implements ImageApi {
             return new ClassifiedImage(inputImage, type);
         }
 
-        final OcrDataRectangle<Power> power = detectSelectedPower(inputImage);
-        if (Power.UNKNOWN == power.data) {
-            return new ClassifiedImage(inputImage, type);
-        }
-
         LOGGER.info("classification end: " + power.data + "/" + type.data + ", for file: " + file.getAbsolutePath());
 
         return new PowerPlayImage(inputImage, type, power);
     }
 
     @Override
-    public SystemBase extract(final ClassifiedImage classified) {
-        final PowerPlayImage input;
+    public ProcessedImage extract(final ClassifiedImage classified) {
+
+        if (null == classified || null == classified.inputImage.getImage() || ImageType.UNKNOWN == classified.type.data) {
+            return new ProcessedImage<>(null, null, null);
+        }
+
         if (classified instanceof PowerPlayImage) {
-            input = (PowerPlayImage) classified;
+            return extractPowerPlay(classified);
         } else {
             input = null;
         }
-        if (null == input || null == input.inputImage.getImage() || ImageType.UNKNOWN == input.type.data
-                || Power.UNKNOWN == input.power.data) {
-            return new SystemBase(input, null, null);
-        }
 
-        final Mat img = input.inputImage.getImage();
-        final File file = input.inputImage.getFile();
-
-        LOGGER.info("Extraction start for file: " + file.getAbsolutePath());
-
-        final OcrDataRectangle<String> sysNameRect = extractSystemName(input);
-        if (Corrector.UNKNOWN_SYSTEM.equals(sysNameRect.data)) {
-            return new SystemBase(input, sysNameRect, UNKNOWN_SYSTEM);
-        }
-
-        if (debug) {
-            saveImageAtStage(ImageUtil.drawDataRectangles(img, input.type, input.power, sysNameRect), file,
-                    "extract-data-rects");
-        }
-
-        switch (input.type.data) {
-            case PP_PREPARATION:
-                return extractPreparation(input, sysNameRect);
-            case PP_EXPANSION:
-                return extractExpansion(input, sysNameRect);
-            case PP_CONTROL:
-                return extractControl(input, sysNameRect);
-            default:
-                LOGGER.error("Unknown image type:" + file.getAbsolutePath());
-                break;
-        }
-        LOGGER.info("Extraction end for file: " + file.getAbsolutePath());
-
-        return new SystemBase(input, sysNameRect, null);
+        return "maciuci";
     }
 
     @Override

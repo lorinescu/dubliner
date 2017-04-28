@@ -3,7 +3,7 @@ package pub.occams.elite.dubliner.domain.powerplay;
 import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
 import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 
-public class PreparationSystem extends SystemBase {
+public class PreparationSystem extends PowerPlayImage {
 
     public final OcrDataRectangle<Integer> ccToSpendThisCycleRectangle;
     public final OcrDataRectangle<Integer> prepRectangle;

@@ -1,9 +1,8 @@
 package pub.occams.elite.dubliner.domain.powerplay;
 
 import pub.occams.elite.dubliner.domain.geometry.OcrDataRectangle;
-import pub.occams.elite.dubliner.domain.image.ClassifiedImage;
 
-public class ExpansionSystem extends SystemBase {
+public class ExpansionSystem extends PowerPlayImage {
 
     public OcrDataRectangle<Integer> potentialValueRectangle;
     public OcrDataRectangle<String> expansionRectangle;

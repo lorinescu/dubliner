@@ -13,6 +13,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import org.bytedeco.javacpp.opencv_core.Mat;
 import pub.occams.elite.dubliner.domain.geometry.Rectangle;
+import pub.occams.elite.dubliner.domain.image.ProcessedImage;
 import pub.occams.elite.dubliner.domain.powerplay.*;
 import pub.occams.elite.dubliner.gui.control.OcrDataTextField;
 import pub.occams.elite.dubliner.gui.controller.Controller;
@@ -261,12 +262,12 @@ public class PowerPlayController extends Controller<AnchorPane> {
         Clipboard.getSystemClipboard().setContent(content);
     }
 
-    private void showOriginalImage(final SystemBase system) {
-        if (null == system) {
+    private void showOriginalImage(final ProcessedImage<PowerPlayImage> processedImage) {
+        if (null == processedImage) {
             return;
         }
 
-        final BufferedImage originalImage = matToBufferedImage(system.classifiedImage.inputImage.getOnDemandImage());
+        final BufferedImage originalImage = matToBufferedImage(processedImage.inputImage.getOnDemandImage());
         if (null == originalImage) {
             new Alert(Alert.AlertType.ERROR, "Could not find image").showAndWait();
             return;
@@ -274,7 +275,7 @@ public class PowerPlayController extends Controller<AnchorPane> {
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.getDialogPane().setContent(new ImageView(toFXImage(originalImage, null)));
-        alert.setHeaderText(system.classifiedImage.inputImage.getFile().getAbsolutePath());
+        alert.setHeaderText(processedImage.inputImage.getFile().getAbsolutePath());
         alert.show();
     }
 

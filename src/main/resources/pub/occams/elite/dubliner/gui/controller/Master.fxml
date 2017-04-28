@@ -46,7 +46,7 @@
                 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" tabMaxHeight="35.0" tabMaxWidth="112.0" tabMinHeight="35.0" tabMinWidth="112.0">
                     <tabs>
                         <Tab fx:id="powerPlayTab" closable="false" text="Power Play" />
-                        <Tab fx:id="systemReportsTab" closable="false" disable="true" text="System Reports" />
+                        <Tab fx:id="systemReportsTab" closable="false" text="System Reports" />
                     </tabs>
                 </TabPane>
             </children>
